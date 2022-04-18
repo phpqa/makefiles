@@ -13,10 +13,17 @@ DOCKER_COMPOSE_FLAGS?=$(if $(DOCKER_COMPOSE_EXTRA_FLAGS), $(DOCKER_COMPOSE_EXTRA
 ## Docker
 ###
 
-#. Check if a program is available, exit if it is not
-$(DOCKER_EXECUTABLE) $(DOCKER_COMPOSE_EXECUTABLE):%:
-	@if ! test -x "$@"; then \
-		printf "$(STYLE_ERROR)%s$(STYLE_RESET)\\n" "Could not run \"$@\". Make sure it is installed."; \
+# Check if Docker is available, exit if it is not
+$(DOCKER_EXECUTABLE):
+	@if ! test -x "$$(@)"; then \
+		printf "$$(STYLE_ERROR)%s$$(STYLE_RESET)\\n" "Could not run \"$$(@)\". Make sure it is installed."; \
+		exit 1; \
+	fi
+
+# Check if Docker-Compose is available, exit if it is not
+$(DOCKER_COMPOSE_EXECUTABLE):
+	@if ! test -x "$$(@)"; then \
+		printf "$$(STYLE_ERROR)%s$$(STYLE_RESET)\\n" "Could not run \"$$(@)\". Make sure it is installed."; \
 		exit 1; \
 	fi
 
