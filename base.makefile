@@ -6,6 +6,12 @@ RUN_UID?=$(shell cat /dev/urandom | env LC_CTYPE=C tr -dc 'a-z0-9' | fold -w 16 
 CWD?=$(shell cd "$(dir $(firstword $(MAKEFILE_LIST)))"; pwd)
 
 ###
+##. Make
+###
+
+MAKE_PARALLELISM_OPTIONS = $(if $(shell $(MAKE) -v | grep "3\|4"), -j "$$(nproc 2>/dev/null || sysctl -n hw.physicalcpu 2>/dev/null || echo "1")" ,)$(if $(shell $(MAKE) -v | grep "4"), --output-sync=recurse,)
+
+###
 ##. Spaces
 ###
 
