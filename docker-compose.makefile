@@ -55,6 +55,40 @@ create-docker-network-%: | $(DOCKER_EXECUTABLE)
 	@$(DOCKER_EXECUTABLE) network create $(*) 2>/dev/null || true
 
 ###
+## Docker Compose
+###
+
+.PHONY: build up logs down remove
+
+# Build the image
+build: | $(DOCKER_COMPOSE_EXECUTABLE)
+	@$(DOCKER_COMPOSE_EXECUTABLE)$(if $(DOCKER_COMPOSE_FLAGS), $(DOCKER_COMPOSE_FLAGS)) build
+
+# Up the image
+up: | $(DOCKER_COMPOSE_EXECUTABLE)
+	@$(DOCKER_COMPOSE_EXECUTABLE)$(if $(DOCKER_COMPOSE_FLAGS), $(DOCKER_COMPOSE_FLAGS)) up -d --remove-orphans
+
+# Follow the logs
+logs: | $(DOCKER_COMPOSE_EXECUTABLE)
+	@$(DOCKER_COMPOSE_EXECUTABLE)$(if $(DOCKER_COMPOSE_FLAGS), $(DOCKER_COMPOSE_FLAGS)) logs --follow --tail="100"
+
+# Down the image
+down: | $(DOCKER_COMPOSE_EXECUTABLE)
+	@$(DOCKER_COMPOSE_EXECUTABLE)$(if $(DOCKER_COMPOSE_FLAGS), $(DOCKER_COMPOSE_FLAGS)) down
+
+# Stop the image
+remove: | $(DOCKER_COMPOSE_EXECUTABLE)
+	@if test -n "$$($(DOCKER_COMPOSE_EXECUTABLE)$(if $(DOCKER_COMPOSE_FLAGS), $(DOCKER_COMPOSE_FLAGS)) ps --quiet --services --filter "status=running" 2> /dev/null)"; then \
+  		$(DOCKER_COMPOSE_EXECUTABLE)$(if $(DOCKER_COMPOSE_FLAGS), $(DOCKER_COMPOSE_FLAGS)) rm --stop --force -v; \
+	fi
+
+# TODO # Clear all volumes
+#clear-volumes: docker-compose.yaml docker-compose.dev.yaml | $(DOCKER_EXECUTABLE) stop
+#	@if test -n "$$($(DOCKER_EXECUTABLE) volume ls --quiet --filter label=com.docker.compose.project=<PROJECT_NAME>)"; then \
+#		$(DOCKER_EXECUTABLE) volume rm --force $$($(DOCKER_EXECUTABLE) volume ls --quiet --filter label=com.docker.compose.project=sqs-frontend); \
+#	fi
+
+###
 ## Docker Tools
 ###
 
