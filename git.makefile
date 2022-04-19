@@ -4,7 +4,9 @@
 
 GIT_EXECUTABLE?=$(shell command -v git || which git 2>/dev/null || printf "%s" "git")
 
-DIRECTORIES?=
+GIT_PULL_VERBOSE?=
+
+APPLICATIONS?=
 
 ###
 ## Git
@@ -12,34 +14,43 @@ DIRECTORIES?=
 
 # TODO make it optional to use stashes
 
-# Pull the repository
-$(foreach dir,$(DIRECTORIES),$(dir)/.git):%/.git: | $(GIT_EXECUTABLE)
-	@printf "%s\\n" "Cloning into $(*)..."
-	@if test -z "$(REPOSITORY_URL_FOR_DIRECTORY_$(*))"; then \
-		printf "%s\\n" "Could not find variable REPOSITORY_URL_FOR_DIRECTORY_$(*)!"; \
-		exit 1; \
-	else \
-		$(GIT_EXECUTABLE) clone $(REPOSITORY_URL_FOR_DIRECTORY_$(*)) $(*); \
-	fi
-
-# Clone all repositories
-clone: $(foreach dir,$(DIRECTORIES),$(dir)/.git)
-	@true
-
-# Pull the repository
-$(foreach dir,$(DIRECTORIES),pull-$(dir)):pull-%: | %/.git $(GIT_EXECUTABLE)
-	$(eval $(@)_DEFAULT_BRANCH:=$(shell cd "$(*)" && $(GIT_EXECUTABLE) remote show origin | sed -n '/HEAD branch/s/.*: //p'))
-	@if test -n '$($(@)_DEFAULT_BRANCH)'; then \
-		printf "%s\\n" "Pulling '$($(@)_DEFAULT_BRANCH)' branch into $(*)..." \
-		&& cd "$(*)" \
-		&& ( $(GIT_EXECUTABLE) pull origin $($(@)_DEFAULT_BRANCH) || true ) \
-		$(if $(LOG),&& $(GIT_EXECUTABLE) log -1) \
+# $(1) is variable, $(2) is application
+git-get-variable-for-application=\
+	$(strip $(1))="$($(strip $(1))_$(strip $(2)))"; \
+	if test -z "$${$(strip $(1))}"; then \
+		$(strip $(1))="$$(printf "$($(strip $(1))_TEMPLATE)" "$(strip $(2))")"; \
+		if test -z "$${$(strip $(1))}"; then \
+			printf "$(STYLE_ERROR)%s$(STYLE_RESET)\\n" "Could not find variable \"$(strip $(1))_$(strip $(2))\", nor \"$(strip $(1))_TEMPLATE\"!"; \
+			exit 1; \
+		fi; \
+	fi;
+# $(1) is application
+git-clone-application=\
+	$(call git-get-variable-for-application,DIRECTORY_FOR_REPOSITORY,$(1)) \
+	$(call git-get-variable-for-application,REPOSITORY_URL_FOR_REPOSITORY,$(1)) \
+	if test ! -d "$${DIRECTORY_FOR_REPOSITORY}"; then \
+		printf "%s\\n" "Cloning into $${DIRECTORY_FOR_REPOSITORY}..."; \
+		$(GIT_EXECUTABLE) clone $${REPOSITORY_URL_FOR_REPOSITORY} $${DIRECTORY_FOR_REPOSITORY}; \
+	fi;
+# $(1) is application
+git-pull-application=\
+	$(call git-get-variable-for-application,DIRECTORY_FOR_REPOSITORY,$(1)) \
+	DEFAULT_BRANCH="$$(cd "$${DIRECTORY_FOR_REPOSITORY}" && $(GIT_EXECUTABLE) remote show origin | sed -n '/HEAD branch/s/.*: //p')"; \
+	if test -n "$${DEFAULT_BRANCH}" && test "$${DEFAULT_BRANCH}" != "(unknown)"; then \
+		printf "%s\\n" "Pulling \"$${DEFAULT_BRANCH}\" branch into \"$${DIRECTORY_FOR_REPOSITORY}\"..." \
+		&& cd "$${DIRECTORY_FOR_REPOSITORY}" \
+		&& ( $(GIT_EXECUTABLE) pull origin "$${DEFAULT_BRANCH}" || true ) \
+		$(if $(GIT_PULL_VERBOSE),&& $(GIT_EXECUTABLE) log -1) \
 		&& echo \
 		&& sleep 1; \
 	else \
-		printf "%s\\n" "Could not determine branch for $(*)!"; \
-	fi
+		printf "%s\\n" "Could not determine branch for $${DIRECTORY_FOR_REPOSITORY}!"; \
+	fi;
+
+# Clone all repositories
+clone: | $(GIT_EXECUTABLE)
+	@$(foreach application,$(APPLICATIONS),$(call git-clone-application,$(application)))
 
 # Pull all repositories
-pull: $(foreach dir,$(DIRECTORIES),pull-$(dir))
-	@true
+pull: | $(GIT_EXECUTABLE)
+	@$(foreach application,$(APPLICATIONS),$(call git-pull-application,$(application)))
