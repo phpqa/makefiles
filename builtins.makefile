@@ -4,4 +4,4 @@
 
 .SUFFIXES:
 SHELL?=/bin/sh
-MAKEFLAGS+=--no-print-directory --no-builtin-rules --environment-overrides --warn-undefined-variables
+MAKEFLAGS+=--no-print-directory --no-builtin-rules --environment-overrides
