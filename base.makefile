@@ -74,6 +74,7 @@ parse_env_string=\
 # $(1) is file, $(2) is variable
 print_env_variable=printf "%s" "$$($(call parse_env_string,$(strip $(1)),$${$(strip $(2))}))";
 println_env_variable=printf "%s\\n" "$$($(call parse_env_string,$(strip $(1)),$${$(strip $(2))}))";
+get_env_variable=$(shell $(call print_env_variable,$(1),$(2)))
 
 check_variable_is_not_empty=if test -z "$${$(strip $(1))}"; then $(call println_error,Could not find the $(strip $(1)) environment variable.); exit 1; fi;
 
