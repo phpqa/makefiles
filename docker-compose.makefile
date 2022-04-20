@@ -13,6 +13,8 @@ DOCKER_COMPOSE_FLAGS?=$(if $(DOCKER_COMPOSE_EXTRA_FLAGS), $(DOCKER_COMPOSE_EXTRA
 ## Docker
 ###
 
+.PHONY: build up logs down remove
+
 # Check if Docker is available, exit if it is not
 $(DOCKER_EXECUTABLE):
 	@if ! test -x "$$(@)"; then \
@@ -29,7 +31,7 @@ $(DOCKER_COMPOSE_EXECUTABLE):
 
 RUNNING_CACHE=
 
-# Ensure container % is running
+#. Ensure container % is running
 ensure-running-%: | $(DOCKER_COMPOSE_EXECUTABLE)
 	$(eval RUNNING_CACHE=$(if $(RUNNING_CACHE),$(RUNNING_CACHE),$(shell $(DOCKER_COMPOSE_EXECUTABLE)$(if $(DOCKER_COMPOSE_FLAGS), $(DOCKER_COMPOSE_FLAGS)) ps --services --filter "status=running")))
 	@if ! echo "$(RUNNING_CACHE)" | grep -q "$(*)" 2> /dev/null; then \
@@ -43,22 +45,16 @@ ensure-running-%: | $(DOCKER_COMPOSE_EXECUTABLE)
 		done; \
 	fi
 
-# Ensure container % is not running
+#. Ensure container % is not running
 ensure-not-running-%: | $(DOCKER_COMPOSE_EXECUTABLE)
 	$(eval RUNNING_CACHE=$(if $(RUNNING_CACHE),$(RUNNING_CACHE),$(shell $(DOCKER_COMPOSE_EXECUTABLE)$(if $(DOCKER_COMPOSE_FLAGS), $(DOCKER_COMPOSE_FLAGS)) ps --services --filter "status=running")))
 	@if echo "$(RUNNING_CACHE)" | grep -q $(*) 2> /dev/null; then \
 		$(DOCKER_COMPOSE_EXECUTABLE)$(if $(DOCKER_COMPOSE_FLAGS), $(DOCKER_COMPOSE_FLAGS)) stop $(*); \
 	fi
 
-# Create a Docker network %
+#. Create a Docker network %
 create-docker-network-%: | $(DOCKER_EXECUTABLE)
 	@$(DOCKER_EXECUTABLE) network create $(*) 2>/dev/null || true
-
-###
-## Docker Compose
-###
-
-.PHONY: build up logs down remove
 
 # Build the image
 build: | $(DOCKER_COMPOSE_EXECUTABLE)
