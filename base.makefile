@@ -83,7 +83,7 @@ check_variable_is_not_empty=if test -z "$${$(strip $(1))}"; then $(call println_
 ###
 
 .PHONY: help debug
-.DEFAULT_GOAL: help
+.DEFAULT_GOAL:=help
 
 # Show this help
 help:
