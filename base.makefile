@@ -244,6 +244,21 @@ list-make-targets:
 		'
 
 ###
+##. Redirect
+###
+
+# Create a makefile in the parent directory to redirect commands
+$(realpath $(CWD)/..)/makefile ../makefile: force
+	@printf "%s\n" "# Generated to redirect" > "$(@)"
+	@printf "%s\n" ".SUFFIXES:" >> "$(@)"
+	@printf "%s\n" "MAKEFLAGS+=--no-print-directory --no-builtin-rules --no-builtin-variables" >> "$(@)"
+	@printf "%s\n" ".PHONY: force" >> "$(@)"
+	@printf "%s\n" ".DEFAULT_GOAL:=$(.DEFAULT_GOAL)" >> "$(@)"
+	@printf "%s\n" "\$$(MAKEFILE_LIST): ; @true" >> "$(@)"
+	@printf "%s\n" "%: force; @cd "$(notdir $(CWD))" && \$$(MAKE) \$$(*)" >> "$(@)"
+	@printf "%s\n" "force:" >> "$(@)"
+
+###
 ##. Force
 ###
 
