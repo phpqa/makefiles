@@ -74,7 +74,7 @@ down: | $(DOCKER_COMPOSE_EXECUTABLE)
 
 # Stop the image
 remove: | $(DOCKER_COMPOSE_EXECUTABLE)
-	@if test -n "$$($(DOCKER_COMPOSE_EXECUTABLE)$(if $(DOCKER_COMPOSE_FLAGS), $(DOCKER_COMPOSE_FLAGS)) ps --quiet --services --filter "status=running" 2> /dev/null)"; then \
+	@if test -n "$$($(DOCKER_COMPOSE_EXECUTABLE)$(if $(DOCKER_COMPOSE_FLAGS), $(DOCKER_COMPOSE_FLAGS)) ps --services --filter "status=running" 2> /dev/null)"; then \
   		$(DOCKER_COMPOSE_EXECUTABLE)$(if $(DOCKER_COMPOSE_FLAGS), $(DOCKER_COMPOSE_FLAGS)) rm --stop --force -v; \
 	fi
 
