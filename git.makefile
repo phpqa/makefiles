@@ -2,7 +2,8 @@
 ##. Configuration
 ###
 
-GIT_EXECUTABLE?=$(shell command -v git || which git 2>/dev/null || printf "%s" "git")
+GIT_EXECUTABLE?=$(shell command -v git || which git 2>/dev/null)
+GIT_DEPENDENCY?=$(if $(GIT_EXECUTABLE),$(if $(wildcard $(GIT_EXECUTABLE)),$(GIT_EXECUTABLE)),git)
 
 GIT_PULL_VERBOSE?=
 
@@ -47,10 +48,17 @@ git-pull-application=\
 		printf "%s\\n" "Could not determine branch for $${DIRECTORY_FOR_REPOSITORY}!"; \
 	fi;
 
+# Check if Git is available, exit if it is not
+$(if $(GIT_DEPENDENCY),$(GIT_DEPENDENCY),git):
+	@if ! test -x "$(@)"; then \
+		printf "$(STYLE_ERROR)%s$(STYLE_RESET)\\n" "Could not run \"$(@)\". Make sure it is installed."; \
+		exit 1; \
+	fi
+
 # Clone all repositories
-clone: | $(GIT_EXECUTABLE)
+clone: | $(GIT_DEPENDENCY)
 	@$(foreach application,$(APPLICATIONS),$(call git-clone-application,$(application)))
 
 # Pull all repositories
-pull: | $(GIT_EXECUTABLE)
+pull: | $(GIT_DEPENDENCY)
 	@$(foreach application,$(APPLICATIONS),$(call git-pull-application,$(application)))
