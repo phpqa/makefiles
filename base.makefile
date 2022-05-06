@@ -43,14 +43,14 @@ STYLE_ERROR_ICON := $(STYLE_ERROR)\342\234\226$(STYLE_RESET)
 
 # $(1) is the title, $(2) is the rest
 define printer
-print_$(1)=printf "$$(STYLE_$(shell echo '$(1)' | tr '[:lower:]' '[:upper:]'))%s$$(STYLE_RESET)%s" "$$(1)" "$$(2)";
-println_$(1)=printf "$$(STYLE_$(shell echo '$(1)' | tr '[:lower:]' '[:upper:]'))%s$$(STYLE_RESET)%s\\n" "$$(1)" "$$(2)";
+print_$(1)=printf "$$(STYLE_$(shell echo '$(1)' | tr '[:lower:]' '[:upper:]'))%s$$(STYLE_RESET)%s" "$$(1)" "$$(2)"
+println_$(1)=printf "$$(STYLE_$(shell echo '$(1)' | tr '[:lower:]' '[:upper:]'))%s$$(STYLE_RESET)%s\\n" "$$(1)" "$$(2)"
 endef
 $(foreach type,title warning error success,$(eval $(call printer,$(type))))
 
 # $(1) is the url, $(2) is the (optional) description
-print_link=printf "\033]8;;%s\033\\\\%s\033]8;;\033\\ " "$(1)" "$(if $(2),$(2),$(1))";
-println_link=printf "\033]8;;%s\033\\\\%s\033]8;;\033\\ \\n" "$(1)" "$(if $(2),$(2),$(1))";
+print_link=printf "\033]8;;%s\033\\\\%s\033]8;;\033\\ " "$(1)" "$(if $(2),$(2),$(1))"
+println_link=printf "\033]8;;%s\033\\\\%s\033]8;;\033\\ \\n" "$(1)" "$(if $(2),$(2),$(1))"
 
 ###
 ##. Environment variables lookup
@@ -72,11 +72,11 @@ parse_env_string=\
 	done; \
 	echo "$${RESULT}";
 # $(1) is file, $(2) is variable
-print_env_variable=printf "%s" "$$($(call parse_env_string,$(strip $(1)),$${$(strip $(2))}))";
-println_env_variable=printf "%s\\n" "$$($(call parse_env_string,$(strip $(1)),$${$(strip $(2))}))";
+print_env_variable=printf "%s" "$$($(call parse_env_string,$(strip $(1)),$${$(strip $(2))}))"
+println_env_variable=printf "%s\\n" "$$($(call parse_env_string,$(strip $(1)),$${$(strip $(2))}))"
 get_env_variable=$(shell $(call print_env_variable,$(1),$(2)))
 
-check_variable_is_not_empty=if test -z "$${$(strip $(1))}"; then $(call println_error,Could not find the $(strip $(1)) environment variable.); exit 1; fi;
+check_variable_is_not_empty=if test -z "$${$(strip $(1))}"; then $(call println_error,Could not find the $(strip $(1)) environment variable.); exit 1; fi
 
 ###
 ## About

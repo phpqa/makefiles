@@ -22,26 +22,26 @@ git-find-variable-for-repository=\
 	$(strip $(1))="$($(strip $(1))_$(strip $(2)))"; \
 	if test -z "$${$(strip $(1))}"; then \
 		$(strip $(1))="$$(printf "$($(strip $(1))_TEMPLATE)" "$(strip $(2))")"; \
-	fi;
+	fi
 # $(1) is variable, $(2) is repository
 git-get-variable-for-repository=\
-	$(call git-find-variable-for-repository,$(1),$(2)) \
+	$(call git-find-variable-for-repository,$(1),$(2)); \
 	if test -z "$${$(strip $(1))}"; then \
 		printf "$(STYLE_ERROR)%s$(STYLE_RESET)\\n" "Could not find variable \"$(strip $(1))_$(strip $(2))\", nor \"$(strip $(1))_TEMPLATE\"!"; \
 		exit 1; \
-	fi;
+	fi
 # $(1) is repository
 git-clone-repository=\
-	$(call git-get-variable-for-repository,DIRECTORY_FOR_REPOSITORY,$(1)) \
+	$(call git-get-variable-for-repository,DIRECTORY_FOR_REPOSITORY,$(1)); \
 	if test ! -d "$${DIRECTORY_FOR_REPOSITORY}"; then \
-		$(call git-get-variable-for-repository,REPOSITORY_URL_FOR_REPOSITORY,$(1)) \
+		$(call git-get-variable-for-repository,REPOSITORY_URL_FOR_REPOSITORY,$(1)); \
 		printf "%s\\n" "Cloning into $${DIRECTORY_FOR_REPOSITORY}..."; \
 		$(GIT_EXECUTABLE) clone $${REPOSITORY_URL_FOR_REPOSITORY} $${DIRECTORY_FOR_REPOSITORY}; \
-	fi;
+	fi
 # $(1) is repository
 git-pull-repository=\
-	$(call git-get-variable-for-repository,DIRECTORY_FOR_REPOSITORY,$(1)) \
-	$(call git-find-variable-for-repository,MAKEFILE_FOR_REPOSITORY,$(1)) \
+	$(call git-get-variable-for-repository,DIRECTORY_FOR_REPOSITORY,$(1)); \
+	$(call git-find-variable-for-repository,MAKEFILE_FOR_REPOSITORY,$(1)); \
 	if test -n "$${MAKEFILE_FOR_REPOSITORY}" && test -f "$${DIRECTORY_FOR_REPOSITORY}/$${MAKEFILE_FOR_REPOSITORY}"; then \
 		( cd "$${DIRECTORY_FOR_REPOSITORY}" && $(MAKE) -f "$${MAKEFILE_FOR_REPOSITORY}" pull ); \
 	else \
@@ -58,7 +58,7 @@ git-pull-repository=\
 			&& echo \
 			&& sleep 1; \
 		fi; \
-	fi;
+	fi
 
 # Check if Git is available, exit if it is not
 $(if $(GIT_DEPENDENCY),$(GIT_DEPENDENCY),git):
@@ -69,8 +69,8 @@ $(if $(GIT_DEPENDENCY),$(GIT_DEPENDENCY),git):
 
 # Clone all repositories
 clone: | $(GIT_DEPENDENCY)
-	@$(foreach repository,$(REPOSITORIES),$(call git-clone-repository,$(repository)))
+	@$(foreach repository,$(REPOSITORIES),$(call git-clone-repository,$(repository)); )
 
 # Pull all repositories
 pull: | $(GIT_DEPENDENCY)
-	@$(foreach repository,$(REPOSITORIES),$(call git-pull-repository,$(repository)))
+	@$(foreach repository,$(REPOSITORIES),$(call git-pull-repository,$(repository)); )
