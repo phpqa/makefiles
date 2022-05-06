@@ -18,14 +18,17 @@ DIRECTORY_FOR_REPOSITORY_self?=.
 # TODO make it optional to use stashes
 
 # $(1) is variable, $(2) is application
-git-get-variable-for-application=\
+git-find-variable-for-application=\
 	$(strip $(1))="$($(strip $(1))_$(strip $(2)))"; \
 	if test -z "$${$(strip $(1))}"; then \
 		$(strip $(1))="$$(printf "$($(strip $(1))_TEMPLATE)" "$(strip $(2))")"; \
-		if test -z "$${$(strip $(1))}"; then \
-			printf "$(STYLE_ERROR)%s$(STYLE_RESET)\\n" "Could not find variable \"$(strip $(1))_$(strip $(2))\", nor \"$(strip $(1))_TEMPLATE\"!"; \
-			exit 1; \
-		fi; \
+	fi;
+# $(1) is variable, $(2) is application
+git-get-variable-for-application=\
+	$(call git-find-variable-for-application,$(1),$(2)) \
+	if test -z "$${$(strip $(1))}"; then \
+		printf "$(STYLE_ERROR)%s$(STYLE_RESET)\\n" "Could not find variable \"$(strip $(1))_$(strip $(2))\", nor \"$(strip $(1))_TEMPLATE\"!"; \
+		exit 1; \
 	fi;
 # $(1) is application
 git-clone-application=\
@@ -38,15 +41,23 @@ git-clone-application=\
 # $(1) is application
 git-pull-application=\
 	$(call git-get-variable-for-application,DIRECTORY_FOR_REPOSITORY,$(1)) \
-	DEFAULT_BRANCH="$$(cd "$${DIRECTORY_FOR_REPOSITORY}" && $(GIT_EXECUTABLE) remote show origin | sed -n '/HEAD branch/s/.*: //p')"; \
-	if test -n "$${DEFAULT_BRANCH}" && test "$${DEFAULT_BRANCH}" != "(unknown)"; then \
-		printf "%s\\n" "Pulling \"$${DEFAULT_BRANCH}\" branch into \"$${DIRECTORY_FOR_REPOSITORY}\"..." \
-		&& ( cd "$${DIRECTORY_FOR_REPOSITORY}" && $(GIT_EXECUTABLE) pull origin "$${DEFAULT_BRANCH}" || true ) \
-		$(if $(GIT_PULL_VERBOSE),&& ( cd "$${DIRECTORY_FOR_REPOSITORY}" && $(GIT_EXECUTABLE) log -1 )) \
-		&& echo \
-		&& sleep 1; \
+	$(call git-find-variable-for-application,MAKEFILE_FOR_REPOSITORY,$(1)) \
+	if test -n "$${MAKEFILE_FOR_REPOSITORY}" && test -f "$${DIRECTORY_FOR_REPOSITORY}/$${MAKEFILE_FOR_REPOSITORY}"; then \
+		( cd "$${DIRECTORY_FOR_REPOSITORY}" && $(MAKE) -f "$${MAKEFILE_FOR_REPOSITORY}" pull ); \
 	else \
-		printf "%s\\n" "Could not determine branch for $${DIRECTORY_FOR_REPOSITORY}!"; \
+		DEFAULT_BRANCH="$$(cd "$${DIRECTORY_FOR_REPOSITORY}" && $(GIT_EXECUTABLE) remote show origin | sed -n '/HEAD branch/s/.*: //p')"; \
+		if test -z "$${DEFAULT_BRANCH}" || test "$${DEFAULT_BRANCH}" = "(unknown)"; then \
+			printf "%s\\n" "Could not determine branch for $$(cd "$${DIRECTORY_FOR_REPOSITORY}"; pwd)!"; \
+		else \
+			printf "%s\\n" "Pulling \"$${DEFAULT_BRANCH}\" branch into \"$$(cd "$${DIRECTORY_FOR_REPOSITORY}"; pwd)\"..." \
+			&& ( \
+				cd "$${DIRECTORY_FOR_REPOSITORY}"; \
+				( $(GIT_EXECUTABLE) pull origin "$${DEFAULT_BRANCH}" || true ) \
+				$(if $(GIT_PULL_VERBOSE), && ( $(GIT_EXECUTABLE) log -1 || true )) \
+			) \
+			&& echo \
+			&& sleep 1; \
+		fi; \
 	fi;
 
 # Check if Git is available, exit if it is not
