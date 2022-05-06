@@ -25,13 +25,14 @@ bin:
 bin/php: $(MAKEFILE_LIST) $(if wildcard .env,.env) | bin
 	@printf "%s\\n" "#!/usr/bin/env sh" > "$@"
 	@printf "%s\\n\\n" "set -e" >> "$@"
-	@printf "%s\\n" "cd $(DOCKER_COMPOSE_DIRECTORY_FOR_PHP)" >> "$@"
+	@printf "%s\\n" "pushd \"$(DOCKER_COMPOSE_DIRECTORY_FOR_PHP)\" > /dev/null" >> "$@"
 	@printf "%s\\n" "if test -n \"\$$(docker-compose$(if $(DOCKER_COMPOSE_FLAGS), $(DOCKER_COMPOSE_FLAGS)) ps --services --filter \"status=running\" | grep \"$(DOCKER_COMPOSE_SERVICE_NAME_FOR_PHP)\" 2>/dev/null)\"; then" >> "$@"
-	@printf "%s\\n" "    set -- docker-compose$(if $(DOCKER_COMPOSE_FLAGS), $(DOCKER_COMPOSE_FLAGS)) exec -T \"$(DOCKER_COMPOSE_SERVICE_NAME_FOR_PHP)\" php \"\$$@\"" >> "$@"
+	@printf "%s\\n" "    set -- docker-compose$(if $(DOCKER_COMPOSE_FLAGS), $(DOCKER_COMPOSE_FLAGS)) exec -T \"$(DOCKER_COMPOSE_SERVICE_NAME_FOR_PHP)\" php \"\$${@--r}\"" >> "$@"
 	@printf "%s\\n" "else" >> "$@"
-	@printf "%s\\n" "    set -- docker-compose$(if $(DOCKER_COMPOSE_FLAGS), $(DOCKER_COMPOSE_FLAGS)) run -T --rm --no-deps \"$(DOCKER_COMPOSE_SERVICE_NAME_FOR_PHP)\" php \"\$$@\"" >> "$@"
+	@printf "%s\\n" "    set -- docker-compose$(if $(DOCKER_COMPOSE_FLAGS), $(DOCKER_COMPOSE_FLAGS)) run -T --rm --no-deps \"$(DOCKER_COMPOSE_SERVICE_NAME_FOR_PHP)\" php \"\$${@--r}\"" >> "$@"
 	@printf "%s\\n" "fi" >> "$@"
-	@printf "%s\\n" "exec \"\$$@\"" >> "$@"
+	@printf "%s\\n" "popd > /dev/null" >> "$@"
+	@printf "%s\\n" "cd \"$(DOCKER_COMPOSE_DIRECTORY_FOR_PHP)\" && exec \"\$$@\"" >> "$@"
 	@chmod +x "$@"
 
 ifneq ($(DOCKER_EXECUTABLE),)
