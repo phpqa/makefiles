@@ -7,7 +7,7 @@ GIT_DEPENDENCY?=$(if $(GIT_EXECUTABLE),$(if $(wildcard $(GIT_EXECUTABLE)),$(GIT_
 
 GIT_PULL_VERBOSE?=
 
-APPLICATIONS?=
+REPOSITORIES?=$(if $(APPLICATIONS),$(APPLICATIONS))
 
 DIRECTORY_FOR_REPOSITORY_self?=.
 
@@ -17,31 +17,31 @@ DIRECTORY_FOR_REPOSITORY_self?=.
 
 # TODO make it optional to use stashes
 
-# $(1) is variable, $(2) is application
-git-find-variable-for-application=\
+# $(1) is variable, $(2) is repository
+git-find-variable-for-repository=\
 	$(strip $(1))="$($(strip $(1))_$(strip $(2)))"; \
 	if test -z "$${$(strip $(1))}"; then \
 		$(strip $(1))="$$(printf "$($(strip $(1))_TEMPLATE)" "$(strip $(2))")"; \
 	fi;
-# $(1) is variable, $(2) is application
-git-get-variable-for-application=\
-	$(call git-find-variable-for-application,$(1),$(2)) \
+# $(1) is variable, $(2) is repository
+git-get-variable-for-repository=\
+	$(call git-find-variable-for-repository,$(1),$(2)) \
 	if test -z "$${$(strip $(1))}"; then \
 		printf "$(STYLE_ERROR)%s$(STYLE_RESET)\\n" "Could not find variable \"$(strip $(1))_$(strip $(2))\", nor \"$(strip $(1))_TEMPLATE\"!"; \
 		exit 1; \
 	fi;
-# $(1) is application
-git-clone-application=\
-	$(call git-get-variable-for-application,DIRECTORY_FOR_REPOSITORY,$(1)) \
+# $(1) is repository
+git-clone-repository=\
+	$(call git-get-variable-for-repository,DIRECTORY_FOR_REPOSITORY,$(1)) \
 	if test ! -d "$${DIRECTORY_FOR_REPOSITORY}"; then \
-		$(call git-get-variable-for-application,REPOSITORY_URL_FOR_REPOSITORY,$(1)) \
+		$(call git-get-variable-for-repository,REPOSITORY_URL_FOR_REPOSITORY,$(1)) \
 		printf "%s\\n" "Cloning into $${DIRECTORY_FOR_REPOSITORY}..."; \
 		$(GIT_EXECUTABLE) clone $${REPOSITORY_URL_FOR_REPOSITORY} $${DIRECTORY_FOR_REPOSITORY}; \
 	fi;
-# $(1) is application
-git-pull-application=\
-	$(call git-get-variable-for-application,DIRECTORY_FOR_REPOSITORY,$(1)) \
-	$(call git-find-variable-for-application,MAKEFILE_FOR_REPOSITORY,$(1)) \
+# $(1) is repository
+git-pull-repository=\
+	$(call git-get-variable-for-repository,DIRECTORY_FOR_REPOSITORY,$(1)) \
+	$(call git-find-variable-for-repository,MAKEFILE_FOR_REPOSITORY,$(1)) \
 	if test -n "$${MAKEFILE_FOR_REPOSITORY}" && test -f "$${DIRECTORY_FOR_REPOSITORY}/$${MAKEFILE_FOR_REPOSITORY}"; then \
 		( cd "$${DIRECTORY_FOR_REPOSITORY}" && $(MAKE) -f "$${MAKEFILE_FOR_REPOSITORY}" pull ); \
 	else \
@@ -69,8 +69,8 @@ $(if $(GIT_DEPENDENCY),$(GIT_DEPENDENCY),git):
 
 # Clone all repositories
 clone: | $(GIT_DEPENDENCY)
-	@$(foreach application,$(APPLICATIONS),$(call git-clone-application,$(application)))
+	@$(foreach repository,$(REPOSITORIES),$(call git-clone-repository,$(repository)))
 
 # Pull all repositories
 pull: | $(GIT_DEPENDENCY)
-	@$(foreach application,$(APPLICATIONS),$(call git-pull-application,$(application)))
+	@$(foreach repository,$(REPOSITORIES),$(call git-pull-repository,$(repository)))
