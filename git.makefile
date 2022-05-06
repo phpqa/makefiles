@@ -9,6 +9,8 @@ GIT_PULL_VERBOSE?=
 
 APPLICATIONS?=
 
+DIRECTORY_FOR_REPOSITORY_self?=.
+
 ###
 ## Git
 ###
@@ -28,8 +30,8 @@ git-get-variable-for-application=\
 # $(1) is application
 git-clone-application=\
 	$(call git-get-variable-for-application,DIRECTORY_FOR_REPOSITORY,$(1)) \
-	$(call git-get-variable-for-application,REPOSITORY_URL_FOR_REPOSITORY,$(1)) \
 	if test ! -d "$${DIRECTORY_FOR_REPOSITORY}"; then \
+		$(call git-get-variable-for-application,REPOSITORY_URL_FOR_REPOSITORY,$(1)) \
 		printf "%s\\n" "Cloning into $${DIRECTORY_FOR_REPOSITORY}..."; \
 		$(GIT_EXECUTABLE) clone $${REPOSITORY_URL_FOR_REPOSITORY} $${DIRECTORY_FOR_REPOSITORY}; \
 	fi;
@@ -39,9 +41,8 @@ git-pull-application=\
 	DEFAULT_BRANCH="$$(cd "$${DIRECTORY_FOR_REPOSITORY}" && $(GIT_EXECUTABLE) remote show origin | sed -n '/HEAD branch/s/.*: //p')"; \
 	if test -n "$${DEFAULT_BRANCH}" && test "$${DEFAULT_BRANCH}" != "(unknown)"; then \
 		printf "%s\\n" "Pulling \"$${DEFAULT_BRANCH}\" branch into \"$${DIRECTORY_FOR_REPOSITORY}\"..." \
-		&& cd "$${DIRECTORY_FOR_REPOSITORY}" \
-		&& ( $(GIT_EXECUTABLE) pull origin "$${DEFAULT_BRANCH}" || true ) \
-		$(if $(GIT_PULL_VERBOSE),&& $(GIT_EXECUTABLE) log -1) \
+		&& ( cd "$${DIRECTORY_FOR_REPOSITORY}" && $(GIT_EXECUTABLE) pull origin "$${DEFAULT_BRANCH}" || true ) \
+		$(if $(GIT_PULL_VERBOSE),&& ( cd "$${DIRECTORY_FOR_REPOSITORY}" && $(GIT_EXECUTABLE) log -1 )) \
 		&& echo \
 		&& sleep 1; \
 	else \
