@@ -5,6 +5,9 @@
 DOCKER_COMPOSE_DIRECTORY_FOR_PHP?=
 DOCKER_COMPOSE_SERVICE_NAME_FOR_PHP?=
 
+COMPOSER_IMAGE?=composer
+COMPOSER_VERSION?=
+
 ifeq ($(DOCKER_COMPOSE_DIRECTORY_FOR_PHP),)
 $(error Please provide the variable DOCKER_COMPOSE_DIRECTORY_FOR_PHP before including this file.)
 endif
@@ -25,19 +28,17 @@ bin:
 bin/php: $(MAKEFILE_LIST) $(if wildcard .env,.env) | bin
 	@printf "%s\\n" "#!/usr/bin/env sh" > "$@"
 	@printf "%s\\n\\n" "set -e" >> "$@"
-	@printf "%s\\n" "pushd \"$(DOCKER_COMPOSE_DIRECTORY_FOR_PHP)\" > /dev/null" >> "$@"
-	@printf "%s\\n" "if test -n \"\$$(docker-compose$(if $(DOCKER_COMPOSE_FLAGS), $(DOCKER_COMPOSE_FLAGS)) ps --services --filter \"status=running\" | grep \"$(DOCKER_COMPOSE_SERVICE_NAME_FOR_PHP)\" 2>/dev/null)\"; then" >> "$@"
+	@printf "%s\\n" "if test -n \"\$$(cd \"$(DOCKER_COMPOSE_DIRECTORY_FOR_PHP)\" && docker-compose$(if $(DOCKER_COMPOSE_FLAGS), $(DOCKER_COMPOSE_FLAGS)) ps --services --filter \"status=running\" | grep \"$(DOCKER_COMPOSE_SERVICE_NAME_FOR_PHP)\" 2>/dev/null)\"; then" >> "$@"
 	@printf "%s\\n" "    set -- docker-compose$(if $(DOCKER_COMPOSE_FLAGS), $(DOCKER_COMPOSE_FLAGS)) exec -T \"$(DOCKER_COMPOSE_SERVICE_NAME_FOR_PHP)\" php \"\$${@--r}\"" >> "$@"
 	@printf "%s\\n" "else" >> "$@"
 	@printf "%s\\n" "    set -- docker-compose$(if $(DOCKER_COMPOSE_FLAGS), $(DOCKER_COMPOSE_FLAGS)) run -T --rm --no-deps \"$(DOCKER_COMPOSE_SERVICE_NAME_FOR_PHP)\" php \"\$${@--r}\"" >> "$@"
 	@printf "%s\\n" "fi" >> "$@"
-	@printf "%s\\n" "popd > /dev/null" >> "$@"
 	@printf "%s\\n" "cd \"$(DOCKER_COMPOSE_DIRECTORY_FOR_PHP)\" && exec \"\$$@\"" >> "$@"
 	@chmod +x "$@"
 
 ifneq ($(DOCKER_EXECUTABLE),)
 # Download Composer to bin/composer
-bin/composer: | bin
+bin/composer: $(MAKEFILE_LIST) | bin
 	@rm -f "$@"
 	@if test ! -d "$(dir $@)"; then mkdir -p "$(dir $@)"; fi
 	@$(DOCKER_EXECUTABLE) image pull $(COMPOSER_IMAGE):$(COMPOSER_VERSION)
@@ -55,11 +56,11 @@ bin/composer: | bin bin/php
 			echo 'Installer corrupt'; \
 			unlink('setup.php'); \
 			unlink('setup.sig'); \
+			echo PHP_EOL; \
 		} \
-		echo PHP_EOL; \
 	"
-	@bin/php -r "mkdir('$(dir $@)', 0777, true);"
-	@bin/php setup.php --no-ansi --install-dir=$(dir $@) --filename=$(notdir $@) --version=$(COMPOSER_VERSION)
+	@if test ! -d "$(dir $@)"; then bin/php -r "mkdir('$(dir $@)', 0777, true);"; fi
+	@bin/php setup.php --no-ansi --install-dir=$(dir $@) --filename=$(notdir $@)$(if $(COMPOSER_VERSION), --version=$(COMPOSER_VERSION))
 	@bin/php -r "unlink('setup.php');"
 	@bin/php -r "unlink('setup.sig');"
 endif
