@@ -3,17 +3,16 @@
 ###
 
 GIT_EXECUTABLE?=$(shell command -v git || which git 2>/dev/null)
-GIT_DEPENDENCY?=$(if $(GIT_EXECUTABLE),$(if $(wildcard $(GIT_EXECUTABLE)),$(GIT_EXECUTABLE)),git)
-
 GIT_PULL_VERBOSE?=
 
 REPOSITORIES?=$(if $(APPLICATIONS),$(APPLICATIONS))
-
-DIRECTORY_FOR_REPOSITORY_self?=.
+REPOSITORY_DIRECTORY_self?=.
 
 ###
 ## Git
 ###
+
+.PHONY: git clone pull
 
 # TODO make it optional to use stashes
 
@@ -32,45 +31,63 @@ git-get-variable-for-repository=\
 	fi
 # $(1) is repository
 git-clone-repository=\
-	$(call git-get-variable-for-repository,DIRECTORY_FOR_REPOSITORY,$(1)); \
-	if test ! -d "$${DIRECTORY_FOR_REPOSITORY}"; then \
-		$(call git-get-variable-for-repository,REPOSITORY_URL_FOR_REPOSITORY,$(1)); \
-		printf "%s\\n" "Cloning into $${DIRECTORY_FOR_REPOSITORY}..."; \
-		$(GIT_EXECUTABLE) clone $${REPOSITORY_URL_FOR_REPOSITORY} $${DIRECTORY_FOR_REPOSITORY}; \
+	$(call git-get-variable-for-repository,REPOSITORY_DIRECTORY,$(1)); \
+	if test ! -d "$${REPOSITORY_DIRECTORY}"; then \
+		$(call git-get-variable-for-repository,REPOSITORY_URL,$(1)); \
+		printf "%s\\n" "Cloning into $${REPOSITORY_DIRECTORY}..."; \
+		$(GIT_EXECUTABLE) clone $${REPOSITORY_URL} $${REPOSITORY_DIRECTORY}; \
 	fi
 # $(1) is repository
 git-pull-repository=\
-	$(call git-get-variable-for-repository,DIRECTORY_FOR_REPOSITORY,$(1)); \
-	$(call git-find-variable-for-repository,MAKEFILE_FOR_REPOSITORY,$(1)); \
-	if test -n "$${MAKEFILE_FOR_REPOSITORY}" && test -f "$${DIRECTORY_FOR_REPOSITORY}/$${MAKEFILE_FOR_REPOSITORY}"; then \
-		( cd "$${DIRECTORY_FOR_REPOSITORY}" && $(MAKE) -f "$${MAKEFILE_FOR_REPOSITORY}" pull ); \
-	else \
-		DEFAULT_BRANCH="$$(cd "$${DIRECTORY_FOR_REPOSITORY}" && $(GIT_EXECUTABLE) remote show origin | sed -n '/HEAD branch/s/.*: //p')"; \
-		if test -z "$${DEFAULT_BRANCH}" || test "$${DEFAULT_BRANCH}" = "(unknown)"; then \
-			printf "%s\\n" "Could not determine branch for $$(cd "$${DIRECTORY_FOR_REPOSITORY}"; pwd)!"; \
+	$(call git-get-variable-for-repository,REPOSITORY_DIRECTORY,$(1)); \
+	$(call git-find-variable-for-repository,REPOSITORY_MAKEFILE,$(1)); \
+	$(call git-find-variable-for-repository,REPOSITORY_TAG,$(1)); \
+	( \
+		cd "$${REPOSITORY_DIRECTORY}"; \
+		if test -n "$${REPOSITORY_MAKEFILE}"; then \
+			if test ! -f "$${REPOSITORY_MAKEFILE}"; then \
+				printf "%s\\n" "Could not find file \"$${REPOSITORY_DIRECTORY}/$${REPOSITORY_MAKEFILE}\"."; \
+			else \
+				$(MAKE) -f "$${REPOSITORY_MAKEFILE}" pull; \
+			fi; \
 		else \
-			printf "%s\\n" "Pulling \"$${DEFAULT_BRANCH}\" branch into \"$$(cd "$${DIRECTORY_FOR_REPOSITORY}"; pwd)\"..." \
-			&& ( \
-				cd "$${DIRECTORY_FOR_REPOSITORY}"; \
-				( $(GIT_EXECUTABLE) pull origin "$${DEFAULT_BRANCH}" || true ) \
-				$(if $(GIT_PULL_VERBOSE), && ( $(GIT_EXECUTABLE) log -1 || true )) \
-			) \
-			&& echo \
-			&& sleep 1; \
-		fi; \
-	fi
+			if test -n "$${REPOSITORY_TAG}"; then \
+				ACTUAL_REPOSITORY_TAG="$$($(GIT_EXECUTABLE) fetch --all --tags > /dev/null && $(GIT_EXECUTABLE) tag --list --ignore-case --sort=-version:refname "$${REPOSITORY_TAG}" | head -n 1)"; \
+				if test -z "$${ACTUAL_REPOSITORY_TAG}"; then \
+					printf "%s\\n" "Could not find tag \"$${REPOSITORY_TAG}\" for \"$$(pwd)\"!"; \
+				else \
+					printf "%s\\n" "Checking \"$${ACTUAL_REPOSITORY_TAG}\" tag into \"$$(pwd)\"..."; \
+					$(GIT_EXECUTABLE) checkout "tags/$${ACTUAL_REPOSITORY_TAG}" || true; \
+					$(if $(GIT_PULL_VERBOSE),$(GIT_EXECUTABLE) log -1 || true;) \
+					echo " "; \
+					sleep 1; \
+				fi; \
+			else \
+				DEFAULT_BRANCH="$$($(GIT_EXECUTABLE) remote show origin | sed -n '/HEAD branch/s/.*: //p')"; \
+				if test -z "$${DEFAULT_BRANCH}" || test "$${DEFAULT_BRANCH}" = "(unknown)"; then \
+					printf "%s\\n" "Could not determine branch for \"$$(pwd)\"!"; \
+				else \
+					printf "%s\\n" "Pulling \"$${DEFAULT_BRANCH}\" branch into \"$$(pwd)\"..."; \
+					$(GIT_EXECUTABLE) pull origin "$${DEFAULT_BRANCH}" || true; \
+					$(if $(GIT_PULL_VERBOSE),$(GIT_EXECUTABLE) log -1 || true;) \
+					echo " "; \
+					sleep 1; \
+				fi; \
+			fi; \
+		fi \
+	)
 
 # Check if Git is available, exit if it is not
-$(if $(GIT_DEPENDENCY),$(GIT_DEPENDENCY),git):
-	@if ! test -x "$(@)"; then \
+git:
+	@if test -z "$(GIT_EXECUTABLE)"; then \
 		printf "$(STYLE_ERROR)%s$(STYLE_RESET)\\n" "Could not run \"$(@)\". Make sure it is installed."; \
 		exit 1; \
 	fi
 
 # Clone all repositories
-clone: | $(GIT_DEPENDENCY)
+clone: | git
 	@$(foreach repository,$(REPOSITORIES),$(call git-clone-repository,$(repository)); )
 
 # Pull all repositories
-pull: | $(GIT_DEPENDENCY)
+pull: | git
 	@$(foreach repository,$(REPOSITORIES),$(call git-pull-repository,$(repository)); )
