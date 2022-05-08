@@ -51,21 +51,22 @@ git-pull-repository=\
 				$(MAKE) -f "$${REPOSITORY_MAKEFILE}" pull; \
 			fi; \
 		else \
-			if test -n "$${REPOSITORY_TAG}"; then \
-				ACTUAL_REPOSITORY_TAG="$$($(GIT_EXECUTABLE) fetch --all --tags > /dev/null && $(GIT_EXECUTABLE) tag --list --ignore-case --sort=-version:refname "$${REPOSITORY_TAG}" | head -n 1)"; \
-				if test -z "$${ACTUAL_REPOSITORY_TAG}"; then \
-					printf "%s\\n" "Could not find tag \"$${REPOSITORY_TAG}\" for \"$$(pwd)\"!"; \
-				else \
-					printf "%s\\n" "Checking \"$${ACTUAL_REPOSITORY_TAG}\" tag into \"$$(pwd)\"..."; \
-					$(GIT_EXECUTABLE) checkout -b "$${ACTUAL_REPOSITORY_TAG}" "tags/$${ACTUAL_REPOSITORY_TAG}" || true; \
-					$(if $(GIT_PULL_VERBOSE),$(GIT_EXECUTABLE) log -1 || true;) \
-					echo " "; \
-					sleep 1; \
-				fi; \
+			DEFAULT_BRANCH="$$($(GIT_EXECUTABLE) remote show origin | sed -n '/HEAD branch/s/.*: //p')"; \
+			if test -z "$${DEFAULT_BRANCH}" || test "$${DEFAULT_BRANCH}" = "(unknown)"; then \
+				printf "%s\\n" "Could not determine branch for \"$$(pwd)\"!"; \
 			else \
-				DEFAULT_BRANCH="$$($(GIT_EXECUTABLE) remote show origin | sed -n '/HEAD branch/s/.*: //p')"; \
-				if test -z "$${DEFAULT_BRANCH}" || test "$${DEFAULT_BRANCH}" = "(unknown)"; then \
-					printf "%s\\n" "Could not determine branch for \"$$(pwd)\"!"; \
+				if test -n "$${REPOSITORY_TAG}"; then \
+					ACTUAL_REPOSITORY_TAG="$$($(GIT_EXECUTABLE) fetch --all --tags > /dev/null && $(GIT_EXECUTABLE) tag --list --ignore-case --sort=-version:refname "$${REPOSITORY_TAG}" | head -n 1)"; \
+					if test -z "$${ACTUAL_REPOSITORY_TAG}"; then \
+						printf "%s\\n" "Could not find tag \"$${REPOSITORY_TAG}\" for \"$$(pwd)\"!"; \
+					else \
+						printf "%s\\n" "Checking \"$${ACTUAL_REPOSITORY_TAG}\" tag into \"$$(pwd)\"..."; \
+						$(GIT_EXECUTABLE) pull origin "$${DEFAULT_BRANCH}" || true; \
+						$(GIT_EXECUTABLE) checkout -b "$${ACTUAL_REPOSITORY_TAG}" "tags/$${ACTUAL_REPOSITORY_TAG}" || true; \
+						$(if $(GIT_PULL_VERBOSE),$(GIT_EXECUTABLE) log -1 || true;) \
+						echo " "; \
+						sleep 1; \
+					fi; \
 				else \
 					printf "%s\\n" "Pulling \"$${DEFAULT_BRANCH}\" branch into \"$$(pwd)\"..."; \
 					$(GIT_EXECUTABLE) pull origin "$${DEFAULT_BRANCH}" || true; \
