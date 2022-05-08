@@ -57,7 +57,7 @@ git-pull-repository=\
 					printf "%s\\n" "Could not find tag \"$${REPOSITORY_TAG}\" for \"$$(pwd)\"!"; \
 				else \
 					printf "%s\\n" "Checking \"$${ACTUAL_REPOSITORY_TAG}\" tag into \"$$(pwd)\"..."; \
-					$(GIT_EXECUTABLE) checkout "tags/$${ACTUAL_REPOSITORY_TAG}" || true; \
+					$(GIT_EXECUTABLE) checkout -b "$${ACTUAL_REPOSITORY_TAG}" "tags/$${ACTUAL_REPOSITORY_TAG}" || true; \
 					$(if $(GIT_PULL_VERBOSE),$(GIT_EXECUTABLE) log -1 || true;) \
 					echo " "; \
 					sleep 1; \
