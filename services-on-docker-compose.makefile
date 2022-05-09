@@ -20,7 +20,7 @@ $(error Please install docker-compose.)
 endif
 
 ###
-## Docker-compose Services
+## Services
 ###
 
 .PHONY: build up logs down remove
