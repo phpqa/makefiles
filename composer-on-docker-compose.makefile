@@ -2,28 +2,29 @@
 ##. Configuration
 ###
 
-COMPOSER_IMAGE?=composer
-COMPOSER_VERSION?=
+DOCKER_SOCKET?=/var/run/docker.sock
 
-DOCKER_EXECUTABLE?=
+DOCKER_EXECUTABLE?=$(shell command -v docker || which docker 2>/dev/null)
+
+DOCKER_COMPOSE_DIRECTORY?=
+DOCKER_COMPOSE_EXECUTABLE?=$(shell command -v docker-compose || which docker-compose 2>/dev/null)
+DOCKER_COMPOSE_EXTRA_FLAGS?=
+DOCKER_COMPOSE_FLAGS?=$(if $(DOCKER_COMPOSE_EXTRA_FLAGS), $(DOCKER_COMPOSE_EXTRA_FLAGS))
+
 ifeq ($(DOCKER_EXECUTABLE),)
-$(error Please provide the variable DOCKER_EXECUTABLE before including this file.)
+$(error Please install docker.)
 endif
 
-DOCKER_COMPOSE_EXECUTABLE?=
 ifeq ($(DOCKER_COMPOSE_EXECUTABLE),)
-$(error Please provide the variable DOCKER_COMPOSE_EXECUTABLE before including this file.)
-endif
-
-DOCKER_COMPOSE_DIRECTORY_FOR_PHP?=
-ifeq ($(DOCKER_COMPOSE_DIRECTORY_FOR_PHP),)
-$(error Please provide the variable DOCKER_COMPOSE_DIRECTORY_FOR_PHP before including this file.)
-endif
+$(error Please install docker-compose.)
 
 DOCKER_COMPOSE_SERVICE_NAME_FOR_PHP?=
 ifeq ($(DOCKER_COMPOSE_SERVICE_NAME_FOR_PHP),)
 $(error Please provide the variable DOCKER_COMPOSE_SERVICE_NAME_FOR_PHP before including this file.)
 endif
+
+COMPOSER_IMAGE?=composer
+COMPOSER_VERSION?=
 
 ###
 ## Composer
@@ -37,12 +38,12 @@ bin:
 bin/php: $(MAKEFILE_LIST) $(if wildcard .env,.env) | bin
 	@printf "%s\\n" "#!/usr/bin/env sh" > "$(@)"
 	@printf "%s\\n\\n" "set -e" >> "$(@)"
-	@printf "%s\\n" "if test -n \"\$$(cd \"$(DOCKER_COMPOSE_DIRECTORY_FOR_PHP)\" && $(DOCKER_COMPOSE_EXECUTABLE)$(if $(DOCKER_COMPOSE_FLAGS), $(DOCKER_COMPOSE_FLAGS)) ps --services --filter \"status=running\" | grep \"$(DOCKER_COMPOSE_SERVICE_NAME_FOR_PHP)\" 2>/dev/null)\"; then" >> "$(@)"
+	@printf "%s\\n" "if test -n \"\$$($(if $(DOCKER_COMPOSE_DIRECTORY),cd \"$(DOCKER_COMPOSE_DIRECTORY)\" && )$(DOCKER_COMPOSE_EXECUTABLE)$(if $(DOCKER_COMPOSE_FLAGS), $(DOCKER_COMPOSE_FLAGS)) ps --services --filter \"status=running\" | grep \"$(DOCKER_COMPOSE_SERVICE_NAME_FOR_PHP)\" 2>/dev/null)\"; then" >> "$(@)"
 	@printf "%s\\n" "    set -- $(DOCKER_COMPOSE_EXECUTABLE)$(if $(DOCKER_COMPOSE_FLAGS), $(DOCKER_COMPOSE_FLAGS)) exec -T \"$(DOCKER_COMPOSE_SERVICE_NAME_FOR_PHP)\" php \"\$${@--r}\"" >> "$(@)"
 	@printf "%s\\n" "else" >> "$(@)"
 	@printf "%s\\n" "    set -- $(DOCKER_COMPOSE_EXECUTABLE)$(if $(DOCKER_COMPOSE_FLAGS), $(DOCKER_COMPOSE_FLAGS)) run -T --rm --no-deps \"$(DOCKER_COMPOSE_SERVICE_NAME_FOR_PHP)\" php \"\$${@--r}\"" >> "$(@)"
 	@printf "%s\\n" "fi" >> "$(@)"
-	@printf "%s\\n" "cd \"$(DOCKER_COMPOSE_DIRECTORY_FOR_PHP)\" && exec \"\$$@\"" >> "$(@)"
+	@printf "%s\\n" "$(if $(DOCKER_COMPOSE_DIRECTORY),cd \"$(DOCKER_COMPOSE_DIRECTORY)\" && )exec \"\$$@\"" >> "$(@)"
 	@chmod +x "$(@)"
 
 ifneq ($(DOCKER_EXECUTABLE),)
