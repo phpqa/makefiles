@@ -17,6 +17,7 @@ endif
 
 ifeq ($(DOCKER_COMPOSE_EXECUTABLE),)
 $(error Please install docker-compose.)
+endif
 
 DOCKER_COMPOSE_SERVICE_NAME_FOR_PHP?=
 ifeq ($(DOCKER_COMPOSE_SERVICE_NAME_FOR_PHP),)
