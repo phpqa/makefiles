@@ -3,6 +3,10 @@
 ###
 
 GIT_EXECUTABLE?=$(shell command -v git || which git 2>/dev/null)
+ifeq ($(GIT_EXECUTABLE),)
+$(error Please install git.)
+endif
+
 GIT_PULL_VERBOSE?=
 
 REPOSITORIES?=$(if $(APPLICATIONS),$(APPLICATIONS))
@@ -74,17 +78,10 @@ git-pull-repository=\
 		fi \
 	)
 
-#. Check if Git is available, exit if it is not
-git:
-	@if test -z "$(GIT_EXECUTABLE)"; then \
-		printf "$(STYLE_ERROR)%s$(STYLE_RESET)\\n" "Could not run \"$(@)\". Make sure it is installed."; \
-		exit 1; \
-	fi
-
 # Clone all repositories
-clone: | git
+clone:
 	@$(foreach repository,$(REPOSITORIES),$(call git-clone-repository,$(repository)); )
 
 # Pull all repositories
-pull: | git
+pull:
 	@$(foreach repository,$(REPOSITORIES),$(call git-pull-repository,$(repository)); )
