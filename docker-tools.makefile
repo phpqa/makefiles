@@ -17,7 +17,7 @@ endif
 .PHONY: ctop lazydocker
 
 # Ctop - Real-time metrics for containers                      https://ctop.sh/
-ctop: | docker
+ctop:
 	@set -e; \
 		if test -z "$$($(DOCKER_EXECUTABLE) ps --quiet --filter="name=ctop")"; then \
 			$(DOCKER_EXECUTABLE) run --rm --interactive --tty --name ctop \
@@ -28,6 +28,6 @@ ctop: | docker
 		fi
 
 # Lazydocker - Terminal UI          https://github.com/jesseduffield/lazydocker
-lazydocker: | docker
+lazydocker:
 	@$(DOCKER_EXECUTABLE) run --rm --interactive --tty --volume $(DOCKER_SOCKET):$(DOCKER_SOCKET):ro \
 		--name lazydocker lazyteam/lazydocker:latest
