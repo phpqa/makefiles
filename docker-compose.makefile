@@ -2,12 +2,11 @@
 ##. Configuration
 ###
 
-DOCKER_EXECUTABLE?=$(shell command -v docker || which docker 2>/dev/null)
-DOCKER_DEPENDENCY?=$(if $(DOCKER_EXECUTABLE),$(if $(wildcard $(DOCKER_EXECUTABLE)),$(DOCKER_EXECUTABLE)),docker)
 DOCKER_SOCKET?=/var/run/docker.sock
 
+DOCKER_EXECUTABLE?=$(shell command -v docker || which docker 2>/dev/null)
+
 DOCKER_COMPOSE_EXECUTABLE?=$(shell command -v docker-compose || which docker-compose 2>/dev/null)
-DOCKER_COMPOSE_DEPENDENCY?=$(if $(DOCKER_COMPOSE_EXECUTABLE),$(if $(wildcard $(DOCKER_COMPOSE_EXECUTABLE)),$(DOCKER_COMPOSE_EXECUTABLE)),docker-compose)
 DOCKER_COMPOSE_EXTRA_FLAGS?=
 DOCKER_COMPOSE_FLAGS?=$(if $(DOCKER_COMPOSE_EXTRA_FLAGS), $(DOCKER_COMPOSE_EXTRA_FLAGS))
 
@@ -15,18 +14,18 @@ DOCKER_COMPOSE_FLAGS?=$(if $(DOCKER_COMPOSE_EXTRA_FLAGS), $(DOCKER_COMPOSE_EXTRA
 ## Docker
 ###
 
-.PHONY: build up logs down remove
+.PHONY: docker docker-compose build up logs down remove
 
-# Check if Docker is available, exit if it is not
-$(if $(DOCKER_DEPENDENCY),$(DOCKER_DEPENDENCY),docker):
-	@if ! test -x "$(@)"; then \
+#. Check if Docker is available, exit if it is not
+docker:
+	@if test -z "$(DOCKER_EXECUTABLE)"; then \
 		printf "$(STYLE_ERROR)%s$(STYLE_RESET)\\n" "Could not run \"$(@)\". Make sure it is installed."; \
 		exit 1; \
 	fi
 
-# Check if Docker-Compose is available, exit if it is not
-$(if $(DOCKER_COMPOSE_DEPENDENCY),$(DOCKER_COMPOSE_DEPENDENCY),docker-compose):
-	@if ! test -x "$(@)"; then \
+#. Check if Docker-Compose is available, exit if it is not
+docker-compose:
+	@if test -z "$(DOCKER_COMPOSE_EXECUTABLE)"; then \
 		printf "$(STYLE_ERROR)%s$(STYLE_RESET)\\n" "Could not run \"$(@)\". Make sure it is installed."; \
 		exit 1; \
 	fi
@@ -34,7 +33,7 @@ $(if $(DOCKER_COMPOSE_DEPENDENCY),$(DOCKER_COMPOSE_DEPENDENCY),docker-compose):
 RUNNING_CACHE=
 
 #. Ensure container % is running
-ensure-running-%: | $(DOCKER_COMPOSE_DEPENDENCY)
+ensure-running-%: | docker-compose
 	$(eval RUNNING_CACHE=$(if $(RUNNING_CACHE),$(RUNNING_CACHE),$(shell $(DOCKER_COMPOSE_EXECUTABLE)$(if $(DOCKER_COMPOSE_FLAGS), $(DOCKER_COMPOSE_FLAGS)) ps --services --filter "status=running")))
 	@if ! echo "$(RUNNING_CACHE)" | grep -q "$(*)" 2> /dev/null; then \
 		$(DOCKER_COMPOSE_EXECUTABLE)$(if $(DOCKER_COMPOSE_FLAGS), $(DOCKER_COMPOSE_FLAGS)) up -d --remove-orphans "$(*)"; \
@@ -48,34 +47,34 @@ ensure-running-%: | $(DOCKER_COMPOSE_DEPENDENCY)
 	fi
 
 #. Ensure container % is not running
-ensure-not-running-%: | $(DOCKER_COMPOSE_DEPENDENCY)
+ensure-not-running-%: | docker-compose
 	$(eval RUNNING_CACHE=$(if $(RUNNING_CACHE),$(RUNNING_CACHE),$(shell $(DOCKER_COMPOSE_EXECUTABLE)$(if $(DOCKER_COMPOSE_FLAGS), $(DOCKER_COMPOSE_FLAGS)) ps --services --filter "status=running")))
 	@if echo "$(RUNNING_CACHE)" | grep -q $(*) 2> /dev/null; then \
 		$(DOCKER_COMPOSE_EXECUTABLE)$(if $(DOCKER_COMPOSE_FLAGS), $(DOCKER_COMPOSE_FLAGS)) stop $(*); \
 	fi
 
 #. Create a Docker network %
-create-docker-network-%: | $(DOCKER_DEPENDENCY)
+create-docker-network-%: | docker
 	@$(DOCKER_EXECUTABLE) network create $(*) 2>/dev/null || true
 
-# Build the image
-build: | $(DOCKER_COMPOSE_DEPENDENCY)
+# Build the image(s)
+build: | docker-compose
 	@$(DOCKER_COMPOSE_EXECUTABLE)$(if $(DOCKER_COMPOSE_FLAGS), $(DOCKER_COMPOSE_FLAGS)) build
 
-# Up the image
-up: | $(DOCKER_COMPOSE_DEPENDENCY)
+# Up the service(s)
+up: | docker-compose
 	@$(DOCKER_COMPOSE_EXECUTABLE)$(if $(DOCKER_COMPOSE_FLAGS), $(DOCKER_COMPOSE_FLAGS)) up -d --remove-orphans
 
-# Follow the logs
-logs: | $(DOCKER_COMPOSE_DEPENDENCY)
+# Follow the logs from the service(s)
+logs: | docker-compose
 	@$(DOCKER_COMPOSE_EXECUTABLE)$(if $(DOCKER_COMPOSE_FLAGS), $(DOCKER_COMPOSE_FLAGS)) logs --follow --tail="100"
 
-# Down the image
-down: | $(DOCKER_COMPOSE_DEPENDENCY)
+# Down the service(s)
+down: | docker-compose
 	@$(DOCKER_COMPOSE_EXECUTABLE)$(if $(DOCKER_COMPOSE_FLAGS), $(DOCKER_COMPOSE_FLAGS)) down
 
-# Stop the image
-remove: | $(DOCKER_COMPOSE_DEPENDENCY)
+# Stop and remove the service(s) and volume(s)
+remove: | docker-compose
 	@if test -n "$$($(DOCKER_COMPOSE_EXECUTABLE)$(if $(DOCKER_COMPOSE_FLAGS), $(DOCKER_COMPOSE_FLAGS)) ps --services --filter "status=running" 2> /dev/null)"; then \
   		$(DOCKER_COMPOSE_EXECUTABLE)$(if $(DOCKER_COMPOSE_FLAGS), $(DOCKER_COMPOSE_FLAGS)) rm --stop --force -v; \
 	fi
@@ -85,25 +84,3 @@ remove: | $(DOCKER_COMPOSE_DEPENDENCY)
 #	@if test -n "$$($(DOCKER_EXECUTABLE) volume ls --quiet --filter label=com.docker.compose.project=<PROJECT_NAME>)"; then \
 #		$(DOCKER_EXECUTABLE) volume rm --force $$($(DOCKER_EXECUTABLE) volume ls --quiet --filter label=com.docker.compose.project=sqs-frontend); \
 #	fi
-
-###
-## Docker Tools
-###
-
-.PHONY: ctop lazydocker
-
-# Ctop - Real-time metrics for containers                      https://ctop.sh/
-ctop: | $(DOCKER_DEPENDENCY)
-	@set -e; \
-		if test -z "$$($(DOCKER_EXECUTABLE) ps --quiet --filter="name=ctop")"; then \
-			$(DOCKER_EXECUTABLE) run --rm --interactive --tty --name ctop \
-				--volume $(DOCKER_SOCKET):$(DOCKER_SOCKET):ro \
-				quay.io/vektorlab/ctop:latest; \
-		else \
-			$(DOCKER_EXECUTABLE) attach ctop; \
-		fi
-
-# Lazydocker - Terminal UI          https://github.com/jesseduffield/lazydocker
-lazydocker: | $(DOCKER_DEPENDENCY)
-	@$(DOCKER_EXECUTABLE) run --rm --interactive --tty --volume $(DOCKER_SOCKET):$(DOCKER_SOCKET):ro \
-		--name lazydocker lazyteam/lazydocker:latest
