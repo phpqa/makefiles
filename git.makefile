@@ -74,7 +74,7 @@ git-pull-repository=\
 		fi \
 	)
 
-# Check if Git is available, exit if it is not
+#. Check if Git is available, exit if it is not
 git:
 	@if test -z "$(GIT_EXECUTABLE)"; then \
 		printf "$(STYLE_ERROR)%s$(STYLE_RESET)\\n" "Could not run \"$(@)\". Make sure it is installed."; \
