@@ -5,6 +5,16 @@
 COMPOSER_IMAGE?=composer
 COMPOSER_VERSION?=
 
+DOCKER_EXECUTABLE?=
+ifeq ($(DOCKER_EXECUTABLE),)
+$(error Please provide the variable DOCKER_EXECUTABLE before including this file.)
+endif
+
+DOCKER_COMPOSE_EXECUTABLE?=
+ifeq ($(DOCKER_COMPOSE_EXECUTABLE),)
+$(error Please provide the variable DOCKER_COMPOSE_EXECUTABLE before including this file.)
+endif
+
 DOCKER_COMPOSE_DIRECTORY_FOR_PHP?=
 ifeq ($(DOCKER_COMPOSE_DIRECTORY_FOR_PHP),)
 $(error Please provide the variable DOCKER_COMPOSE_DIRECTORY_FOR_PHP before including this file.)
@@ -13,14 +23,6 @@ endif
 DOCKER_COMPOSE_SERVICE_NAME_FOR_PHP?=
 ifeq ($(DOCKER_COMPOSE_SERVICE_NAME_FOR_PHP),)
 $(error Please provide the variable DOCKER_COMPOSE_SERVICE_NAME_FOR_PHP before including this file.)
-endif
-
-ifeq ($(DOCKER_EXECUTABLE),)
-DOCKER_EXECUTABLE?=$(shell command -v docker || which docker 2>/dev/null)
-endif
-
-ifeq ($(DOCKER_COMPOSE_EXECUTABLE),)
-DOCKER_COMPOSE_EXECUTABLE?=$(shell command -v docker-compose || which docker-compose 2>/dev/null)
 endif
 
 ###
