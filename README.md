@@ -4,31 +4,34 @@ Add the following in your project's makefile:
 
 ```makefile
 ###
-##. Includes
+##. Configuration
 ###
 
-ifeq ($(wildcard includes),)
-#. This installs the includes directory during first run on a new system
-SILENT_INSTALL:=$(shell git clone $(REPOSITORY_URL_includes) includes && $(MAKE) pull)
-endif
+#. This installs/updates the included makefiles
+MAKEFILES_REPOSITORY:=https://github.com/phpqa/makefiles.git
+MAKEFILES_DIRECTORY:=.makefiles
+MAKEFILES_TAG:=v0.2.8
+MAKEFILES_LOG:=$(shell \
+	if test ! -d $(MAKEFILES_DIRECTORY); then git clone $(MAKEFILES_REPOSITORY) "$(MAKEFILES_DIRECTORY)"; fi; \
+	cd "$(MAKEFILES_DIRECTORY)"; \
+	if test -z "$$(git --no-pager describe --always --dirty | grep "^$(MAKEFILES_TAG)")"; then git fetch --all --tags; git reset --hard "tags/$(MAKEFILES_TAG)"; fi \
+)
 
-#. These settings define the own directory and the includes directory as repositories to update
-REPOSITORIES=self includes
+#. This section contains the variables required by the included makefiles, before including the makefiles themselves.
+#. In this case, these variables define the own directory as repository to update with the commands in git.makefile
+REPOSITORIES=self
 REPOSITORY_DIRECTORY_self=.
-REPOSITORY_DIRECTORY_includes=./includes
-REPOSITORY_URL_includes=https://github.com/phpqa/includes.git
-REPOSITORY_TAG_includes=v0.2.*
 
 #. At least include the includes/base.makefile and includes/git.makefile files
-include includes/builtins.makefile  # Reset the default makefile builtins
-include includes/base.makefile      # Base functionality
-include includes/git.makefile       # Git management
+include $(MAKEFILES_DIRECTORY)/builtins.makefile  # Reset the default makefile builtins
+include $(MAKEFILES_DIRECTORY)/base.makefile      # Base functionality
+include $(MAKEFILES_DIRECTORY)/git.makefile       # Git management
 ```
 
-Add the includes directory to your .gitignore file:
+Add the directory mentioned in the MAKEFILES_DIRECTORY variable to your .gitignore file:
 
 ```.gitignore
-/includes
+/.makefiles
 ```
 
 Run the following command to see if it works:
