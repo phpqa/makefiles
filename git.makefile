@@ -17,8 +17,6 @@ REPOSITORY_DIRECTORY_self?=.
 ## Git
 ###
 
-.PHONY: clone-repositories pull-repositories pull-repository
-
 # TODO make it optional to use stashes
 
 # $(1) is variable, $(2) is repository
@@ -79,14 +77,17 @@ git-pull-repository=\
 		fi \
 	)
 
-ifneq ($(REPOSITORIES),)
-# Clone a repository
+#. Clone a repository
 $(foreach repository,$(REPOSITORIES),clone-repository-$(repository)):clone-repository-%:
 	@$(call git-clone-repository,$(*))
 
-# Pull a repository
+#. Pull a repository
 $(foreach repository,$(REPOSITORIES),pull-repository-$(repository)):pull-repository-%:
 	@$(call git-pull-repository,$(*))
+
+ifneq ($(REPOSITORIES),)
+ifneq ($(REPOSITORIES),self)
+.PHONY: clone-repositories pull-repositories
 
 # Clone all repositories
 clone-repositories: | $(foreach repository,$(REPOSITORIES),clone-repository-$(repository))
@@ -96,8 +97,11 @@ clone-repositories: | $(foreach repository,$(REPOSITORIES),clone-repository-$(re
 pull-repositories: | $(foreach repository,$(REPOSITORIES),pull-repository-$(repository))
 	@true
 endif
+endif
 
 ifneq ($(REPOSITORY_self),)
+.PHONY: pull-repository
+
 # Pull this repository
 pull-repository: | pull-repository-$(REPOSITORY_self)
 	@true
