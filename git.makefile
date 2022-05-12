@@ -9,7 +9,7 @@ endif
 
 GIT_PULL_VERBOSE?=
 
-REPOSITORIES?=$(if $(APPLICATIONS),$(APPLICATIONS))
+REPOSITORIES?=$(if $(wildcard .git),self)
 REPOSITORY_self?=$(strip $(foreach variable,$(filter REPOSITORY_DIRECTORY_%,$(.VARIABLES)),$(if $(findstring $(shell pwd),$(realpath $($(variable)))),$(if $(findstring $(realpath $($(variable))),$(shell pwd)),$(patsubst REPOSITORY_DIRECTORY_%,%,$(variable))))))
 REPOSITORY_DIRECTORY_self?=.
 
