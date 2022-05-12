@@ -23,7 +23,7 @@ endif
 ## Services
 ###
 
-.PHONY: build up logs down remove
+.PHONY: build-images up-services log-services down-services remove-services
 
 RUNNING_CACHE=
 
@@ -56,27 +56,27 @@ create-docker-network-%:
 	$(DOCKER_EXECUTABLE) network create $(*) 2>/dev/null || true
 
 # Build the image(s)
-build:
+build-images:
 	@$(if $(DOCKER_COMPOSE_DIRECTORY),cd "$(DOCKER_COMPOSE_DIRECTORY)";) \
 	$(DOCKER_COMPOSE_EXECUTABLE)$(if $(DOCKER_COMPOSE_FLAGS), $(DOCKER_COMPOSE_FLAGS)) build
 
 # Up the service(s)
-up:
+up-services:
 	@$(if $(DOCKER_COMPOSE_DIRECTORY),cd "$(DOCKER_COMPOSE_DIRECTORY)";) \
 	$(DOCKER_COMPOSE_EXECUTABLE)$(if $(DOCKER_COMPOSE_FLAGS), $(DOCKER_COMPOSE_FLAGS)) up -d --remove-orphans
 
 # Follow the logs from the service(s)
-logs:
+log-services:
 	@$(if $(DOCKER_COMPOSE_DIRECTORY),cd "$(DOCKER_COMPOSE_DIRECTORY)";) \
 	$(DOCKER_COMPOSE_EXECUTABLE)$(if $(DOCKER_COMPOSE_FLAGS), $(DOCKER_COMPOSE_FLAGS)) logs --follow --tail="100"
 
 # Down the service(s)
-down:
+down-services:
 	@$(if $(DOCKER_COMPOSE_DIRECTORY),cd "$(DOCKER_COMPOSE_DIRECTORY)";) \
 	$(DOCKER_COMPOSE_EXECUTABLE)$(if $(DOCKER_COMPOSE_FLAGS), $(DOCKER_COMPOSE_FLAGS)) down
 
 # Stop and remove the service(s) and volume(s)
-remove:
+remove-services:
 	@$(if $(DOCKER_COMPOSE_DIRECTORY),cd "$(DOCKER_COMPOSE_DIRECTORY)";) \
 	if test -n "$$($(DOCKER_COMPOSE_EXECUTABLE)$(if $(DOCKER_COMPOSE_FLAGS), $(DOCKER_COMPOSE_FLAGS)) ps --services --filter "status=running" 2> /dev/null)"; then \
 		$(DOCKER_COMPOSE_EXECUTABLE)$(if $(DOCKER_COMPOSE_FLAGS), $(DOCKER_COMPOSE_FLAGS)) rm --stop --force -v; \
