@@ -85,8 +85,23 @@ $(foreach repository,$(REPOSITORIES),clone-repository-$(repository)):clone-repos
 $(foreach repository,$(REPOSITORIES),pull-repository-$(repository)):pull-repository-%:
 	@$(call git-pull-repository,$(*))
 
-ifneq ($(REPOSITORIES),)
-ifneq ($(REPOSITORIES),self)
+#> Case 1: No repositories to pull
+ifeq ($(REPOSITORIES),)
+.PHONY: pull-repositories
+
+#. Do nothing
+pull-repositories:
+	@true
+else
+#> Case 2: Only this repository to pull
+ifeq ($(REPOSITORIES),$(REPOSITORY_self))
+.PHONY: pull-repositories
+
+#. Pull this repository (alias)
+pull-repositories: | pull-repository
+	@true
+#> Case 3: Multiple repositories to pull
+else
 .PHONY: clone-repositories pull-repositories
 
 # Clone all repositories
