@@ -53,7 +53,7 @@ git-pull-repository=\
 			if test ! -f "$${REPOSITORY_MAKEFILE}"; then \
 				printf "%s\\n" "Could not find file \"$${REPOSITORY_DIRECTORY}/$${REPOSITORY_MAKEFILE}\"."; \
 			else \
-				$(MAKE) -f "$${REPOSITORY_MAKEFILE}" pull; \
+				$(MAKE) -f "$${REPOSITORY_MAKEFILE}" pull-repositories; \
 			fi; \
 		else \
 			DEFAULT_BRANCH="$$($(GIT_EXECUTABLE) remote show origin | sed -n '/HEAD branch/s/.*: //p')"; \
