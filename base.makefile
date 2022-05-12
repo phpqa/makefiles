@@ -133,9 +133,9 @@ list-makefiles:
 			{ if (/^\.PHONY|^\.SUFFIXES|^\.DEFAULT|^\.PRECIOUS/) { next } } \
 			{ if (/^[\t]/) { next } } \
 			\
-			{ if (/^# Not a target:/) { included=1; next } } \
-			{ if (/^([^#]+):/) { if (included==1) { match($$0,/:/); file=substr($$0,0,RSTART-1) } } } \
-			{ if (/^$$|^[\t]+$$/) { if (file) { search=replace=file; gsub(" ","\\ ",replace); gsub(" "search,replace"\n",MAKEFILE_LIST) }; original=""; file=""; included=0; } } \
+			{ if (/^# Not a target:/) { include="yes"; next } } \
+			{ if (/^([^#]+):/) { if (include=="yes") { match($$0,/:/); file=substr($$0,0,RSTART-1) } } } \
+			{ if (/^$$|^[\t]+$$/) { if (file) { search=replace=file; gsub(" ","\\ ",replace); gsub(" "search,replace"\n",MAKEFILE_LIST) }; original=""; file=""; include="no"; } } \
 			\
 			END { printf "%s",MAKEFILE_LIST } \
 		'
@@ -162,14 +162,21 @@ list-make-variables-as-database:
 				file=substr($$0,RSTART+16,RLENGTH-24); \
 				gsub(" ","\\ ",file); \
 				match($$0,/line [0-9]+/); \
-				line="000000" substr($$0,RSTART+5,RLENGTH-5); \
-				line=substr(line, 1 + length(line) - 6); \
+				line=substr($$0,RSTART+5,RLENGTH-5); \
 				source="included"; \
 				next \
 			} } \
-			{ if (/^#/) { source=substr($$0,3); next } } \
+			{ if (/^#/) { \
+				file=""; line=""; source=substr($$0,3); \
+				next \
+			} } \
 			\
-			{ if (/^[A-Z0-9_-][a-zA-Z0-9_-]+ ?(=|\?=|:=)/) { printf "%s;%s;%s;%s\n",file,line,$$1,source; file=""; line=""; source="" } } \
+			{ if (/^[A-Z0-9_-][a-zA-Z0-9_-]+ ?(=|\?=|:=)/ && file && line) { \
+				if ($$1 != "MAKEFILE_LIST") { \
+					printf "%s;%s;%s;%s\n",file,substr("000000" line, 1 + length(line)),$$1,source; \
+				} \
+				file=""; line=""; source=""; \
+			} } \
 		' \
 		| sort -t ";" -k 1,1 -k 2,2 -u
 
@@ -186,50 +193,44 @@ list-make-variables:
 #. List all make targets as semi-colon separated list
 list-make-targets-as-database:
 	@$(MAKE) --jobs=1 --always-make --print-data-base --no-builtin-rules --no-builtin-variables : 2>/dev/null \
-		| awk \
-			-v STYLE_TITLE="$(STYLE_TITLE)" \
-			-v STYLE_WARNING="$(STYLE_WARNING)" \
-			-v STYLE_DIM="$(STYLE_DIM)" \
-			-v STYLE_RESET="$(STYLE_RESET)" \
-			' \
-				{ if (/^# Variables/) { skip_segment=1 } } \
-				{ if (/^# Directories/) { skip_segment=1 } } \
-				{ if (/^# Implicit Rules/) { skip_segment=0 } } \
-				{ if (/^# Files/) { skip_segment=0 } } \
-				{ if (skip_segment==1) { next } } \
-				\
-				{ if (/^\.PHONY|^\.SUFFIXES|^\.DEFAULT|^\.PRECIOUS/) { next } } \
-				{ if (/^[\t]/) { next } } \
-				\
-				{ \
-					if (/^$$|^[\t]+$$/) { \
-						if (command && included==0) { \
-							printf "%s;%s;%s;%s\n", \
-							file, \
-							line, \
-							command, \
-							phony ? "phony" : "" \
-						}; \
-						command=""; \
-						phony=0; \
-						included=0; \
-						file=""; \
-						line=""; \
-					} \
+		| awk ' \
+			{ if (/^# Variables/) { skip_segment=1 } } \
+			{ if (/^# Directories/) { skip_segment=1 } } \
+			{ if (/^# Implicit Rules/) { skip_segment=0 } } \
+			{ if (/^# Files/) { skip_segment=0 } } \
+			{ if (skip_segment==1) { next } } \
+			\
+			{ if (/^\.PHONY|^\.SUFFIXES|^\.DEFAULT|^\.PRECIOUS/) { next } } \
+			{ if (/^[\t]/) { next } } \
+			\
+			{ \
+				if (/^$$|^[\t]+$$/) { \
+					if (command && include=="yes") { \
+						printf "%s;%s;%s;%s\n", \
+						file ? file : "data-base", \
+						line ? substr("000000" line, 1 + length(line)) : substr("000000" NR, 1 + length(NR)), \
+						command, \
+						is_phony=="yes" ? "phony" : "" \
+					}; \
+					command=""; \
+					include="yes"; \
+					is_phony="no"; \
+					file=""; \
+					line=""; \
 				} \
-				{ if (/^([^#]+):/) { match($$0,/:/); command=substr($$0,0,RSTART-1) } } \
-				{ if (/^# Not a target:/) { included=1; next } } \
-				{ if (/^#  Phony target/) { phony=1; next } } \
-				{ if (/^#  recipe to execute/) { \
-					match($$0,/from [^[:alnum:]][^\)]+[^[:alnum:]],/); \
-					file=substr($$0,RSTART+6,RLENGTH-8); \
-					gsub(" ","\\ ",file); \
-					match($$0,/line [0-9]+/); \
-					line="000000" substr($$0,RSTART+5,RLENGTH-5); \
-					line=substr(line, 1 + length(line) - 6); \
-					next \
-				} } \
-			' \
+			} \
+			{ if (/^([^#]+):/) { match($$0,/:/); command=substr($$0,0,RSTART-1) } } \
+			{ if (/^# Not a target:/) { include="no"; next } } \
+			{ if (/^#  Phony target/) { is_phony="yes"; next } } \
+			{ if (/^#  recipe to execute/) { \
+				match($$0,/from [^[:alnum:]][^\)]+[^[:alnum:]],/); \
+				file=substr($$0,RSTART+6,RLENGTH-8); \
+				gsub(" ","\\ ",file); \
+				match($$0,/line [0-9]+/); \
+				line=substr($$0,RSTART+5,RLENGTH-5); \
+				next \
+			} } \
+		' \
 		| sort -t ";" -k 1,1 -k 2,2 -u
 
 #. List all make targets
