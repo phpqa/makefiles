@@ -10,7 +10,7 @@ Add the following in your project's makefile:
 #. This installs/updates the included makefiles
 MAKEFILES_REPOSITORY:=https://github.com/phpqa/makefiles.git
 MAKEFILES_DIRECTORY:=.makefiles
-MAKEFILES_TAG:=v0.2.8
+MAKEFILES_TAG:=v0.0.0
 MAKEFILES_LOG:=$(shell \
 	if test ! -d $(MAKEFILES_DIRECTORY); then git clone $(MAKEFILES_REPOSITORY) "$(MAKEFILES_DIRECTORY)"; fi; \
 	cd "$(MAKEFILES_DIRECTORY)"; \
@@ -26,6 +26,12 @@ REPOSITORY_DIRECTORY_self=.
 include $(MAKEFILES_DIRECTORY)/builtins.makefile  # Reset the default makefile builtins
 include $(MAKEFILES_DIRECTORY)/base.makefile      # Base functionality
 include $(MAKEFILES_DIRECTORY)/git.makefile       # Git management
+```
+
+Change the MAKEFILES_TAG variable to the latest tag of this project, or the tag of the version you want to use:
+
+```makefile
+MAKEFILES_TAG:=v0.0.0
 ```
 
 Add the directory mentioned in the MAKEFILES_DIRECTORY variable to your .gitignore file:
