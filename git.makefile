@@ -10,6 +10,7 @@ endif
 GIT_PULL_VERBOSE?=
 
 REPOSITORIES?=$(if $(APPLICATIONS),$(APPLICATIONS))
+REPOSITORY_self?=$(strip $(foreach variable,$(filter REPOSITORY_DIRECTORY_%,$(.VARIABLES)),$(if $(findstring $(shell pwd),$(realpath $($(variable)))),$(if $(findstring $(realpath $($(variable))),$(shell pwd)),$(patsubst REPOSITORY_DIRECTORY_%,%,$(variable))))))
 REPOSITORY_DIRECTORY_self?=.
 
 ###
@@ -78,10 +79,26 @@ git-pull-repository=\
 		fi \
 	)
 
+ifneq ($(REPOSITORIES),)
+# Clone a repository
+$(foreach repository,$(REPOSITORIES),clone-repository-$(repository)):clone-repository-%:
+	@$(call git-clone-repository,$(*))
+
+# Pull a repository
+$(foreach repository,$(REPOSITORIES),pull-repository-$(repository)):pull-repository-%:
+	@$(call git-pull-repository,$(*))
+
 # Clone all repositories
-clone:
-	@$(foreach repository,$(REPOSITORIES),$(call git-clone-repository,$(repository)); )
+clone-repositories: | $(foreach repository,$(REPOSITORIES),clone-repository-$(repository))
+	@true
 
 # Pull all repositories
-pull:
-	@$(foreach repository,$(REPOSITORIES),$(call git-pull-repository,$(repository)); )
+pull-repositories: | $(foreach repository,$(REPOSITORIES),pull-repository-$(repository))
+	@true
+endif
+
+ifneq ($(REPOSITORY_self),)
+# Pull this repository
+pull-repository: | pull-repository-$(REPOSITORY_self)
+	@true
+endif
