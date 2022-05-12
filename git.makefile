@@ -17,7 +17,7 @@ REPOSITORY_DIRECTORY_self?=.
 ## Git
 ###
 
-.PHONY: git clone pull
+.PHONY: git clone-repositories pull-repositories pull-repository
 
 # TODO make it optional to use stashes
 
