@@ -18,17 +18,17 @@ endif
 
 .PHONY: phpstan rector phpunit
 
-#. Install PhpStan
+#. Install PHPStan
 vendor/bin/phpstan: | vendor
 	@if test ! -f "$(@)"; then $(PHP_EXECUTABLE) $(COMPOSER_EXECUTABLE) require --dev phpstan/phpstan; fi
 
-# Generate the phpstan baseline
-phpstan-baseline.neon: | vendor/bin/phpstan
-	@$(PHP_EXECUTABLE) vendor/bin/phpstan --generate-baseline
-
-# Run PHP Static Analysis Tool               https://github.com/phpstan/phpstan
+# Run PHPStan - Static Analysis Tool         https://github.com/phpstan/phpstan
 phpstan: | vendor/bin/phpstan
 	@$(PHP_EXECUTABLE) vendor/bin/phpstan --no-interaction analyse .
+
+# Generate a baseline for PHPStan
+phpstan-baseline.neon: | vendor/bin/phpstan
+	@$(PHP_EXECUTABLE) vendor/bin/phpstan --generate-baseline
 
 #. Install Rector
 vendor/bin/rector: | vendor
@@ -38,7 +38,7 @@ vendor/bin/rector: | vendor
 rector.php: | vendor/bin/rector
 	@$(PHP_EXECUTABLE) vendor/bin/rector init
 
-# Run Rector                                https://github.com/rectorphp/rector
+# Run Rector - Upgrades and Refactoring     https://github.com/rectorphp/rector
 rector: | vendor/bin/rector rector.php
 	@$(PHP_EXECUTABLE) vendor/bin/rector process tests
 
@@ -50,6 +50,6 @@ vendor/bin/phpunit: | vendor
 phpunit.xml.dist: | vendor/bin/phpunit
 	@true
 
-# Run PHPUnit                                               https://phpunit.de/
+# Run PHPUnit - Testing Framework for PHP                   https://phpunit.de/
 phpunit: | vendor/bin/phpunit phpunit.xml.dist
 	@$(PHP_EXECUTABLE) vendor/bin/phpunit
