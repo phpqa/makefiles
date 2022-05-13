@@ -14,7 +14,10 @@ MAKEFILES_TAG:=v0.0.0
 MAKEFILES_LOG:=$(shell \
 	if test ! -d $(MAKEFILES_DIRECTORY); then git clone $(MAKEFILES_REPOSITORY) "$(MAKEFILES_DIRECTORY)"; fi; \
 	cd "$(MAKEFILES_DIRECTORY)"; \
-	if test -z "$$(git --no-pager describe --always --dirty | grep "^$(MAKEFILES_TAG)")"; then git fetch --all --tags; git reset --hard "tags/$(MAKEFILES_TAG)"; fi \
+	if [ -n "$(MAKEFILES_TAG)" ] && [ "$(MAKEFILES_TAG)" != "v0.0.0" ] && \
+	[ -z "$$(git --no-pager describe --always --dirty | grep "^$(MAKEFILES_TAG)")" ]; then \
+	git fetch --all --tags; git reset --hard "tags/$(MAKEFILES_TAG)"; \
+	else git pull; fi \
 )
 
 #. This section contains the variables required by the included makefiles, before including the makefiles themselves.
