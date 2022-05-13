@@ -2,16 +2,16 @@
 ##. Configuration
 ###
 
-JQ_EXECUTABLE?=$(shell command -v jq || which jq 2>/dev/null)
-ifeq ($(JQ_EXECUTABLE),)
-ifeq ($(DOCKER_EXECUTABLE),)
-$(error Please provide the variable JQ_EXECUTABLE or the variable DOCKER_EXECUTABLE before including this file.)
+JQ?=$(shell command -v jq || which jq 2>/dev/null)
+ifeq ($(JQ),)
+ifeq ($(DOCKER),)
+$(error Please provide the variable JQ or the variable DOCKER before including this file.)
 else
-JQ_EXECUTABLE?=$(DOCKER_EXECUTABLE) run --rm --interactive stedolan/jq
+JQ?=$(DOCKER) run --rm --interactive stedolan/jq
 endif
 endif
 
-ifeq ($(DOCKER_COMPOSE_EXECUTABLE),)
+ifeq ($(DOCKER_COMPOSE),)
 $(error Please install docker-compose.)
 endif
 
@@ -28,7 +28,7 @@ endif
 
 # No parameters
 get-token-for-keycloak-service=\
-	$(DOCKER_COMPOSE_EXECUTABLE) exec -T "$(DOCKER_COMPOSE_SERVICE_NAME_FOR_KEYCLOAK)" sh -c "\
+	$(DOCKER_COMPOSE) exec -T "$(DOCKER_COMPOSE_SERVICE_NAME_FOR_KEYCLOAK)" sh -c "\
 		curl --silent --show-error \
 			--location --request POST \"http://\$${HOSTNAME}:\$${KEYCLOAK_HTTP_PORT}/auth/realms/master/protocol/openid-connect/token\" \
 			--header 'Content-Type: application/x-www-form-urlencoded' \
@@ -37,19 +37,19 @@ get-token-for-keycloak-service=\
 			--data-urlencode 'grant_type=password' \
 			--data-urlencode 'client_id=admin-cli' \
 	" \
-	| $(JQ_EXECUTABLE) -r '.access_token' || true
+	| $(JQ) -r '.access_token' || true
 # $1 is realm, $2 is username
 find-user-id-on-keycloak-service=\
-	$(DOCKER_COMPOSE_EXECUTABLE) exec -T "$(DOCKER_COMPOSE_SERVICE_NAME_FOR_KEYCLOAK)" sh -c "\
+	$(DOCKER_COMPOSE) exec -T "$(DOCKER_COMPOSE_SERVICE_NAME_FOR_KEYCLOAK)" sh -c "\
 		curl --silent --show-error \
 			--location --request GET \"http://\$${HOSTNAME}:\$${KEYCLOAK_HTTP_PORT}/auth/admin/realms/$(strip $(1))/users?username=$(strip $(2))\" \
 			--header 'Content-Type: application/json' \
 			--header 'Authorization: Bearer $$($(call get-token-for-keycloak-service))' \
 	" \
-	| $(JQ_EXECUTABLE) -r '.[].id' 2>/dev/null || true
+	| $(JQ) -r '.[].id' 2>/dev/null || true
 # $1 is realm, $2 is username
 add-user-to-keycloak-service=\
-	$(DOCKER_COMPOSE_EXECUTABLE) exec -T "$(DOCKER_COMPOSE_SERVICE_NAME_FOR_KEYCLOAK)" sh -c "\
+	$(DOCKER_COMPOSE) exec -T "$(DOCKER_COMPOSE_SERVICE_NAME_FOR_KEYCLOAK)" sh -c "\
 		curl --silent --show-error \
 			--location --request POST \"http://\$${HOSTNAME}:\$${KEYCLOAK_HTTP_PORT}/auth/admin/realms/$(strip $(1))/users\" \
 			--header 'Content-Type: application/json' \
@@ -58,7 +58,7 @@ add-user-to-keycloak-service=\
 	"
 # $1 is realm, $2 is username, $3 is password
 update-user-password-on-keycloak-service=\
-	$(DOCKER_COMPOSE_EXECUTABLE) exec -T "$(DOCKER_COMPOSE_SERVICE_NAME_FOR_KEYCLOAK)" sh -c "\
+	$(DOCKER_COMPOSE) exec -T "$(DOCKER_COMPOSE_SERVICE_NAME_FOR_KEYCLOAK)" sh -c "\
 		curl --silent --show-error \
 			--location --request PUT \"http://\$${HOSTNAME}:\$${KEYCLOAK_HTTP_PORT}/auth/admin/realms/$(strip $(1))/users/$$($(call find-user-id-on-keycloak-service,$(1),$(2)))/reset-password\" \
 			--header 'Content-Type: application/json' \
