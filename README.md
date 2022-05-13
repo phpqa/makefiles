@@ -10,11 +10,13 @@ Add the following in your project's makefile:
 #. This installs/updates the included makefiles
 MAKEFILES_REPOSITORY:=https://github.com/phpqa/makefiles.git
 MAKEFILES_DIRECTORY:=.makefiles
-MAKEFILES_TAG:=v0.0.0
+MAKEFILES_TAG:=$(shell git ls-remote --tags --refs --sort="version:refname" "$(MAKEFILES_REPOSITORY)" "v*.*.*" | tail -n 1 | awk -F/ '{ print $$3 }')
 MAKEFILES_LOG:=$(shell \
 	if test ! -d $(MAKEFILES_DIRECTORY); then git clone $(MAKEFILES_REPOSITORY) "$(MAKEFILES_DIRECTORY)"; fi; \
-	cd "$(MAKEFILES_DIRECTORY)"; \
-	if test -z "$$(git --no-pager describe --always --dirty | grep "^$(MAKEFILES_TAG)")"; then git fetch --all --tags; git reset --hard "tags/$(MAKEFILES_TAG)"; fi \
+	if test -n "$(MAKEFILES_TAG)" && test -z "$$(git -C "$(MAKEFILES_DIRECTORY)" --no-pager describe --always --dirty | grep "^$(MAKEFILES_TAG)")"; then \
+		git -C "$(MAKEFILES_DIRECTORY)" fetch --all --tags; \
+		git -C "$(MAKEFILES_DIRECTORY)" reset --hard "tags/$(MAKEFILES_TAG)"; \
+	fi \
 )
 
 #. This section contains the variables required by the included makefiles, before including the makefiles themselves.
