@@ -2,8 +2,8 @@
 ##. Configuration
 ###
 
-GIT_EXECUTABLE?=$(shell command -v git || which git 2>/dev/null)
-ifeq ($(GIT_EXECUTABLE),)
+GIT?=$(shell command -v git || which git 2>/dev/null)
+ifeq ($(GIT),)
 $(error Please install git.)
 endif
 
@@ -38,7 +38,7 @@ git-clone-repository=\
 	if test ! -d "$${REPOSITORY_DIRECTORY}"; then \
 		$(call git-get-variable-for-repository,REPOSITORY_URL,$(1)); \
 		printf "%s\\n" "Cloning into $${REPOSITORY_DIRECTORY}..."; \
-		$(GIT_EXECUTABLE) clone $${REPOSITORY_URL} $${REPOSITORY_DIRECTORY}; \
+		$(GIT) clone $${REPOSITORY_URL} $${REPOSITORY_DIRECTORY}; \
 	fi
 # $(1) is repository
 git-pull-repository=\
@@ -54,23 +54,23 @@ git-pull-repository=\
 				$(MAKE) -f "$${REPOSITORY_MAKEFILE}" pull-repositories; \
 			fi; \
 		else \
-			DEFAULT_BRANCH="$$($(GIT_EXECUTABLE) remote show origin | sed -n '/HEAD branch/s/.*: //p')"; \
+			DEFAULT_BRANCH="$$($(GIT) remote show origin | sed -n '/HEAD branch/s/.*: //p')"; \
 			if test -z "$${DEFAULT_BRANCH}" || test "$${DEFAULT_BRANCH}" = "(unknown)"; then \
 				printf "%s\\n" "Could not determine branch for \"$$(pwd)\"!"; \
 			else \
 				printf "%s\\n" "Pulling \"$${DEFAULT_BRANCH}\" branch into \"$$(pwd)\"..."; \
-				$(GIT_EXECUTABLE) pull origin "$${DEFAULT_BRANCH}" || true; \
+				$(GIT) pull origin "$${DEFAULT_BRANCH}" || true; \
 				if test -n "$${REPOSITORY_TAG}"; then \
-					$(GIT_EXECUTABLE) fetch --all --tags > /dev/null || true; \
-					ACTUAL_REPOSITORY_TAG="$$($(GIT_EXECUTABLE) tag --list --ignore-case --sort=-version:refname "$${REPOSITORY_TAG}" | head -n 1)"; \
+					$(GIT) fetch --all --tags > /dev/null || true; \
+					ACTUAL_REPOSITORY_TAG="$$($(GIT) tag --list --ignore-case --sort=-version:refname "$${REPOSITORY_TAG}" | head -n 1)"; \
 					if test -z "$${ACTUAL_REPOSITORY_TAG}"; then \
 						printf "%s\\n" "Could not find tag \"$${REPOSITORY_TAG}\" for \"$$(pwd)\"!"; \
 					else \
 						printf "%s\\n" "Checking \"$${ACTUAL_REPOSITORY_TAG}\" tag into \"$$(pwd)\"..."; \
-						$(GIT_EXECUTABLE) -c advice.detachedHead=false checkout "tags/$${ACTUAL_REPOSITORY_TAG}" || true; \
+						$(GIT) -c advice.detachedHead=false checkout "tags/$${ACTUAL_REPOSITORY_TAG}" || true; \
 					fi; \
 				fi; \
-				$(if $(GIT_PULL_VERBOSE),$(GIT_EXECUTABLE) log -1 || true;) \
+				$(if $(GIT_PULL_VERBOSE),$(GIT) log -1 || true;) \
 				echo " "; \
 				sleep 1; \
 			fi; \

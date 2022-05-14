@@ -4,18 +4,18 @@
 
 DOCKER_SOCKET?=/var/run/docker.sock
 
-DOCKER_EXECUTABLE?=$(shell command -v docker || which docker 2>/dev/null)
+DOCKER?=$(shell command -v docker || which docker 2>/dev/null)
 
-DOCKER_COMPOSE_DIRECTORY?=
-DOCKER_COMPOSE_EXECUTABLE?=$(shell command -v docker-compose || which docker-compose 2>/dev/null)
+DOCKER_COMPOSE?=$(shell command -v docker-compose || which docker-compose 2>/dev/null)
 DOCKER_COMPOSE_EXTRA_FLAGS?=
 DOCKER_COMPOSE_FLAGS?=$(if $(DOCKER_COMPOSE_EXTRA_FLAGS), $(DOCKER_COMPOSE_EXTRA_FLAGS))
+DOCKER_COMPOSE_DIRECTORY?=
 
-ifeq ($(DOCKER_EXECUTABLE),)
+ifeq ($(DOCKER),)
 $(error Please install docker.)
 endif
 
-ifeq ($(DOCKER_COMPOSE_EXECUTABLE),)
+ifeq ($(DOCKER_COMPOSE),)
 $(error Please install docker-compose.)
 endif
 
@@ -39,23 +39,23 @@ bin:
 bin/php: $(MAKEFILE_LIST) $(if wildcard .env,.env) | bin
 	@printf "%s\\n" "#!/usr/bin/env sh" > "$(@)"
 	@printf "%s\\n\\n" "set -e" >> "$(@)"
-	@printf "%s\\n" "if test -n \"\$$($(if $(DOCKER_COMPOSE_DIRECTORY),cd \"$(DOCKER_COMPOSE_DIRECTORY)\" && )$(DOCKER_COMPOSE_EXECUTABLE)$(if $(DOCKER_COMPOSE_FLAGS), $(DOCKER_COMPOSE_FLAGS)) ps --services --filter \"status=running\" | grep \"$(DOCKER_COMPOSE_SERVICE_NAME_FOR_PHP)\" 2>/dev/null)\"; then" >> "$(@)"
-	@printf "%s\\n" "    set -- $(DOCKER_COMPOSE_EXECUTABLE)$(if $(DOCKER_COMPOSE_FLAGS), $(DOCKER_COMPOSE_FLAGS)) exec -T \"$(DOCKER_COMPOSE_SERVICE_NAME_FOR_PHP)\" php \"\$${@--r}\"" >> "$(@)"
+	@printf "%s\\n" "if test -n \"\$$($(if $(DOCKER_COMPOSE_DIRECTORY),cd \"$(DOCKER_COMPOSE_DIRECTORY)\" && )$(DOCKER_COMPOSE)$(if $(DOCKER_COMPOSE_FLAGS), $(DOCKER_COMPOSE_FLAGS)) ps --services --filter \"status=running\" | grep \"$(DOCKER_COMPOSE_SERVICE_NAME_FOR_PHP)\" 2>/dev/null)\"; then" >> "$(@)"
+	@printf "%s\\n" "    set -- $(DOCKER_COMPOSE)$(if $(DOCKER_COMPOSE_FLAGS), $(DOCKER_COMPOSE_FLAGS)) exec -T \"$(DOCKER_COMPOSE_SERVICE_NAME_FOR_PHP)\" php \"\$${@--r}\"" >> "$(@)"
 	@printf "%s\\n" "else" >> "$(@)"
-	@printf "%s\\n" "    set -- $(DOCKER_COMPOSE_EXECUTABLE)$(if $(DOCKER_COMPOSE_FLAGS), $(DOCKER_COMPOSE_FLAGS)) run -T --rm --no-deps \"$(DOCKER_COMPOSE_SERVICE_NAME_FOR_PHP)\" php \"\$${@--r}\"" >> "$(@)"
+	@printf "%s\\n" "    set -- $(DOCKER_COMPOSE)$(if $(DOCKER_COMPOSE_FLAGS), $(DOCKER_COMPOSE_FLAGS)) run -T --rm --no-deps \"$(DOCKER_COMPOSE_SERVICE_NAME_FOR_PHP)\" php \"\$${@--r}\"" >> "$(@)"
 	@printf "%s\\n" "fi" >> "$(@)"
 	@printf "%s\\n" "$(if $(DOCKER_COMPOSE_DIRECTORY),cd \"$(DOCKER_COMPOSE_DIRECTORY)\" && )exec \"\$$@\"" >> "$(@)"
 	@chmod +x "$(@)"
 
-ifneq ($(DOCKER_EXECUTABLE),)
+ifneq ($(DOCKER),)
 #. Download Composer to bin/composer or bin/composer-COMPOSER_VERSION
 bin/composer$(if $(COMPOSER_VERSION),-$(COMPOSER_VERSION)): | bin
 	@if test ! -d "$(dir $(@))"; then mkdir -p "$(dir $(@))"; fi
 	@if test -f "$(@)"; then rm -f "$(@)"; fi
 	@$(if $(COMPOSER_VERSION),if test -L "bin/composer" || -f "bin/composer"; then rm -f "bin/composer"; fi)
-	@$(DOCKER_EXECUTABLE) image pull $(COMPOSER_IMAGE)$(if $(COMPOSER_VERSION),:$(COMPOSER_VERSION))
-	@$(DOCKER_EXECUTABLE) run --rm --init --pull=missing --volume "$(CWD)":"/app" --workdir "/app" $(COMPOSER_IMAGE)$(if $(COMPOSER_VERSION),:$(COMPOSER_VERSION)) cat /usr/bin/composer > "$(@)"
-	@$(DOCKER_EXECUTABLE) image rm $(COMPOSER_IMAGE)$(if $(COMPOSER_VERSION),:$(COMPOSER_VERSION))
+	@$(DOCKER) image pull $(COMPOSER_IMAGE)$(if $(COMPOSER_VERSION),:$(COMPOSER_VERSION))
+	@$(DOCKER) run --rm --init --pull=missing --volume "$(CWD)":"/app" --workdir "/app" $(COMPOSER_IMAGE)$(if $(COMPOSER_VERSION),:$(COMPOSER_VERSION)) cat /usr/bin/composer > "$(@)"
+	@$(DOCKER) image rm $(COMPOSER_IMAGE)$(if $(COMPOSER_VERSION),:$(COMPOSER_VERSION))
 	@chmod +x "$(@)"
 else
 #. Download Composer to bin/composer or bin/composer-COMPOSER_VERSION

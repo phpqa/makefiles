@@ -259,10 +259,13 @@ $(realpath $(CWD)/..)/makefile ../makefile: force
 	@printf "%s\n" "force:" >> "$(@)"
 
 ###
-##. Force
+##. Helpers
 ###
 
 .PHONY: force
 
-#. Force
+#. Force the command to run
 force: ; @true
+
+#. Run the command without printing "is up to date" messages
+silent-%:%; @true
