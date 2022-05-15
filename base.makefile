@@ -56,8 +56,8 @@ ICON_ERROR?=\342\234\226
 print_in_style?=printf "$(subst $(space),,$(foreach style,$(1),$(STYLE_$(call uppercase,$(style)))))%s$(STYLE_RESET)%s" "$(2)"
 println_in_style?=printf "%s\\n" "$(shell $(call print_in_style,$(1),$(2)))"
 #. $(1) is the url, $(2) is the (optional) description
-print_link?=printf "\033]8;;%s\033\\\\%s\033]8;;\033\\ " "$(1)" "$(if $(2),$(2),$(1))"
-println_link?=printf "\033]8;;%s\033\\\\%s\033]8;;\033\\ \\n" "$(1)" "$(if $(2),$(2),$(1))"
+print_link?=printf "\033]8;;%s\033\\\\%s\033]8;;\033\\\\" "$(1)" "$(if $(2),$(2),$(1))"
+println_link?=printf "%s\\n" "$(shell $(call print_link,$(1),$(2)))"
 
 ###
 ##. Environment variables lookup
@@ -103,12 +103,20 @@ help:
 		{ if (/^$$/) { skip="false"; doc=""; next } } \
 		{ if (/^#. / && doc == "") { skip="true"; next } } \
 		{ if (/^# / && doc == "") { skip="false"; doc=$$0; next } } \
+		{ if (/^# @see / && doc) { link=substr($$0,8) } } \
 		{ if ($$0 ~ show_pattern && $$0 !~ skip_pattern) { \
 			if (skip == "true") { skip="false"; doc=""; next } \
 			if (title != "") { if (title != last_title) { printf "\n%s\n",substr(title,4) }; last_title=title }; \
 			gsub(/:.*/,"",$$1); \
 			gsub(/#!/,"\xE2\x9D\x97 ",doc); \
-			printf "%-40s %s\n", "$(STYLE_TITLE)"$$1"$(STYLE_RESET)", doc ? substr(doc,3,match(doc"# TODO",/# TODO/)-3) : "$(STYLE_DIM)No documentation$(STYLE_RESET)"; \
+			styled_title="$(STYLE_TITLE)"$$1"$(STYLE_RESET)"; \
+			styled_doc=doc ? substr(doc,3,match(doc"# TODO",/# TODO/)-3) : "$(STYLE_DIM)No documentation$(STYLE_RESET)"; \
+			if (link == "") { \
+				printf "%-40s %s\n", styled_title, styled_doc; \
+			} else { \
+				printf "%-40s \033]8;;%s\033\\%s\033]8;;\033\\\n", styled_title, link, styled_doc; \
+			} \
+			link=""; \
 			doc=""; \
 		} }; \
 	' $(shell $(MAKE) list-makefiles)

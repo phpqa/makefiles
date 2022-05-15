@@ -12,15 +12,14 @@ endif
 
 ###
 ## Quality Assurance Tools
-## PHPStan - Static Analysis Tool
-## @see https://github.com/phpstan/phpstan
 ###
 
 #. Install PHPStan
 vendor/bin/phpstan: | $(COMPOSER_DEPENDENCY) vendor
 	@if test ! -f "$(@)"; then $(COMPOSER_EXECUTABLE) require --dev phpstan/phpstan; fi
 
-# Run PHPStan
+# Run PHPStan - Static Analysis Tool
+# @see https://github.com/phpstan/phpstan
 phpstan: | $(PHP_DEPENDENCY) vendor/bin/phpstan
 	@$(PHP) vendor/bin/phpstan --no-interaction analyse .
 .PHONY: phpstan

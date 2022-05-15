@@ -14,8 +14,6 @@ RECTOR_DRYRUN?=$(PHP_QA_DRYRUN)
 
 ###
 ## Quality Assurance Tools
-## Rector - Instant Upgrades and Automated Refactoring
-## @see https://github.com/rectorphp/rector
 ###
 
 #. Install Rector
@@ -26,7 +24,8 @@ vendor/bin/rector: | $(COMPOSER_DEPENDENCY) vendor
 rector.php: | $(PHP_DEPENDENCY) vendor/bin/rector
 	@$(PHP) vendor/bin/rector init
 
-# Run Rector
+# Run Rector - Instant Upgrades and Automated Refactoring
+# @see https://github.com/rectorphp/rector
 rector: | $(PHP_DEPENDENCY) vendor/bin/rector rector.php
 	@$(PHP) vendor/bin/rector process$(if $(RECTOR_DRYRUN), --dry-run) .
 .PHONY: rector

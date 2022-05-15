@@ -12,8 +12,6 @@ endif
 
 ###
 ## Quality Assurance Tools
-## PHPUnit - Programmer-oriented Testing Framework for PHP
-## @see https://phpunit.de/
 ###
 
 #. Install PHPUnit
@@ -24,7 +22,8 @@ vendor/bin/phpunit: | $(COMPOSER_DEPENDENCY) vendor
 phpunit.xml.dist: | $(PHP_DEPENDENCY) vendor/bin/phpunit
 	@true
 
-# Run PHPUnit
+# Run PHPUnit - Programmer-oriented Testing Framework for PHP
+# @see https://phpunit.de/
 phpunit: | $(PHP_DEPENDENCY) vendor/bin/phpunit phpunit.xml.dist
 	@$(PHP) vendor/bin/phpunit
 .PHONY: phpunit

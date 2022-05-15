@@ -8,10 +8,9 @@ endif
 
 ###
 ## Quality Assurance Tools
-## Composer - A Dependency Manager for PHP
-## @see https://getcomposer.org/
 ###
 
-# Validate Composer
+# Validate Composer - Dependency Manager for PHP
+# @see https://getcomposer.org/
 composer.validate: | $(COMPOSER_DEPENDENCY)
 	@$(COMPOSER_EXECUTABLE) validate --no-check-publish
