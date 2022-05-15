@@ -2,11 +2,14 @@
 ##. Disable built-in rules
 ###
 
-#. Disable documentation
+#. Remove all predefined rules
 .SUFFIXES:
 
-#. Disable documentation
+#. Remove the target if a recipe fails
 .DELETE_ON_ERROR:
 
+#. Default to the system shell
 SHELL?=/bin/sh
+
+#. Add extra flags to the make command
 MAKEFLAGS+=--no-print-directory --no-builtin-rules --warn-undefined-variables --environment-overrides
