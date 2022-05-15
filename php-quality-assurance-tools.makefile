@@ -7,11 +7,14 @@ ifeq ($(PHP),)
 $(error Please install php.)
 endif
 
-# ! Note: the environment variable COMPOSER is used by Composer to locate the composer.json file
+# ! Note: the environment variable COMPOSER is already used by Composer to locate the composer.json file
 COMPOSER_EXECUTABLE?=$(if $(wildcard bin/composer),bin/composer,$(shell command -v composer || which composer 2>/dev/null))
 ifeq ($(COMPOSER_EXECUTABLE),)
 $(error Please install composer.)
 endif
+
+PHP_QA_DRYRUN?=
+RECTOR_DRYRUN?=$(PHP_QA_DRYRUN)
 
 ###
 ## Quality Assurance Tools
@@ -41,7 +44,7 @@ rector.php: | vendor/bin/rector
 
 # Run Rector - Upgrades and Refactoring     https://github.com/rectorphp/rector
 rector: | vendor/bin/rector rector.php
-	@$(PHP) vendor/bin/rector process tests
+	@$(PHP) vendor/bin/rector process$(if $(RECTOR_DRYRUN), --dry-run) src
 
 #. Install PHPUnit
 vendor/bin/phpunit: | vendor
@@ -54,3 +57,7 @@ phpunit.xml.dist: | vendor/bin/phpunit
 # Run PHPUnit - Testing Framework for PHP                   https://phpunit.de/
 phpunit: | vendor/bin/phpunit phpunit.xml.dist
 	@$(PHP) vendor/bin/phpunit
+
+#. Dry run it
+rector-dryrun:%-dryrun:
+	@PHP_QA_DRYRUN="yes" $(MAKE) $(*)
