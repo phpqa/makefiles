@@ -31,33 +31,30 @@ uppercase?=$(shell echo '$(1)' | tr '[:lower:]' '[:upper:]')
 ##. Stylesheets
 ###
 
-STYLE_RESET:=\033[0m
-STYLE_TITLE:=\033[1;36m
-STYLE_WARNING:=\033[33m
-STYLE_ERROR:=\033[31m
-STYLE_SUCCESS:=\033[32m
-STYLE_DIM:=\033[2m
-STYLE_BOLD:=\033[1m
-STYLE_UNDERLINED:=\033[4m
+STYLE_RESET?=\033[0m
 
-STYLE_SUCCESS_ICON := $(STYLE_SUCCESS)\342\234\224$(STYLE_RESET)
-STYLE_WARNING_ICON := $(STYLE_WARNING)\342\232\240$(STYLE_RESET)
-STYLE_ERROR_ICON := $(STYLE_ERROR)\342\234\226$(STYLE_RESET)
+STYLE_TITLE?=\033[1;36m
+STYLE_SUCCESS?=\033[32m
+STYLE_WARNING?=\033[33m
+STYLE_ERROR?=\033[31m
+STYLE_DIM?=\033[2m
+STYLE_BOLD?=\033[1m
+STYLE_UNDERLINE?=\033[4m
+
+ICON_SUCCESS?=\342\234\224
+ICON_WARNING?=\342\232\240
+ICON_ERROR?=\342\234\226
 
 ###
 ##. Printf
 ###
 
-# $(1) is the title, $(2) is the rest
-define printer
-print_$(1)=printf "$$(STYLE_$(shell echo '$(1)' | tr '[:lower:]' '[:upper:]'))%s$$(STYLE_RESET)%s" "$$(1)" "$$(2)"
-println_$(1)=printf "$$(STYLE_$(shell echo '$(1)' | tr '[:lower:]' '[:upper:]'))%s$$(STYLE_RESET)%s\\n" "$$(1)" "$$(2)"
-endef
-$(foreach type,title warning error success,$(eval $(call printer,$(type))))
-
+# $(1) is the style, $(2) is the message
+print_in_style?=printf "$(subst $(space),,$(foreach style,$(1),$(STYLE_$(call uppercase,$(style)))))%s$(STYLE_RESET)%s" "$(2)"
+println_in_style?=printf "%s\\n" "$(shell $(call print_in_style,$(1),$(2)))"
 # $(1) is the url, $(2) is the (optional) description
-print_link=printf "\033]8;;%s\033\\\\%s\033]8;;\033\\ " "$(1)" "$(if $(2),$(2),$(1))"
-println_link=printf "\033]8;;%s\033\\\\%s\033]8;;\033\\ \\n" "$(1)" "$(if $(2),$(2),$(1))"
+print_link?=printf "\033]8;;%s\033\\\\%s\033]8;;\033\\ " "$(1)" "$(if $(2),$(2),$(1))"
+println_link?=printf "\033]8;;%s\033\\\\%s\033]8;;\033\\ \\n" "$(1)" "$(if $(2),$(2),$(1))"
 
 ###
 ##. Environment variables lookup
