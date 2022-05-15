@@ -87,37 +87,34 @@ $(foreach repository,$(REPOSITORIES),pull-repository-$(repository)):pull-reposit
 
 #> Case 1: No repositories to pull
 ifeq ($(REPOSITORIES),)
-.PHONY: pull-repositories
-
 #. Do nothing
 pull-repositories:
 	@true
+.PHONY: pull-repositories
 else
 #> Case 2: Only this repository to pull
 ifeq ($(REPOSITORIES),$(REPOSITORY_self))
-.PHONY: pull-repositories
-
 #. Pull this repository (alias)
 pull-repositories: | pull-repository
 	@true
+.PHONY: pull-repositories
 #> Case 3: Multiple repositories to pull
 else
-.PHONY: clone-repositories pull-repositories
-
 # Clone all repositories
 clone-repositories: | $(foreach repository,$(REPOSITORIES),clone-repository-$(repository))
 	@true
+.PHONY: clone-repositories
 
 # Pull all repositories
 pull-repositories: | $(foreach repository,$(REPOSITORIES),pull-repository-$(repository))
 	@true
+.PHONY: pull-repositories
 endif
 endif
 
 ifneq ($(REPOSITORY_self),)
-.PHONY: pull-repository
-
 # Pull this repository
 pull-repository: | pull-repository-$(REPOSITORY_self)
 	@true
+.PHONY: pull-repository
 endif

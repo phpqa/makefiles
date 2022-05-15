@@ -23,8 +23,6 @@ endif
 ## Docker Compose Services
 ###
 
-.PHONY: build-images up-services log-services down-services remove-services
-
 RUNNING_CACHE=
 
 #. Ensure container % is running
@@ -59,21 +57,25 @@ create-docker-network-%:
 build-images:
 	@$(if $(DOCKER_COMPOSE_DIRECTORY),cd "$(DOCKER_COMPOSE_DIRECTORY)";) \
 	$(DOCKER_COMPOSE)$(if $(DOCKER_COMPOSE_FLAGS), $(DOCKER_COMPOSE_FLAGS)) build
+.PHONY: build-images
 
 # Up the service(s)
 up-services:
 	@$(if $(DOCKER_COMPOSE_DIRECTORY),cd "$(DOCKER_COMPOSE_DIRECTORY)";) \
 	$(DOCKER_COMPOSE)$(if $(DOCKER_COMPOSE_FLAGS), $(DOCKER_COMPOSE_FLAGS)) up -d --remove-orphans
+.PHONY: up-services
 
 # Follow the logs from the service(s)
 log-services:
 	@$(if $(DOCKER_COMPOSE_DIRECTORY),cd "$(DOCKER_COMPOSE_DIRECTORY)";) \
 	$(DOCKER_COMPOSE)$(if $(DOCKER_COMPOSE_FLAGS), $(DOCKER_COMPOSE_FLAGS)) logs --follow --tail="100"
+.PHONY: log-services
 
 # Down the service(s)
 down-services:
 	@$(if $(DOCKER_COMPOSE_DIRECTORY),cd "$(DOCKER_COMPOSE_DIRECTORY)";) \
 	$(DOCKER_COMPOSE)$(if $(DOCKER_COMPOSE_FLAGS), $(DOCKER_COMPOSE_FLAGS)) down
+.PHONY: down-services
 
 # Stop and remove the service(s) and volume(s)
 remove-services:
@@ -81,6 +83,7 @@ remove-services:
 	if test -n "$$($(DOCKER_COMPOSE)$(if $(DOCKER_COMPOSE_FLAGS), $(DOCKER_COMPOSE_FLAGS)) ps --services --filter "status=running" 2> /dev/null)"; then \
 		$(DOCKER_COMPOSE)$(if $(DOCKER_COMPOSE_FLAGS), $(DOCKER_COMPOSE_FLAGS)) rm --stop --force -v; \
 	fi
+.PHONY: remove-services
 
 # TODO # Clear all volumes
 #clear-volumes: docker-compose.yaml docker-compose.dev.yaml | $(DOCKER_DEPENDENCY) stop

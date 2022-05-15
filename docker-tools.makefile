@@ -14,8 +14,6 @@ endif
 ## Docker Tools
 ###
 
-.PHONY: ctop lazydocker
-
 # Ctop - Real-time metrics for containers                      https://ctop.sh/
 ctop:
 	@set -e; \
@@ -26,8 +24,10 @@ ctop:
 		else \
 			$(DOCKER) attach ctop; \
 		fi
+.PHONY: ctop
 
 # Lazydocker - Terminal UI          https://github.com/jesseduffield/lazydocker
 lazydocker:
 	@$(DOCKER) run --rm --interactive --tty --volume $(DOCKER_SOCKET):$(DOCKER_SOCKET):ro \
 		--name lazydocker lazyteam/lazydocker:latest
+.PHONY: lazydocker

@@ -20,8 +20,6 @@ RECTOR_DRYRUN?=$(PHP_QA_DRYRUN)
 ## Quality Assurance Tools
 ###
 
-.PHONY: phpstan rector phpunit
-
 #. Install PHPStan
 vendor/bin/phpstan: | vendor
 	@if test ! -f "$(@)"; then $(PHP) $(COMPOSER_EXECUTABLE) require --dev phpstan/phpstan; fi
@@ -29,6 +27,7 @@ vendor/bin/phpstan: | vendor
 # Run PHPStan - Static Analysis Tool         https://github.com/phpstan/phpstan
 phpstan: | vendor/bin/phpstan
 	@$(PHP) vendor/bin/phpstan --no-interaction analyse .
+.PHONY: phpstan
 
 # Generate a baseline for PHPStan
 phpstan-baseline.neon: | vendor/bin/phpstan
@@ -45,6 +44,7 @@ rector.php: | vendor/bin/rector
 # Run Rector - Upgrades and Refactoring     https://github.com/rectorphp/rector
 rector: | vendor/bin/rector rector.php
 	@$(PHP) vendor/bin/rector process$(if $(RECTOR_DRYRUN), --dry-run) src
+.PHONY: rector
 
 #. Install PHPUnit
 vendor/bin/phpunit: | vendor
@@ -57,6 +57,7 @@ phpunit.xml.dist: | vendor/bin/phpunit
 # Run PHPUnit - Testing Framework for PHP                   https://phpunit.de/
 phpunit: | vendor/bin/phpunit phpunit.xml.dist
 	@$(PHP) vendor/bin/phpunit
+.PHONY: phpunit
 
 #. Dry run it
 rector-dryrun:%-dryrun:

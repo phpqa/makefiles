@@ -85,8 +85,7 @@ check_variable_is_not_empty=if test -z "$${$(strip $(1))}"; then $(call println_
 ## About
 ###
 
-.PHONY: help debug
-.DEFAULT_GOAL:=help
+.DEFAULT_GOAL?=help
 
 # Show this help
 help:
@@ -106,6 +105,7 @@ help:
 		done; \
 	fi; \
 	printf "\\n"
+.PHONY: help
 
 # Print debugging information
 debug:
@@ -117,12 +117,11 @@ debug:
 	@$(MAKE) list-makefiles | awk '$$0="  "$$0'
 	@$(call println_title,Used makeflags,)
 	@printf "  %s\\n" "$(MAKEFLAGS)"
+.PHONY: debug
 
 ###
 ##. Debug
 ###
-
-.PHONY: list-makefiles list-make-variables-as-database list-make-variables list-make-targets-as-database list-make-targets
 
 #. List all included makefiles
 list-makefiles:
@@ -143,6 +142,7 @@ list-makefiles:
 			\
 			END { printf "%s",MAKEFILE_LIST } \
 		'
+.PHONY: list-makefiles
 
 #. List the value for a make variable
 list-make-variable-%:
@@ -183,6 +183,7 @@ list-make-variables-as-database:
 			} } \
 		' \
 		| sort -t ";" -k 1,1 -k 2,2 -u
+.PHONY: list-make-variables-as-database
 
 #. List all make variables
 list-make-variables:
@@ -193,6 +194,7 @@ list-make-variables:
 				system("make list-make-variable-" $$3) \
 			} \
 		'
+.PHONY: list-make-variables
 
 #. List all make targets as semi-colon separated list
 list-make-targets-as-database:
@@ -236,6 +238,7 @@ list-make-targets-as-database:
 			} } \
 		' \
 		| sort -t ";" -k 1,1 -k 2,2 -u
+.PHONY: list-make-targets-as-database
 
 #. List all make targets
 list-make-targets:
@@ -246,6 +249,7 @@ list-make-targets:
 				{ printf "%s%s\n",STYLE_TITLE $$3 STYLE_RESET,$$4=="phony"?STYLE_WARNING "*" STYLE_RESET:"" } \
 			} \
 		'
+.PHONY: list-make-targets
 
 ###
 ##. Redirect
@@ -266,10 +270,9 @@ $(realpath $(CWD)/..)/makefile ../makefile: force
 ##. Helpers
 ###
 
-.PHONY: force
-
 #. Force the command to run
 force: ; @true
+.PHONY: force
 
 #. Run the command without printing "is up to date" messages
 silent-%:%; @true
