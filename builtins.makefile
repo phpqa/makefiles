@@ -12,4 +12,4 @@
 SHELL?=/bin/sh
 
 #. Add extra flags to the make command
-MAKEFLAGS+=--no-print-directory --no-builtin-rules --warn-undefined-variables --environment-overrides
+MAKEFLAGS+=--no-print-directory --no-builtin-rules --environment-overrides
