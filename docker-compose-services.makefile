@@ -6,10 +6,10 @@ DOCKER_SOCKET?=/var/run/docker.sock
 
 DOCKER?=$(shell command -v docker || which docker 2>/dev/null)
 
-DOCKER_COMPOSE_DIRECTORY?=
 DOCKER_COMPOSE?=$(shell command -v docker-compose || which docker-compose 2>/dev/null)
 DOCKER_COMPOSE_EXTRA_FLAGS?=
 DOCKER_COMPOSE_FLAGS?=$(if $(DOCKER_COMPOSE_EXTRA_FLAGS), $(DOCKER_COMPOSE_EXTRA_FLAGS))
+DOCKER_COMPOSE_DIRECTORY?=
 
 ifeq ($(DOCKER),)
 $(error Please install docker.)
