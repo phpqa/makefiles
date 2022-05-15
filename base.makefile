@@ -12,13 +12,20 @@ CWD?=$(shell cd "$(dir $(firstword $(MAKEFILE_LIST)))"; pwd)
 MAKE_PARALLELISM_OPTIONS = $(if $(shell $(MAKE) -v | grep "3\|4"), -j "$$(nproc 2>/dev/null || sysctl -n hw.physicalcpu 2>/dev/null || echo "1")" ,)$(if $(shell $(MAKE) -v | grep "4"), --output-sync=recurse,)
 
 ###
-##. Spaces
+##. Characters
 ###
 
-SPACE:=$(shell printf " ")
-ESCAPED_SPACE:=\$(SPACE)
-ENCODED_SPACE:=+
-COMMA:=,
+empty:=
+space:=$(empty) $(empty)
+escaped_space:=\$(space)
+encoded_space:=+
+comma:=,
+
+###
+##. Conversions
+###
+
+uppercase?=$(shell echo '$(1)' | tr '[:lower:]' '[:upper:]')
 
 ###
 ##. Stylesheets
