@@ -82,7 +82,7 @@ parse_env_string=\
 print_env_variable=printf "%s" "$$($(call parse_env_string,$(strip $(1)),$${$(strip $(2))}))"
 println_env_variable=printf "%s\\n" "$$($(call parse_env_string,$(strip $(1)),$${$(strip $(2))}))"
 get_env_variable=$(shell $(call print_env_variable,$(1),$(2)))
-check_variable_is_not_empty=if test -z "$${$(strip $(1))}"; then $(call println_error,Could not find the $(strip $(1)) environment variable.); exit 1; fi
+check_variable_is_not_empty=if test -z "$${$(strip $(1))}"; then $(call println_in_style,error,Could not find the $(strip $(1)) environment variable.); exit 1; fi
 
 ###
 ## About
@@ -124,13 +124,13 @@ help:
 
 # Print debugging information
 debug:
-	@$(call println_title,Run UID,)
+	@$(call println_in_style,title,Run UID)
 	@printf "  %s\\n" "$(RUN_UID)"
-	@$(call println_title,Current working directory,)
+	@$(call println_in_style,title,Current working directory)
 	@printf "  %s\\n" "$(CWD)"
-	@$(call println_title,Loaded makefiles,)
+	@$(call println_in_style,title,Loaded makefiles)
 	@$(MAKE) list-makefiles | awk '$$0="  "$$0'
-	@$(call println_title,Used makeflags,)
+	@$(call println_in_style,title,Used makeflags)
 	@printf "  %s\\n" "$(MAKEFLAGS)"
 .PHONY: debug
 

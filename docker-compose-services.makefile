@@ -33,7 +33,7 @@ ensure-running-%:
 		$(DOCKER_COMPOSE)$(if $(DOCKER_COMPOSE_FLAGS), $(DOCKER_COMPOSE_FLAGS)) up -d --remove-orphans "$(*)"; \
 		until $(DOCKER_COMPOSE)$(if $(DOCKER_COMPOSE_FLAGS), $(DOCKER_COMPOSE_FLAGS)) ps --services --filter "status=running" | grep -q "$(*)" 2> /dev/null; do \
 			if $(DOCKER_COMPOSE)$(if $(DOCKER_COMPOSE_FLAGS), $(DOCKER_COMPOSE_FLAGS)) ps --services --filter "status=stopped" | grep -q "$(*)" 2> /dev/null; then \
-				$(call println_error,The image "$(*)" stopped unexpectedly.); \
+				$(call println_in_style,The image "$(*)" stopped unexpectedly.); \
 				exit 1; \
 			fi; \
 			sleep 1; \
