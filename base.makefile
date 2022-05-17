@@ -44,9 +44,9 @@ STYLE_DIM?=\033[2m
 STYLE_BOLD?=\033[1m
 STYLE_UNDERLINE?=\033[4m
 
-ICON_SUCCESS?=\342\234\224
-ICON_WARNING?=\342\232\240
-ICON_ERROR?=\342\234\226
+ICON_SUCCESS?=\342\234\224 # \u2713
+ICON_WARNING?=\342\232\240 # \u26A0
+ICON_ERROR?=\342\234\225 # \u2715
 
 ###
 ##. Printf
@@ -90,6 +90,7 @@ check_variable_is_not_empty=if test -z "$${$(strip $(1))}"; then $(call println_
 
 .DEFAULT_GOAL?=help
 HELP_SKIP_TARGETS?=
+HELP_FIRST_COLUMN_WIDTH?=24
 
 # Show this help
 help:
@@ -98,25 +99,23 @@ help:
 	skip_pattern="$(subst $(space),|,$(foreach target,$(HELP_SKIP_TARGETS),^$(target):))"; \
 	if test -z "$${show_pattern}"; then show_pattern="empty"; fi; \
 	if test -z "$${skip_pattern}"; then skip_pattern="empty"; fi; \
-	awk -v show_pattern="$${show_pattern}" -v skip_pattern="$${skip_pattern}" ' \
+	awk -v title_length="$(HELP_FIRST_COLUMN_WIDTH)" -v show_pattern="$${show_pattern}" -v skip_pattern="$${skip_pattern}" ' \
 		{ if (/^## /) { if (title_block != "true") { title=$$0; title_block="true" }; next } else { title_block="false" } } \
 		{ if (/^$$/) { skip="false"; doc=""; next } } \
-		{ if (/^#. / && doc == "") { skip="true"; next } } \
-		{ if (/^# / && doc == "") { skip="false"; doc=$$0; next } } \
+		{ if (/^#\. / && doc == "") { skip="true"; next } } \
+		{ if (/^# / && doc == "") { skip="false"; indent=""; doc=substr($$0,3); next } } \
+		{ if (/^#[^\.\s]+ / && doc == "") { skip="false"; indent=substr($$1,2)" "; doc=substr($$0,3+length(indent)-1); next } } \
 		{ if (/^# @see / && doc) { link=substr($$0,8) } } \
 		{ if ($$0 ~ show_pattern && $$0 !~ skip_pattern) { \
 			if (skip == "true") { skip="false"; doc=""; next } \
 			if (title != "") { if (title != last_title) { printf "\n%s\n",substr(title,4) }; last_title=title }; \
 			gsub(/:.*/,"",$$1); \
-			gsub(/#!/,"\xE2\x9D\x97 ",doc); \
-			styled_title="$(STYLE_TITLE)"$$1"$(STYLE_RESET)"; \
-			styled_doc=doc ? substr(doc,3,match(doc"# TODO",/# TODO/)-3) : "$(STYLE_DIM)No documentation$(STYLE_RESET)"; \
-			if (link == "") { \
-				printf "%-40s %s\n", styled_title, styled_doc; \
-			} else { \
-				printf "%-40s \033]8;;%s\033\\%s\033]8;;\033\\\n", styled_title, link, styled_doc; \
-			} \
+			gsub(/#!/,"\xE2\x9D\x97",doc); \
+			printf "$(STYLE_DIM)%s$(STYLE_RESET)$(STYLE_TITLE)%-*s$(STYLE_RESET)", indent, title_length - length(indent), $$1; \
+			styled_doc=doc ? substr(doc,1,match(doc"# TODO",/# TODO/)-1) : "$(STYLE_DIM)No documentation$(STYLE_RESET)"; \
+			if (link) { printf "\033]8;;%s\033\\%s\033]8;;\033\\\n", link, styled_doc } else { printf "%s\n", styled_doc } \
 			link=""; \
+			indent=""; \
 			doc=""; \
 		} }; \
 	' $(shell $(MAKE) list-makefiles)
