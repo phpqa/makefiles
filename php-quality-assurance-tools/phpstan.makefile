@@ -10,6 +10,17 @@ ifeq ($(COMPOSER_EXECUTABLE),)
 $(error Please install Composer.)
 endif
 
+PHPSTAN?=$(PHP) vendor/bin/phpstan
+ifeq ($(PHPSTAN),$(PHP) vendor/bin/phpstan)
+PHPSTAN_DEPENDENCY?=$(PHP_DEPENDENCY) vendor/bin/phpstan
+else
+PHPSTAN_DEPENDENCY?=$(wildcard $(PHPSTAN))
+endif
+PHPSTAN_FLAGS?=--memory-limit=-1
+ifeq ($(findstring --no-interaction,$(PHPSTAN_FLAGS)),)
+PHPSTAN_FLAGS+=--no-interaction
+endif
+
 ###
 ## Quality Assurance Tools
 ###
@@ -20,10 +31,10 @@ vendor/bin/phpstan: | $(COMPOSER_DEPENDENCY) vendor
 
 # Run PHPStan - Static Analysis Tool
 # @see https://github.com/phpstan/phpstan
-phpstan: | $(PHP_DEPENDENCY) vendor/bin/phpstan
-	@$(PHP) vendor/bin/phpstan --no-interaction analyse .
+phpstan: | $(PHPSTAN_DEPENDENCY)
+	@$(PHPSTAN)$(if $(PHPSTAN_FLAGS), $(PHPSTAN_FLAGS)) analyse .
 .PHONY: phpstan
 
 # Generate a baseline for PHPStan
 phpstan-baseline.neon: | $(PHP_DEPENDENCY) vendor/bin/phpstan
-	@$(PHP) vendor/bin/phpstan --generate-baseline
+	@$(PHPSTAN)$(if $(PHPSTAN_FLAGS), $(PHPSTAN_FLAGS)) --generate-baseline
