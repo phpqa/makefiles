@@ -110,13 +110,17 @@ help:
 			if (skip == "true") { skip="false"; doc=""; next } \
 			if (title != "") { if (title != last_title) { printf "\n%s\n",substr(title,4) }; last_title=title }; \
 			gsub(/:.*/,"",$$1); \
-			gsub(/#!/,"\xE2\x9D\x97",doc); \
 			printf "$(STYLE_DIM)%s$(STYLE_RESET)$(STYLE_TITLE)%-*s$(STYLE_RESET)", indent, title_length - length(indent), $$1; \
-			styled_doc=doc ? substr(doc,1,match(doc"# TODO",/# TODO/)-1) : "$(STYLE_DIM)No documentation$(STYLE_RESET)"; \
-			if (link) { printf "\033]8;;%s\033\\%s\033]8;;\033\\\n", link, styled_doc } else { printf "%s\n", styled_doc } \
+			if (doc == "") { doc="$(STYLE_DIM)No documentation$(STYLE_RESET)" }; \
+			if (doc ~ /# TODO/) { doc=substr(doc,1,match(doc,/# TODO/)-1) }; \
+			if (doc ~ /#!/) { warning="$(ICON_WARNING)" substr(doc,match(doc,/#!/)+2); doc=substr(doc,1,match(doc,/#!/)-1) } ; \
+			if (link) { printf "\033]8;;%s\033\\%s\033]8;;\033\\", link, doc } else { printf "%s", doc }; \
+			if (warning) { printf "$(STYLE_WARNING)%s$(STYLE_RESET)",warning; }; \
+			printf "\n"; \
 			link=""; \
 			indent=""; \
 			doc=""; \
+			warning=""; \
 		} }; \
 	' $(shell $(MAKE) list-makefiles)
 .PHONY: help
