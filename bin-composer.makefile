@@ -13,7 +13,7 @@ COMPOSER_VERSION?=
 #.! Note: the environment variable COMPOSER is already used by Composer to locate the composer.json file
 COMPOSER_EXECUTABLE?=$(PHP) bin/composer
 ifeq ($(COMPOSER_EXECUTABLE),$(PHP) bin/composer)
-COMPOSER_DEPENDENCY?=$(PHP) bin/composer
+COMPOSER_DEPENDENCY?=$(PHP_DEPENDENCY) bin/composer
 else
 COMPOSER_DEPENDENCY?=$(wildcard $(COMPOSER_EXECUTABLE))
 endif
