@@ -7,10 +7,10 @@ $(error Please install Composer.)
 endif
 
 ###
-## Quality Assurance Tools
+## PHP Quality Assurance Tools
 ###
 
-# Validate Composer - Dependency Manager for PHP
+# Validate Composer
 # @see https://getcomposer.org/
 composer.validate: | $(COMPOSER_DEPENDENCY)
 	@$(COMPOSER_EXECUTABLE) validate --strict --no-check-publish --no-interaction

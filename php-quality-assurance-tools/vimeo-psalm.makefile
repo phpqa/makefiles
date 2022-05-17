@@ -29,7 +29,7 @@ endif
 PSALTER_ISSUES?=
 
 ###
-## Quality Assurance Tools
+## PHP Quality Assurance Tools
 ###
 
 #. Install Psalm # TODO Also add installation as phar
@@ -40,7 +40,7 @@ vendor/bin/psalm: | $(COMPOSER_DEPENDENCY) vendor
 psalm.xml: | $(PSALM_DEPENDENCY)
 	@$(PSALM) --init
 
-# Run Psalm - Static Analysis Tool
+# Run Psalm
 # @see https://psalm.dev/docs/
 psalm: | $(wildcard $(PSALM_CONFIG)) $(PSALM_DEPENDENCY)
 	@$(PSALM)$(if $(PSALM_FLAGS), $(PSALM_FLAGS))$(if $(PSALM_BASELINE), --use-baseline="$(PSALM_BASELINE)" --update-baseline)
@@ -50,13 +50,13 @@ psalm: | $(wildcard $(PSALM_CONFIG)) $(PSALM_DEPENDENCY)
 psalm-baseline.xml: | $(wildcard $(PSALM_CONFIG)) $(PSALM_DEPENDENCY)
 	@$(PSALM)$(if $(PSALM_FLAGS), $(PSALM_FLAGS)) --set-baseline="$(if $(PSALM_BASELINE),$(PSALM_BASELINE),psalm-baseline.xml)"
 
-# Run Psalter - Static Analysis Fixer #! will change code
+# Run Psalter #!
 # @see https://psalm.dev/docs/manipulating_code/fixing/
 psalter: | $(wildcard $(PSALM_CONFIG)) $(PSALM_DEPENDENCY)
 	@$(PSALM) --alter$(if $(PSALM_FLAGS), $(PSALM_FLAGS)) --issues=$(PSALTER_ISSUES)
 .PHONY: psalter
 
 # Dryrun Psalter
-psalter-dryrun: | $(wildcard $(PSALM_CONFIG)) $(PSALM_DEPENDENCY)
+psalter.dryrun: | $(wildcard $(PSALM_CONFIG)) $(PSALM_DEPENDENCY)
 	@$(PSALM) --alter --dry-run$(if $(PSALM_FLAGS), $(PSALM_FLAGS)) --issues=$(PSALTER_ISSUES)
-.PHONY: psalter-dryrun
+.PHONY: psalter.dryrun

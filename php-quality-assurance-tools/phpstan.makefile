@@ -34,14 +34,14 @@ endif
 endif
 
 ###
-## Quality Assurance Tools
+## PHP Quality Assurance Tools
 ###
 
 #. Install PHPStan
 vendor/bin/phpstan: | $(COMPOSER_DEPENDENCY) vendor
 	@if test ! -f "$(@)"; then $(COMPOSER_EXECUTABLE) require --dev phpstan/phpstan; fi
 
-# Run PHPStan - Static Analysis Tool
+# Run PHPStan
 # @see https://phpstan.org/
 phpstan: $(wildcard $(PHPSTAN_CONFIG)) | $(PHPSTAN_DEPENDENCY)
 	@$(PHPSTAN)$(if $(PHPSTAN_FLAGS), $(PHPSTAN_FLAGS)) analyse$(if $(PHPSTAN_DIRECTORIES_TO_CHECK), $(PHPSTAN_DIRECTORIES_TO_CHECK))

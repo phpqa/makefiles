@@ -43,7 +43,7 @@ endif
 endif
 
 ###
-## Quality Assurance Tools
+## PHP Quality Assurance Tools
 ###
 
 #. Install PHP_CodeSniffer # TODO Also add installation as phar
@@ -60,7 +60,7 @@ phpcs: | $(wildcard $(PHPCS_STANDARD)) $(PHPCS_DEPENDENCY)
 vendor/bin/phpcbf: | $(COMPOSER_DEPENDENCY) vendor
 	@if test ! -f "$(@)"; then $(COMPOSER_EXECUTABLE) require --dev squizlabs/php_codesniffer; fi
 
-# Run PHP Code Beautifier and Fixer #! will change code
+# Run PHP Code Beautifier and Fixer #!
 # @see https://github.com/squizlabs/PHP_CodeSniffer
 phpcbf: | $(wildcard $(PHPCBF_STANDARD)) bin/php vendor/bin/phpcbf
 	@$(PHPCBF)$(if $(PHPCBF_FLAGS), $(PHPCBF_FLAGS)) $(PHPCBF_DIRECTORIES_TO_CHECK)

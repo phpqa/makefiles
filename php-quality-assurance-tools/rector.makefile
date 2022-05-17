@@ -27,7 +27,7 @@ endif
 endif
 
 ###
-## Quality Assurance Tools
+## PHP Quality Assurance Tools
 ###
 
 #. Install Rector
@@ -38,13 +38,13 @@ vendor/bin/rector: | $(COMPOSER_DEPENDENCY) vendor
 rector.php: | $(RECTOR_DEPENDENCY)
 	@$(RECTOR) init
 
-# Run Rector - Instant Upgrades and Automated Refactoring
+# Run Rector #!
 # @see https://github.com/rectorphp/rector
 rector: | $(RECTOR_DEPENDENCY) rector.php
 	@$(RECTOR)$(if $(RECTOR_FLAGS), $(RECTOR_FLAGS)) process $(RECTOR_DIRECTORIES_TO_CHECK)
 .PHONY: rector
 
 # Dryrun Rector
-rector-dryrun: | $(RECTOR_DEPENDENCY) rector.php
+rector.dryrun: | $(RECTOR_DEPENDENCY) rector.php
 	@$(RECTOR)$(if $(RECTOR_FLAGS), $(RECTOR_FLAGS)) --dry-run process $(RECTOR_DIRECTORIES_TO_CHECK)
-.PHONY: rector-dryrun
+.PHONY: rector.dryrun

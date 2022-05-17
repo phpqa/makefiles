@@ -25,7 +25,7 @@ endif
 endif
 
 ###
-## Quality Assurance Tools
+## PHP Quality Assurance Tools
 ###
 
 #. Install Parallel Lint
