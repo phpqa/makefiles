@@ -33,5 +33,5 @@ phpunit.xml.dist: | $(PHPUNIT_DEPENDENCY)
 # Run PHPUnit - Programmer-oriented Testing Framework for PHP
 # @see https://phpunit.de/
 phpunit: | $(PHPUNIT_DEPENDENCY) phpunit.xml.dist
-	@$(PHPUNIT) $(PHPUNIT_FLAGS)
+	@$(PHPUNIT)$(if $(PHPUNIT_FLAGS), $(PHPUNIT_FLAGS))
 .PHONY: phpunit
