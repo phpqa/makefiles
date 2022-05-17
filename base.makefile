@@ -53,8 +53,8 @@ ICON_ERROR?=\342\234\226
 ###
 
 #. $(1) is the style, $(2) is the message
-print_in_style?=printf "$(subst $(space),,$(foreach style,$(1),$(STYLE_$(call uppercase,$(style)))))%s$(STYLE_RESET)%s" "$(2)"
-println_in_style?=printf "$(subst $(space),,$(foreach style,$(1),$(STYLE_$(call uppercase,$(style)))))%s$(STYLE_RESET)%s\n" "$(2)"
+print_in_style?=printf "$(subst $(space),,$(foreach style,$(call uppercase,$(1)),$(STYLE_$(style))))%s$(STYLE_RESET)%s" "$(2)"
+println_in_style?=printf "$(subst $(space),,$(foreach style,$(call uppercase,$(1)),$(STYLE_$(style))))%s$(STYLE_RESET)%s\n" "$(2)"
 #. $(1) is the url, $(2) is the (optional) description
 print_link?=printf "\033]8;;%s\033\\\\%s\033]8;;\033\\\\" "$(1)" "$(if $(2),$(2),$(1))"
 println_link?=printf "\033]8;;%s\033\\\\%s\033]8;;\033\\\\\n" "$(1)" "$(if $(2),$(2),$(1))"
