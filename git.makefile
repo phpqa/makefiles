@@ -51,7 +51,7 @@ git-pull-repository=\
 			if test ! -f "$${REPOSITORY_MAKEFILE}"; then \
 				printf "%s\\n" "Could not find file \"$${REPOSITORY_DIRECTORY}/$${REPOSITORY_MAKEFILE}\"."; \
 			else \
-				$(MAKE) -f "$${REPOSITORY_MAKEFILE}" pull-repositories; \
+				$(MAKE) -f "$${REPOSITORY_MAKEFILE}" pull-everything; \
 			fi; \
 		else \
 			DEFAULT_BRANCH="$$($(GIT) remote show origin | sed -n '/HEAD branch/s/.*: //p')"; \
@@ -85,30 +85,30 @@ $(foreach repository,$(REPOSITORIES),clone-repository-$(repository)):clone-repos
 $(foreach repository,$(REPOSITORIES),pull-repository-$(repository)):pull-repository-%:
 	@$(call git-pull-repository,$(*))
 
-#> Case 1: No repositories to pull
+#. Case 1: No repositories to pull
 ifeq ($(REPOSITORIES),)
 #. Do nothing
-pull-repositories:
-	@true
-.PHONY: pull-repositories
+pull-everything: ; @true
+.PHONY: pull-everything
 else
-#> Case 2: Only this repository to pull
+#. Case 2: Only this repository to pull
 ifeq ($(REPOSITORIES),$(REPOSITORY_self))
-#. Pull this repository (alias)
-pull-repositories: | pull-repository
-	@true
-.PHONY: pull-repositories
-#> Case 3: Multiple repositories to pull
+#. Pull this repository
+pull-everything: | pull-repository; @true
+.PHONY: pull-everything
+#. Case 3: Multiple repositories to pull
 else
 # Clone all repositories
-clone-repositories: | $(foreach repository,$(REPOSITORIES),clone-repository-$(repository))
-	@true
+clone-repositories: | $(foreach repository,$(REPOSITORIES),clone-repository-$(repository)); @true
 .PHONY: clone-repositories
 
 # Pull all repositories
-pull-repositories: | $(foreach repository,$(REPOSITORIES),pull-repository-$(repository))
-	@true
+pull-repositories: | $(foreach repository,$(REPOSITORIES),pull-repository-$(repository)); @true
 .PHONY: pull-repositories
+
+#. Pull all repositories
+pull-everything: pull-repositories; @true
+.PHONY: pull-everything
 endif
 endif
 
