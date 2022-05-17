@@ -13,4 +13,4 @@ endif
 # Validate Composer - Dependency Manager for PHP
 # @see https://getcomposer.org/
 composer.validate: | $(COMPOSER_DEPENDENCY)
-	@$(COMPOSER_EXECUTABLE) validate --no-check-publish
+	@$(COMPOSER_EXECUTABLE) validate --strict --no-check-publish --no-interaction
