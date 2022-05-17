@@ -19,7 +19,7 @@ endif
 PHPUNIT_FLAGS?=
 
 ###
-## Quality Assurance Tools
+## PHP Testing Tools
 ###
 
 #. Install PHPUnit
@@ -30,7 +30,7 @@ vendor/bin/phpunit: | $(COMPOSER_DEPENDENCY) vendor
 phpunit.xml.dist: | $(PHPUNIT_DEPENDENCY)
 	@$(PHPUNIT) --generate-configuration
 
-# Run PHPUnit - Programmer-oriented Testing Framework for PHP
+# Run PHPUnit
 # @see https://phpunit.de/
 phpunit: | $(PHPUNIT_DEPENDENCY) phpunit.xml.dist
 	@$(PHPUNIT)$(if $(PHPUNIT_FLAGS), $(PHPUNIT_FLAGS))
