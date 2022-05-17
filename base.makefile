@@ -293,4 +293,4 @@ force: ; @true
 .PHONY: force
 
 #. Run the command without printing "is up to date" messages
-silent-%:%; @true
+silent-% %.silent:%; @true
