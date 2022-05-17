@@ -16,9 +16,21 @@ PHPSTAN_DEPENDENCY?=$(PHP_DEPENDENCY) vendor/bin/phpstan
 else
 PHPSTAN_DEPENDENCY?=$(wildcard $(PHPSTAN))
 endif
-PHPSTAN_FLAGS?=--memory-limit=-1
-ifeq ($(findstring --no-interaction,$(PHPSTAN_FLAGS)),)
-PHPSTAN_FLAGS+=--no-interaction
+
+PHPSTAN_CONFIG?=$(wildcard phpstan.neon)
+PHPSTAN_BASELINE?=$(wildcard phpstan-baseline.neon)
+PHPSTAN_DIRECTORIES_TO_CHECK?=$(if $(PHPSTAN_CONFIG),,.)
+PHPSTAN_FLAGS?=
+ifneq ($(wildcard $(PHPSTAN_CONFIG)),)
+ifeq ($(findstring --configuration,$(PHPSTAN_FLAGS)),)
+PHPSTAN_FLAGS+=--configuration="$(PHPSTAN_CONFIG)"
+endif
+endif
+PHPSTAN_MEMORY_LIMIT?=
+ifneq ($(PHPSTAN_MEMORY_LIMIT),)
+ifeq ($(findstring --memory-limit,$(PHPSTAN_FLAGS)),)
+PHPSTAN_FLAGS+=--memory-limit="$(PHPSTAN_MEMORY_LIMIT)"
+endif
 endif
 
 ###
@@ -30,11 +42,11 @@ vendor/bin/phpstan: | $(COMPOSER_DEPENDENCY) vendor
 	@if test ! -f "$(@)"; then $(COMPOSER_EXECUTABLE) require --dev phpstan/phpstan; fi
 
 # Run PHPStan - Static Analysis Tool
-# @see https://github.com/phpstan/phpstan
-phpstan: | $(PHPSTAN_DEPENDENCY)
-	@$(PHPSTAN)$(if $(PHPSTAN_FLAGS), $(PHPSTAN_FLAGS)) analyse .
+# @see https://phpstan.org/
+phpstan: $(wildcard $(PHPSTAN_CONFIG)) | $(PHPSTAN_DEPENDENCY)
+	@$(PHPSTAN)$(if $(PHPSTAN_FLAGS), $(PHPSTAN_FLAGS)) analyse$(if $(PHPSTAN_DIRECTORIES_TO_CHECK), $(PHPSTAN_DIRECTORIES_TO_CHECK))
 .PHONY: phpstan
 
 # Generate a baseline for PHPStan
-phpstan-baseline.neon: | $(PHP_DEPENDENCY) vendor/bin/phpstan
-	@$(PHPSTAN)$(if $(PHPSTAN_FLAGS), $(PHPSTAN_FLAGS)) --generate-baseline
+phpstan-baseline.neon: | $(PHPSTAN_DEPENDENCY)
+	@$(PHPSTAN)$(if $(PHPSTAN_FLAGS), $(PHPSTAN_FLAGS)) --generate-baseline$(if $(PHPSTAN_BASELINE),="$(PHPSTAN_BASELINE)")
