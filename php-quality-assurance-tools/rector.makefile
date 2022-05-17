@@ -16,7 +16,15 @@ RECTOR_DEPENDENCY?=$(PHP_DEPENDENCY) vendor/bin/rector
 else
 RECTOR_DEPENDENCY?=$(wildcard $(RECTOR))
 endif
+
+RECTOR_CONFIG?=$(wildcard rector.php)
+RECTOR_DIRECTORIES_TO_CHECK?=.
 RECTOR_FLAGS?=
+ifneq ($(wildcard $(RECTOR_CONFIG)),)
+ifeq ($(findstring --config,$(RECTOR_FLAGS)),)
+RECTOR_FLAGS+=--config="$(RECTOR_CONFIG)"
+endif
+endif
 
 ###
 ## Quality Assurance Tools
@@ -33,5 +41,10 @@ rector.php: | $(RECTOR_DEPENDENCY)
 # Run Rector - Instant Upgrades and Automated Refactoring
 # @see https://github.com/rectorphp/rector
 rector: | $(RECTOR_DEPENDENCY) rector.php
-	@$(RECTOR)$(if $(RECTOR_FLAGS), $(RECTOR_FLAGS)) process .
+	@$(RECTOR)$(if $(RECTOR_FLAGS), $(RECTOR_FLAGS)) process $(RECTOR_DIRECTORIES_TO_CHECK)
 .PHONY: rector
+
+# Dryrun Rector
+rector-dryrun: | $(RECTOR_DEPENDENCY) rector.php
+	@$(RECTOR)$(if $(RECTOR_FLAGS), $(RECTOR_FLAGS)) --dry-run process $(RECTOR_DIRECTORIES_TO_CHECK)
+.PHONY: rector-dryrun
