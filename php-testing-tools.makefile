@@ -8,7 +8,7 @@ $(error Please provide the variable PHP_TESTING_TOOLS_DIRECTORY before including
 endif
 
 ###
-## PHP Testing Tools
+##. PHP Testing Tools
 ###
 
 include $(PHP_TESTING_TOOLS_DIRECTORY)/phpunit.makefile

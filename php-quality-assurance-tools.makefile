@@ -8,7 +8,7 @@ $(error Please provide the variable PHP_QUALITY_ASSURANCE_TOOLS_DIRECTORY before
 endif
 
 ###
-## PHP Quality Assurance Tools
+##. PHP Quality Assurance Tools
 ###
 
 include $(PHP_QUALITY_ASSURANCE_TOOLS_DIRECTORY)/php-parallel-lint.makefile
