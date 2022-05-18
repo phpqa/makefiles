@@ -12,7 +12,7 @@ endif
 ###
 
 include $(PHP_QUALITY_ASSURANCE_TOOLS_DIRECTORY)/php-parallel-lint.makefile
-include $(PHP_QUALITY_ASSURANCE_TOOLS_DIRECTORY)/composer-validate.makefile
+include $(PHP_QUALITY_ASSURANCE_TOOLS_DIRECTORY)/composer.makefile
 include $(PHP_QUALITY_ASSURANCE_TOOLS_DIRECTORY)/composer-normalize.makefile
 include $(PHP_QUALITY_ASSURANCE_TOOLS_DIRECTORY)/squizlabs-php_codesniffer.makefile
 include $(PHP_QUALITY_ASSURANCE_TOOLS_DIRECTORY)/friendsofphp-php-cs-fixer.makefile

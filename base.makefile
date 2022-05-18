@@ -90,7 +90,7 @@ check_variable_is_not_empty=if test -z "$${$(strip $(1))}"; then $(call println_
 
 .DEFAULT_GOAL?=help
 HELP_SKIP_TARGETS?=
-HELP_FIRST_COLUMN_WIDTH?=26
+HELP_FIRST_COLUMN_WIDTH?=29
 
 # Show this help
 help:

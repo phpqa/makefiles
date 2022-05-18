@@ -6,7 +6,7 @@
 # Run a complete analysis
 php.check:\
 	$(if $(PARALLEL_LINT),parallel-lint) \
-	$(if $(findstring composer-validate.makefile,$(MAKEFILE_LIST)),composer.validate) \
+	$(if $(findstring composer.makefile,$(MAKEFILE_LIST)),composer.validate composer.check-platform-reqs) \
 	$(if $(findstring composer-normalize.makefile,$(MAKEFILE_LIST)),composer-normalize.dryrun) \
 	$(if $(PHPCS),phpcs) \
 	$(if $(PHPCSFIXER),php-cs-fixer.dryrun) \
