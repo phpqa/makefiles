@@ -19,7 +19,7 @@ endif
 
 PHPSTAN_CONFIG?=$(wildcard phpstan.neon)
 PHPSTAN_BASELINE?=$(wildcard phpstan-baseline.neon)
-PHPSTAN_DIRECTORIES_TO_CHECK?=$(if $(PHPSTAN_CONFIG),,.)
+PHPSTAN_DIRECTORIES_TO_CHECK?=$(if $(PHPSTAN_CONFIG),,src)
 PHPSTAN_FLAGS?=
 ifneq ($(wildcard $(PHPSTAN_CONFIG)),)
 ifeq ($(findstring --configuration,$(PHPSTAN_FLAGS)),)

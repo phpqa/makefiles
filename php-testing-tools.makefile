@@ -12,7 +12,4 @@ endif
 ###
 
 include $(PHP_TESTING_TOOLS_DIRECTORY)/phpunit.makefile
-
-# Run all tests
-php.test: phpunit
-.PHONY: php.test
+include $(PHP_TESTING_TOOLS_DIRECTORY)/combined.makefile

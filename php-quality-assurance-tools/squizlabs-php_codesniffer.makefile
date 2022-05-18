@@ -17,8 +17,9 @@ else
 PHPCS_DEPENDENCY?=$(wildcard $(PHPCS))
 endif
 
-PHPCS_STANDARD?=$(firstword $(wildcard .phpcs.xml phpcs.xml .phpcs.xml.dist phpcs.xml.dist))
-PHPCS_DIRECTORIES_TO_CHECK?=.
+PHPCS_POSSIBLE_STANDARDS?=.phpcs.xml phpcs.xml .phpcs.xml.dist phpcs.xml.dist
+PHPCS_STANDARD?=$(firstword $(wildcard $(PHPCS_POSSIBLE_STANDARDS)))
+PHPCS_DIRECTORIES_TO_CHECK?=$(if $(wildcard $(PHPCS_POSSIBLE_STANDARDS)),,src)
 PHPCS_FLAGS?=
 ifneq ($(wildcard $(PHPCS_STANDARD)),)
 ifeq ($(findstring --standard,$(PHPCS_FLAGS)),)

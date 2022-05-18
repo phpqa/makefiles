@@ -17,7 +17,7 @@ else
 PSALM_DEPENDENCY?=$(wildcard $(PSALM))
 endif
 
-PSALM_CONFIG?=$(wildcard psalm.xml)
+PSALM_CONFIG?=psalm.xml
 PSALM_BASELINE?=$(wildcard psalm-baseline.xml)
 PSALM_FLAGS?=
 ifneq ($(wildcard $(PSALM_CONFIG)),)
@@ -36,27 +36,27 @@ PSALTER_ISSUES?=
 vendor/bin/psalm: | $(COMPOSER_DEPENDENCY) vendor
 	@if test ! -f "$(@)"; then $(COMPOSER_EXECUTABLE) require --dev vimeo/psalm; fi
 
-#. Initialize Psalm
+#. Initialize Psalm # TODO This needs a HOME environment variable to be overwritten https://github.com/vimeo/psalm/issues/4267
 psalm.xml: | $(PSALM_DEPENDENCY)
 	@$(PSALM) --init
 
 # Run Psalm
 # @see https://psalm.dev/docs/
-psalm: | $(wildcard $(PSALM_CONFIG)) $(PSALM_DEPENDENCY)
+psalm: | $(PSALM_CONFIG) $(PSALM_DEPENDENCY)
 	@$(PSALM)$(if $(PSALM_FLAGS), $(PSALM_FLAGS))$(if $(PSALM_BASELINE), --use-baseline="$(PSALM_BASELINE)" --update-baseline)
 .PHONY: psalm
 
 # Generate a baseline for Psalm
-psalm-baseline.xml: | $(wildcard $(PSALM_CONFIG)) $(PSALM_DEPENDENCY)
+psalm-baseline.xml: | $(PSALM_CONFIG) $(PSALM_DEPENDENCY)
 	@$(PSALM)$(if $(PSALM_FLAGS), $(PSALM_FLAGS)) --set-baseline="$(if $(PSALM_BASELINE),$(PSALM_BASELINE),psalm-baseline.xml)"
 
 # Run Psalter #!
 # @see https://psalm.dev/docs/manipulating_code/fixing/
-psalter: | $(wildcard $(PSALM_CONFIG)) $(PSALM_DEPENDENCY)
-	@$(PSALM) --alter$(if $(PSALM_FLAGS), $(PSALM_FLAGS)) --issues=$(PSALTER_ISSUES)
+psalter: | $(PSALM_CONFIG) $(PSALM_DEPENDENCY)
+	@$(PSALM) --alter$(if $(PSALM_FLAGS), $(PSALM_FLAGS)) --issues="$(if $(PSALTER_ISSUES),$(PSALTER_ISSUES),all)"
 .PHONY: psalter
 
 # Dryrun Psalter
-psalter.dryrun: | $(wildcard $(PSALM_CONFIG)) $(PSALM_DEPENDENCY)
-	@$(PSALM) --alter --dry-run$(if $(PSALM_FLAGS), $(PSALM_FLAGS)) --issues=$(PSALTER_ISSUES)
+psalter.dryrun: | $(PSALM_CONFIG) $(PSALM_DEPENDENCY)
+	@$(PSALM) --alter --dry-run$(if $(PSALM_FLAGS), $(PSALM_FLAGS)) --issues="$(if $(PSALTER_ISSUES),$(PSALTER_ISSUES),all)"
 .PHONY: psalter.dryrun

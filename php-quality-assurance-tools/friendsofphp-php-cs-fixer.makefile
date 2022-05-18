@@ -17,8 +17,9 @@ else
 PHPCSFIXER_DEPENDENCY?=$(wildcard $(PHPCSFIXER))
 endif
 
-PHPCSFIXER_DIRECTORIES_TO_CHECK?=
-PHPCSFIXER_CONFIG?=$(firstword $(wildcard ..php-cs-fixer.dist.php .php-cs-fixer.php))
+PHPCSFIXER_POSSIBLE_CONFIGS?=.php-cs-fixer.dist.php .php-cs-fixer.php
+PHPCSFIXER_DIRECTORIES_TO_CHECK?=$(if $(wildcard $(PHPCSFIXER_POSSIBLE_CONFIGS)),,src)
+PHPCSFIXER_CONFIG?=$(firstword $(wildcard $(PHPCSFIXER_POSSIBLE_CONFIGS)))
 PHPCSFIXER_FLAGS?=
 ifneq ($(wildcard $(PHPCSFIXER_CONFIG)),)
 ifeq ($(findstring --config,$(PHPCSFIXER_FLAGS)),)

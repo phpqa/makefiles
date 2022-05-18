@@ -19,9 +19,9 @@ vendor/ergebnis/composer-normalize: | $(COMPOSER_DEPENDENCY) vendor
 
 # Run composer-normalize #!
 # @see https://github.com/ergebnis/composer-normalize
-composer-normalize: | $(COMPOSER_DEPENDENCY)
+composer-normalize: | $(COMPOSER_DEPENDENCY) vendor/ergebnis/composer-normalize
 	@$(COMPOSER_EXECUTABLE) normalize$(if $(COMPOSER_NORMALIZE_FLAGS), $(COMPOSER_NORMALIZE_FLAGS))$(if $(COMPOSER), $(COMPOSER))
 
 # Dryrun composer-normalize
-composer-normalize.dryrun: | $(COMPOSER_DEPENDENCY)
+composer-normalize.dryrun: | $(COMPOSER_DEPENDENCY) vendor/ergebnis/composer-normalize
 	@$(COMPOSER_EXECUTABLE) normalize$(if $(COMPOSER_NORMALIZE_FLAGS), $(COMPOSER_NORMALIZE_FLAGS)) --diff --dry-run$(if $(COMPOSER), $(COMPOSER))
