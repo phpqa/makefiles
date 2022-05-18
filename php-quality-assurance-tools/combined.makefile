@@ -4,7 +4,7 @@
 ###
 
 # Run a complete analysis
-php.analysis:\
+php.check:\
 	$(if $(PARALLEL_LINT),parallel-lint) \
 	$(if $(findstring composer-validate.makefile,$(MAKEFILE_LIST)),composer.validate) \
 	$(if $(findstring composer-normalize.makefile,$(MAKEFILE_LIST)),composer-normalize.dryrun) \
@@ -14,7 +14,7 @@ php.analysis:\
 	$(if $(PSALM),psalm psalter.dryrun) \
 	$(if $(RECTOR),rector.dryrun) \
 
-.PHONY: php.analysis
+.PHONY: php.check
 
 # Fix your files #!
 php.fix:\
