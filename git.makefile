@@ -114,3 +114,13 @@ pull-repository: | pull-repository-$(REPOSITORY_self)
 	@true
 .PHONY: pull-repository
 endif
+
+ifneq ($(REPOSITORIES),)
+#. Hand-off to the REPOSITORY_MAKEFILE of the repository
+$(foreach repository,$(filter-out self,$(REPOSITORIES)),$(if $(REPOSITORY_MAKEFILE_$(repository)),%-$(repository))):
+	@if test -z "$(REPOSITORY_DIRECTORY_$(patsubst $(*)-%,%,$(@)))"; then \
+		printf "$(STYLE_ERROR)%s$(STYLE_RESET)\\n" "Could not find variable \"REPOSITORY_DIRECTORY_$(patsubst $(*)-%,%,$(@))\"!"; \
+		exit 1; \
+	fi
+	@cd "$(REPOSITORY_DIRECTORY_$(patsubst $(*)-%,%,$(@)))" && $(MAKE) -f "$(REPOSITORY_MAKEFILE_$(patsubst $(*)-%,%,$(@)))" $(*)
+endif
