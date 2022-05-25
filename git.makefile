@@ -7,51 +7,47 @@ ifeq ($(GIT),)
 $(error Please install git.)
 endif
 
+GIT_SUBDIRECTORY?=.git
+
 GIT_PULL_VERBOSE?=
 
-REPOSITORIES?=$(if $(wildcard .git),self)
-REPOSITORY_self?=$(strip $(foreach variable,$(filter REPOSITORY_DIRECTORY_%,$(.VARIABLES)),$(if $(findstring $(shell pwd),$(realpath $($(variable)))),$(if $(findstring $(realpath $($(variable))),$(shell pwd)),$(patsubst REPOSITORY_DIRECTORY_%,%,$(variable))))))
-REPOSITORY_DIRECTORY_self?=.
+REPOSITORIES?=$(if $(wildcard $(GIT_SUBDIRECTORY)),self)
+REPOSITORY_self?=$(if $(wildcard $(GIT_SUBDIRECTORY)),$(strip $(foreach variable,$(filter REPOSITORY_DIRECTORY_%,$(.VARIABLES)),$(if $(findstring $(shell pwd),$(realpath $($(variable)))),$(if $(findstring $(realpath $($(variable))),$(shell pwd)),$(patsubst REPOSITORY_DIRECTORY_%,%,$(variable)))))))
+REPOSITORY_DIRECTORY_self?=$(if $(wildcard $(GIT_SUBDIRECTORY)),.)
 
 ###
 ## Git
 ###
 
 # TODO make it optional to use stashes
-
-# $(1) is variable, $(2) is repository
-git-find-variable-for-repository=\
-	$(strip $(1))="$($(strip $(1))_$(strip $(2)))"; \
-	if test -z "$${$(strip $(1))}"; then \
-		$(strip $(1))="$$(printf "$($(strip $(1))_TEMPLATE)" "$(strip $(2))")"; \
-	fi
-# $(1) is variable, $(2) is repository
-git-get-variable-for-repository=\
-	$(call git-find-variable-for-repository,$(1),$(2)); \
-	if test -z "$${$(strip $(1))}"; then \
-		printf "$(STYLE_ERROR)%s$(STYLE_RESET)\\n" "Could not find variable \"$(strip $(1))_$(strip $(2))\", nor \"$(strip $(1))_TEMPLATE\"!"; \
-		exit 1; \
-	fi
 # $(1) is repository
 git-clone-repository=\
-	$(call git-get-variable-for-repository,REPOSITORY_DIRECTORY,$(1)); \
-	if test ! -d "$${REPOSITORY_DIRECTORY}"; then \
-		$(call git-get-variable-for-repository,REPOSITORY_URL,$(1)); \
-		printf "%s\\n" "Cloning into $${REPOSITORY_DIRECTORY}..."; \
-		$(GIT) clone $${REPOSITORY_URL} $${REPOSITORY_DIRECTORY}; \
+	if test -z "$(REPOSITORY_DIRECTORY_$(1))"; then \
+		printf "$(STYLE_ERROR)%s$(STYLE_RESET)\\n" "Could not find variable \"REPOSITORY_DIRECTORY_$(1)\"!"; \
+		exit 1; \
+	fi; \
+	if test ! -d "$(REPOSITORY_DIRECTORY_$(1))"; then \
+		if test -z "$(REPOSITORY_URL_$(1))"; then \
+			printf "$(STYLE_ERROR)%s$(STYLE_RESET)\\n" "Could not find variable \"REPOSITORY_URL_$(1)\"!"; \
+			exit 1; \
+		fi; \
+		$(GIT) clone "$(REPOSITORY_URL_$(1))" "$(REPOSITORY_DIRECTORY_$(1))"; \
 	fi
 # $(1) is repository
 git-pull-repository=\
-	$(call git-get-variable-for-repository,REPOSITORY_DIRECTORY,$(1)); \
-	$(call git-find-variable-for-repository,REPOSITORY_MAKEFILE,$(1)); \
-	$(call git-find-variable-for-repository,REPOSITORY_TAG,$(1)); \
-	( \
-		cd "$${REPOSITORY_DIRECTORY}"; \
-		if test -n "$${REPOSITORY_MAKEFILE}"; then \
-			if test ! -f "$${REPOSITORY_MAKEFILE}"; then \
-				printf "%s\\n" "Could not find file \"$${REPOSITORY_DIRECTORY}/$${REPOSITORY_MAKEFILE}\"."; \
+	if test -z "$(REPOSITORY_DIRECTORY_$(1))"; then \
+		printf "$(STYLE_ERROR)%s$(STYLE_RESET)\\n" "Could not find variable \"REPOSITORY_DIRECTORY_$(1)\"!"; \
+		exit 1; \
+	fi; \
+	if test ! -d "$(REPOSITORY_DIRECTORY_$(1))"; then \
+		printf "%s\\n" "Could not find directory \"$(REPOSITORY_DIRECTORY_$(1))\"."; \
+	else \
+		cd "$(REPOSITORY_DIRECTORY_$(1))"; \
+		if test -n "$(REPOSITORY_MAKEFILE_$(1))"; then \
+			if test ! -f "$(REPOSITORY_MAKEFILE_$(1))"; then \
+				printf "%s\\n" "Could not find file \"$(REPOSITORY_DIRECTORY_$(1))/$(REPOSITORY_MAKEFILE_$(1))\"."; \
 			else \
-				$(MAKE) -f "$${REPOSITORY_MAKEFILE}" pull-everything; \
+				$(MAKE) -f "$(REPOSITORY_MAKEFILE_$(1))" pull-everything; \
 			fi; \
 		else \
 			DEFAULT_BRANCH="$$($(GIT) remote show origin | sed -n '/HEAD branch/s/.*: //p')"; \
@@ -60,11 +56,11 @@ git-pull-repository=\
 			else \
 				printf "%s\\n" "Pulling \"$${DEFAULT_BRANCH}\" branch into \"$$(pwd)\"..."; \
 				$(GIT) pull origin "$${DEFAULT_BRANCH}" || true; \
-				if test -n "$${REPOSITORY_TAG}"; then \
+				if test -n "$(REPOSITORY_TAG_$(1))"; then \
 					$(GIT) fetch --all --tags > /dev/null || true; \
-					ACTUAL_REPOSITORY_TAG="$$($(GIT) tag --list --ignore-case --sort=-version:refname "$${REPOSITORY_TAG}" | head -n 1)"; \
+					ACTUAL_REPOSITORY_TAG="$$($(GIT) tag --list --ignore-case --sort=-version:refname "$(REPOSITORY_TAG_$(1))" | head -n 1)"; \
 					if test -z "$${ACTUAL_REPOSITORY_TAG}"; then \
-						printf "%s\\n" "Could not find tag \"$${REPOSITORY_TAG}\" for \"$$(pwd)\"!"; \
+						printf "%s\\n" "Could not find tag \"$(REPOSITORY_TAG_$(1))\" for \"$$(pwd)\"!"; \
 					else \
 						printf "%s\\n" "Checking \"$${ACTUAL_REPOSITORY_TAG}\" tag into \"$$(pwd)\"..."; \
 						$(GIT) -c advice.detachedHead=false checkout "tags/$${ACTUAL_REPOSITORY_TAG}" || true; \
@@ -74,8 +70,8 @@ git-pull-repository=\
 				echo " "; \
 				sleep 1; \
 			fi; \
-		fi \
-	)
+		fi; \
+	fi
 
 #. Clone a repository
 $(foreach repository,$(REPOSITORIES),clone-repository-$(repository)):clone-repository-%:
