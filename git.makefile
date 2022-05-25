@@ -9,8 +9,6 @@ endif
 
 GIT_SUBDIRECTORY?=.git
 
-GIT_PULL_VERBOSE?=
-
 REPOSITORIES?=$(if $(wildcard $(GIT_SUBDIRECTORY)),self)
 REPOSITORY_self?=$(if $(wildcard $(GIT_SUBDIRECTORY)),$(strip $(foreach variable,$(filter REPOSITORY_DIRECTORY_%,$(.VARIABLES)),$(if $(findstring $(shell pwd),$(realpath $($(variable)))),$(if $(findstring $(realpath $($(variable))),$(shell pwd)),$(patsubst REPOSITORY_DIRECTORY_%,%,$(variable)))))))
 REPOSITORY_DIRECTORY_self?=$(if $(wildcard $(GIT_SUBDIRECTORY)),.)
@@ -55,7 +53,7 @@ git-pull-repository=\
 				printf "%s\\n" "Could not determine branch for \"$$(pwd)\"!"; \
 			else \
 				printf "%s\\n" "Pulling \"$${DEFAULT_BRANCH}\" branch into \"$$(pwd)\"..."; \
-				$(GIT) pull origin "$${DEFAULT_BRANCH}" || true; \
+				$(GIT) pull --rebase origin "$${DEFAULT_BRANCH}" || true; \
 				if test -n "$(REPOSITORY_TAG_$(1))"; then \
 					$(GIT) fetch --all --tags > /dev/null || true; \
 					ACTUAL_REPOSITORY_TAG="$$($(GIT) tag --list --ignore-case --sort=-version:refname "$(REPOSITORY_TAG_$(1))" | head -n 1)"; \
@@ -66,9 +64,33 @@ git-pull-repository=\
 						$(GIT) -c advice.detachedHead=false checkout "tags/$${ACTUAL_REPOSITORY_TAG}" || true; \
 					fi; \
 				fi; \
-				$(if $(GIT_PULL_VERBOSE),$(GIT) log -1 || true;) \
 				echo " "; \
 				sleep 1; \
+			fi; \
+		fi; \
+	fi
+# $(1) is repository
+git-stash-repository=\
+	if test -z "$(REPOSITORY_DIRECTORY_$(1))"; then \
+		printf "$(STYLE_ERROR)%s$(STYLE_RESET)\\n" "Could not find variable \"REPOSITORY_DIRECTORY_$(1)\"!"; \
+		exit 1; \
+	fi; \
+	if test ! -d "$(REPOSITORY_DIRECTORY_$(1))"; then \
+		printf "%s\\n" "Could not find directory \"$(REPOSITORY_DIRECTORY_$(1))\"."; \
+	else \
+		cd "$(REPOSITORY_DIRECTORY_$(1))"; \
+		if test -n "$(REPOSITORY_MAKEFILE_$(1))"; then \
+			if test ! -f "$(REPOSITORY_MAKEFILE_$(1))"; then \
+				printf "%s\\n" "Could not find file \"$(REPOSITORY_DIRECTORY_$(1))/$(REPOSITORY_MAKEFILE_$(1))\"."; \
+			else \
+				$(MAKE) -f "$(REPOSITORY_MAKEFILE_$(1))" stash-everything; \
+			fi; \
+		else \
+			if test -z "$$($(GIT) status -s)"; then \
+				printf "%s\\n" "Nothing to stash in \"$$(pwd)\"."; \
+			else \
+				printf "%s\\n" "Stash pending changes in \"$$(pwd)\"..."; \
+				$(GIT) stash push --message "Stashed $$(date +'%Y-%m-%d %H:%M:%S') by makefile script" || true; \
 			fi; \
 		fi; \
 	fi
@@ -81,17 +103,29 @@ $(foreach repository,$(REPOSITORIES),clone-repository-$(repository)):clone-repos
 $(foreach repository,$(REPOSITORIES),pull-repository-$(repository)):pull-repository-%:
 	@$(call git-pull-repository,$(*))
 
+#. Stash a repository
+$(foreach repository,$(REPOSITORIES),stash-repository-$(repository)):stash-repository-%:
+	@$(call git-stash-repository,$(*))
+
 #. Case 1: No repositories to pull
 ifeq ($(REPOSITORIES),)
 #. Do nothing
 pull-everything: ; @true
 .PHONY: pull-everything
+
+#. Do nothing
+stash-everything: ; @true
+.PHONY: stash-everything
 else
 #. Case 2: Only this repository to pull
 ifeq ($(REPOSITORIES),$(REPOSITORY_self))
 #. Pull this repository
 pull-everything: | pull-repository; @true
 .PHONY: pull-everything
+
+#. Stash files in this repository
+stash-everything: | stash-repository; @true
+.PHONY: stash-everything
 #. Case 3: Multiple repositories to pull
 else
 # Clone all repositories
@@ -105,6 +139,14 @@ pull-repositories: | $(foreach repository,$(REPOSITORIES),pull-repository-$(repo
 #. Pull all repositories
 pull-everything: pull-repositories; @true
 .PHONY: pull-everything
+
+# Stash files in all repositories
+stash-repositories: | $(foreach repository,$(REPOSITORIES),stash-repository-$(repository)); @true
+.PHONY: stash-repositories
+
+#. Stash files in all repositories
+stash-everything: stash-repositories; @true
+.PHONY: stash-everything
 endif
 endif
 
@@ -113,6 +155,11 @@ ifneq ($(REPOSITORY_self),)
 pull-repository: | pull-repository-$(REPOSITORY_self)
 	@true
 .PHONY: pull-repository
+
+# Stash files in this repository
+stash-repository: | stash-repository-$(REPOSITORY_self)
+	@true
+.PHONY: stash-repository
 endif
 
 ifneq ($(REPOSITORIES),)
