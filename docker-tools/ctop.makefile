@@ -18,12 +18,11 @@ endif
 # Concise commandline monitoring for containers
 # @see https://ctop.sh/
 ctop:
-	@set -e; \
-		if test -z "$$($(DOCKER) ps --quiet --filter="name=$(@)")"; then \
-			$(DOCKER) run --rm --interactive --tty --name $(@) \
-				--volume $(DOCKER_SOCKET):$(DOCKER_SOCKET):ro \
-				quay.io/vektorlab/ctop:latest; \
-		else \
-			$(DOCKER) attach $(@); \
-		fi
+	@if test -z "$$($(DOCKER) container inspect --format "{{ .ID }}" "$(@)" 2> /dev/null)"; then \
+		$(DOCKER) container run --rm --interactive --tty --name $(@) \
+			--volume $(DOCKER_SOCKET):$(DOCKER_SOCKET):ro \
+			quay.io/vektorlab/ctop:latest; \
+	else \
+		$(DOCKER) attach $(@); \
+	fi
 .PHONY: ctop
