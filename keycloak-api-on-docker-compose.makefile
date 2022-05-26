@@ -67,8 +67,7 @@ update-user-password-on-keycloak-service=\
 	"
 # $1 is realm, $2 is username, $3 is password
 ensure-user-on-keycloak-service=\
-	REALM="$(strip $(1))"; \
-	$(call check_variable_is_not_empty,REALM); \
+	REALM="$(if $(strip $(1)),$(strip $(1)),master)"; \
 	USERNAME="$(if $(strip $(2)),$(strip $(2)),$(shell whoami))"; \
 	PASSWORD="$(if $(strip $(3)),$(strip $(3)),$${USERNAME})"; \
 	USER_ID="$$($(call find-user-id-on-keycloak-service,$${REALM},$${USERNAME}) || true)"; \
