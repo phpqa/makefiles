@@ -18,7 +18,12 @@ endif
 # A simple terminal UI for both docker and docker-compose
 # @see https://github.com/jesseduffield/lazydocker
 lazydocker:
-	@$(DOCKER) run --rm --interactive --tty --name $(@) \
-		--volume $(DOCKER_SOCKET):$(DOCKER_SOCKET):ro \
-		lazyteam/lazydocker:latest
+	@set -e; \
+		if test -z "$$($(DOCKER) ps --quiet --filter="name=$(@)")"; then \
+			$(DOCKER) run --rm --interactive --tty --name $(@) \
+				--volume $(DOCKER_SOCKET):$(DOCKER_SOCKET):ro \
+				lazyteam/lazydocker:latest; \
+		else \
+			$(DOCKER) attach $(@); \
+		fi
 .PHONY: lazydocker
