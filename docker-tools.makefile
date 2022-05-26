@@ -13,3 +13,4 @@ endif
 
 include $(DOCKER_TOOLS_DIRECTORY)/ctop.makefile
 include $(DOCKER_TOOLS_DIRECTORY)/lazydocker.makefile
+include $(DOCKER_TOOLS_DIRECTORY)/portainer.makefile
