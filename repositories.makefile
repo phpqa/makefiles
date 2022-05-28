@@ -14,7 +14,7 @@ REPOSITORY_self?=$(if $(wildcard $(GIT_SUBDIRECTORY)),$(strip $(foreach variable
 REPOSITORY_DIRECTORY_self?=$(if $(wildcard $(GIT_SUBDIRECTORY)),.)
 
 ###
-## Git
+## Repositories
 ###
 
 # TODO make it optional to use stashes
@@ -45,7 +45,7 @@ git-pull-repository=\
 			if test ! -f "$(REPOSITORY_MAKEFILE_$(1))"; then \
 				printf "%s\\n" "Could not find file \"$(REPOSITORY_DIRECTORY_$(1))/$(REPOSITORY_MAKEFILE_$(1))\"."; \
 			else \
-				$(MAKE) -f "$(REPOSITORY_MAKEFILE_$(1))" pull-everything; \
+				$(MAKE) -f "$(REPOSITORY_MAKEFILE_$(1))" repositories.pull-everything; \
 			fi; \
 		else \
 			DEFAULT_BRANCH="$$($(GIT) remote show origin | sed -n '/HEAD branch/s/.*: //p')"; \
@@ -83,7 +83,7 @@ git-stash-repository=\
 			if test ! -f "$(REPOSITORY_MAKEFILE_$(1))"; then \
 				printf "%s\\n" "Could not find file \"$(REPOSITORY_DIRECTORY_$(1))/$(REPOSITORY_MAKEFILE_$(1))\"."; \
 			else \
-				$(MAKE) -f "$(REPOSITORY_MAKEFILE_$(1))" stash-everything; \
+				$(MAKE) -f "$(REPOSITORY_MAKEFILE_$(1))" repositories.stash-everything; \
 			fi; \
 		else \
 			if test -z "$$($(GIT) status -s)"; then \
@@ -96,70 +96,70 @@ git-stash-repository=\
 	fi
 
 #. Clone a repository
-$(foreach repository,$(REPOSITORIES),clone-repository-$(repository)):clone-repository-%:
+$(foreach repository,$(REPOSITORIES),repository.$(repository).clone):repository.%.clone:
 	@$(call git-clone-repository,$(*))
 
 #. Pull a repository
-$(foreach repository,$(REPOSITORIES),pull-repository-$(repository)):pull-repository-%:
+$(foreach repository,$(REPOSITORIES),repository.$(repository).pull):repository.%.pull:
 	@$(call git-pull-repository,$(*))
 
 #. Stash a repository
-$(foreach repository,$(REPOSITORIES),stash-repository-$(repository)):stash-repository-%:
+$(foreach repository,$(REPOSITORIES),repository.$(repository).stash):repository.%.stash:
 	@$(call git-stash-repository,$(*))
 
 #. Case 1: No repositories to pull
 ifeq ($(REPOSITORIES),)
 #. Do nothing
-pull-everything: ; @true
-.PHONY: pull-everything
+repositories.pull-everything: ; @true
+.PHONY: repositories.pull-everything
 
 #. Do nothing
-stash-everything: ; @true
-.PHONY: stash-everything
+repositories.stash-everything: ; @true
+.PHONY: repositories.stash-everything
 else
 #. Case 2: Only this repository to pull
 ifeq ($(REPOSITORIES),$(REPOSITORY_self))
 #. Pull this repository
-pull-everything: | pull-repository; @true
-.PHONY: pull-everything
+repositories.pull-everything: | repository.pull; @true
+.PHONY: repositories.pull-everything
 
 #. Stash files in this repository
-stash-everything: | stash-repository; @true
-.PHONY: stash-everything
+repositories.stash-everything: | repository.stash; @true
+.PHONY: repositories.stash-everything
 #. Case 3: Multiple repositories to pull
 else
 # Clone all repositories
-clone-repositories: | $(foreach repository,$(REPOSITORIES),clone-repository-$(repository)); @true
-.PHONY: clone-repositories
+repositories.clone: | $(foreach repository,$(REPOSITORIES),repository.$(repository).clone); @true
+.PHONY: repositories.clone
 
 # Pull all repositories
-pull-repositories: | $(foreach repository,$(REPOSITORIES),pull-repository-$(repository)); @true
-.PHONY: pull-repositories
+repositories.pull: | $(foreach repository,$(REPOSITORIES),repository.$(repository).pull); @true
+.PHONY: repositories.pull
 
 #. Pull all repositories
-pull-everything: pull-repositories; @true
-.PHONY: pull-everything
+repositories.pull-everything: repositories.pull; @true
+.PHONY: repositories.pull-everything
 
 # Stash files in all repositories
-stash-repositories: | $(foreach repository,$(REPOSITORIES),stash-repository-$(repository)); @true
-.PHONY: stash-repositories
+repositories.stash: | $(foreach repository,$(REPOSITORIES),repository.$(repository).stash); @true
+.PHONY: repositories.stash
 
 #. Stash files in all repositories
-stash-everything: stash-repositories; @true
-.PHONY: stash-everything
+repositories.stash-everything: repositories.stash; @true
+.PHONY: repositories.stash-everything
 endif
 endif
 
 ifneq ($(REPOSITORY_self),)
 # Pull this repository
-pull-repository: | pull-repository-$(REPOSITORY_self)
+repository.pull: | repository.$(REPOSITORY_self).pull
 	@true
-.PHONY: pull-repository
+.PHONY: repository.pull
 
 # Stash files in this repository
-stash-repository: | stash-repository-$(REPOSITORY_self)
+repository.stash: | repository.$(REPOSITORY_self).stash
 	@true
-.PHONY: stash-repository
+.PHONY: repository.stash
 endif
 
 ifneq ($(REPOSITORIES),)
