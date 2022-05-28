@@ -24,10 +24,10 @@ MAKEFILES_LOG:=$(shell \
 REPOSITORIES=self
 REPOSITORY_DIRECTORY_self=.
 
-#. At least include the includes/base.makefile and includes/git.makefile files
-include $(MAKEFILES_DIRECTORY)/builtins.makefile  # Reset the default makefile builtins
-include $(MAKEFILES_DIRECTORY)/base.makefile      # Base functionality
-include $(MAKEFILES_DIRECTORY)/git.makefile       # Git management
+#. At least include the includes/base.makefile and includes/repositories.makefile files
+include $(MAKEFILES_DIRECTORY)/builtins.makefile     # Reset the default makefile builtins
+include $(MAKEFILES_DIRECTORY)/base.makefile         # Base functionality
+include $(MAKEFILES_DIRECTORY)/repositories.makefile # Repositories management
 ```
 
 Change the MAKEFILES_TAG variable to the latest tag of this project, or the tag of the version you want to use:
