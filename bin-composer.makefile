@@ -3,7 +3,7 @@
 ###
 
 ifeq ($(PHP),)
-$(error Please install php.)
+$(error Please provide the variable PHP before including this file.)
 endif
 
 COMPOSER_IMAGE?=composer
