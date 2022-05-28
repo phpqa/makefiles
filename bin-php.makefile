@@ -2,23 +2,7 @@
 ##. Configuration
 ###
 
-DOCKER_SOCKET?=/var/run/docker.sock
-
-DOCKER?=$(shell command -v docker || which docker 2>/dev/null)
-
-DOCKER_COMPOSE?=$(shell command -v docker-compose || which docker-compose 2>/dev/null)
-DOCKER_COMPOSE_EXTRA_FLAGS?=
-DOCKER_COMPOSE_FLAGS?=$(if $(DOCKER_COMPOSE_EXTRA_FLAGS), $(DOCKER_COMPOSE_EXTRA_FLAGS))
-DOCKER_COMPOSE_DIRECTORY?=
-
-ifeq ($(DOCKER),)
-$(error Please install docker.)
-endif
-
-ifeq ($(DOCKER_COMPOSE),)
-$(error Please install docker-compose.)
-endif
-
+# TODO Move to DOCKER_CONTAINER_NAME_FOR_PHP
 DOCKER_COMPOSE_SERVICE_NAME_FOR_PHP?=
 ifeq ($(DOCKER_COMPOSE_SERVICE_NAME_FOR_PHP),)
 $(error Please provide the variable DOCKER_COMPOSE_SERVICE_NAME_FOR_PHP before including this file.)
