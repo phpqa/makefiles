@@ -17,7 +17,7 @@ PORTAINER_ADMIN_PASSWORD?=superpassword
 ###
 
 # Start the Portainer container
-start-portainer:start-%:
+portainer.start:%.start:
 	@ID=""; \
 	if test -z "$$($(DOCKER) container inspect --format "{{ .ID }}" portainer 2> /dev/null)"; then \
 		$(DOCKER) container run --rm --detach --name portainer \
@@ -31,13 +31,16 @@ start-portainer:start-%:
 		$(DOCKER) container inspect --format "{{ .ID }}" portainer; \
 	fi
 	@printf "http://$$($(DOCKER) container port portainer 9000)"
+.PHONY: portainer.start
 
 # Stop the Portainer container
-stop-portainer:stop-%:
+portainer.stop:%.stop:
 	-@$(DOCKER) stop portainer
+.PHONY: portainer.stop
 
 # Reset the Portainer volume (including password)
-reset-portainer:reset-%:
-	-@$(MAKE) stop-portainer
+portainer.reset:%.reset:
+	-@$(MAKE) portainer.stop
 	-@$(DOCKER) volume rm portainer_data
-	@$(MAKE) start-portainer
+	@$(MAKE) portainer.start
+.PHONY: portainer.reset
