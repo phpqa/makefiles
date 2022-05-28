@@ -12,9 +12,10 @@ endif
 endif
 
 ifeq ($(DOCKER_COMPOSE),)
-$(error Please install docker-compose.)
+$(error Please provide the variable DOCKER_COMPOSE before including this file.)
 endif
 
+# TODO Move to DOCKER_CONTAINER_NAME_FOR_KEYCLOAK
 DOCKER_COMPOSE_SERVICE_NAME_FOR_KEYCLOAK?=
 ifeq ($(DOCKER_COMPOSE_SERVICE_NAME_FOR_KEYCLOAK),)
 $(error Please provide the variable DOCKER_COMPOSE_SERVICE_NAME_FOR_KEYCLOAK before including this file.)
