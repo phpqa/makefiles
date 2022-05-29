@@ -12,8 +12,8 @@ php.check:\
 	$(if $(PHPCSFIXER),php-cs-fixer.dryrun) \
 	$(if $(PHPSTAN),phpstan) \
 	$(if $(PSALM),psalm psalter.dryrun) \
-	$(if $(RECTOR),rector.dryrun) \
-
+	$(if $(RECTOR),rector.dryrun)
+	@true
 .PHONY: php.check
 
 # Fix your files #!
@@ -22,6 +22,6 @@ php.fix:\
 	$(if $(PSALM),psalter) \
 	$(if $(RECTOR),rector) \
 	$(if $(PHPCBF),phpcbf) \
-	$(if $(PHPCSFIXER),php-cs-fixer) \
-
+	$(if $(PHPCSFIXER),php-cs-fixer)
+	@true
 .PHONY: php.fix

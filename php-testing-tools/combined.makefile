@@ -5,6 +5,6 @@
 
 # Run all tests
 php.test: \
-	$(if $(PHPUNIT),phpunit) \
-
+	$(if $(PHPUNIT),phpunit)
+	@true
 .PHONY: php.test
