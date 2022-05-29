@@ -103,12 +103,19 @@ endif
 # List all managed files
 managed-files.list:
 	@$(foreach file,$(MANAGED_FILES),printf "%s\n" "$(file)";)
+.PHONY: managed-files.list
 
 # Back up all managed files
 managed-files.back-up: | $(foreach file,$(MANAGED_FILES),$(file).back-up)
+	@true
+.PHONY: managed-files.back-up
 
 # Recover all managed files
 managed-files.recover: | $(foreach file,$(MANAGED_FILES),$(file).recover)
+	@true
+.PHONY: managed-files.recover
 
 # Remove all managed files, keep backups
 managed-files.remove: | $(foreach file,$(MANAGED_FILES),$(file).remove)
+	@true
+.PHONY: managed-files.remove
