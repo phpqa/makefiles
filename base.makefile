@@ -95,7 +95,7 @@ HELP_FIRST_COLUMN_WIDTH?=29
 # Show this help
 help:
 	@\
-	show_pattern="$$($(MAKE) list-make-targets-as-database | awk -F ";" '/^[a-zA-Z0-9_%\/\.-]+/{ if (skipped) printf "|"; printf "^%s:", $$3; skipped=1 }')"; \
+	show_pattern="$$($(MAKE) --file="$(firstword $(MAKEFILE_LIST))" list-make-targets-as-database | awk -F ";" '/^[a-zA-Z0-9_%\/\.-]+/{ if (skipped) printf "|"; printf "^%s:", $$3; skipped=1 }')"; \
 	skip_pattern="$(subst $(space),|,$(foreach target,$(HELP_SKIP_TARGETS),^$(target):))"; \
 	if test -z "$${show_pattern}"; then show_pattern="empty"; fi; \
 	if test -z "$${skip_pattern}"; then skip_pattern="empty"; fi; \
@@ -122,7 +122,7 @@ help:
 			doc=""; \
 			warning=""; \
 		} }; \
-	' $(shell $(MAKE) list-makefiles)
+	' $(shell $(MAKE) --file="$(firstword $(MAKEFILE_LIST))" list-makefiles)
 .PHONY: help
 
 # Print debugging information
@@ -132,7 +132,7 @@ debug:
 	@$(call println_in_style,title,Current working directory)
 	@printf "  %s\\n" "$(CWD)"
 	@$(call println_in_style,title,Loaded makefiles)
-	@$(MAKE) list-makefiles | awk '$$0="  "$$0'
+	@$(MAKE) --file="$(firstword $(MAKEFILE_LIST))" list-makefiles | awk '$$0="  "$$0'
 	@$(call println_in_style,title,Used makeflags)
 	@printf "  %s\\n" "$(MAKEFLAGS)"
 .PHONY: debug
@@ -143,7 +143,7 @@ debug:
 
 #. List all included makefiles
 list-makefiles:
-	@$(MAKE) --jobs=1 --always-make --print-data-base --no-builtin-rules --no-builtin-variables : 2>/dev/null \
+	@$(MAKE) --file="$(firstword $(MAKEFILE_LIST))" --jobs=1 --always-make --print-data-base --no-builtin-rules --no-builtin-variables : 2>/dev/null \
 		| awk -v MAKEFILE_LIST="$(MAKEFILE_LIST)" ' \
 			{ if (/^# Variables/) { skip_segment=1 } } \
 			{ if (/^# Directories/) { skip_segment=1 } } \
@@ -155,11 +155,12 @@ list-makefiles:
 			{ if (/^[\t]/) { next } } \
 			\
 			{ if (/^# Not a target:/) { include="yes"; next } } \
-			{ if (/^([^#]+):/) { if (include=="yes") { match($$0,/:/); file=substr($$0,0,RSTART-1) } } } \
-			{ if (/^$$|^[\t]+$$/) { if (file) { search=replace=file; gsub(" ","\\ ",replace); gsub(" "search,replace"\n",MAKEFILE_LIST) }; original=""; file=""; include="no"; } } \
+			{ if (/^([^#]+):/) { if (include=="yes") { match($$0,/:/); file=substr($$0,1,RSTART-1) } } } \
+			{ if (/^$$|^[\t]+$$/) { if (file) { search=replace=file; gsub(" ","\\ ",replace); gsub(" "search,"\n*"replace"*\n",MAKEFILE_LIST) }; original=""; file=""; include="no"; } } \
 			\
-			END { printf "%s",MAKEFILE_LIST } \
-		'
+			END { print MAKEFILE_LIST } \
+		' \
+		| awk '/\*([^\*]+)\*/ { print substr($$1,2,length($$1)-2) }'
 .PHONY: list-makefiles
 
 #. List the value for a make variable
@@ -171,7 +172,7 @@ list-make-variable-%:
 
 #. List all make variables as semi-colon separated list
 list-make-variables-as-database:
-	@$(MAKE) --jobs=1 --print-data-base --no-builtin-rules --no-builtin-variables : 2>/dev/null \
+	@$(MAKE) --file="$(firstword $(MAKEFILE_LIST))" --jobs=1 --print-data-base --no-builtin-rules --no-builtin-variables : 2>/dev/null \
 		| awk ' \
 			{ if (/^# Variables/) { skip_segment=0 } } \
 			{ if (/^# Directories/) { skip_segment=1 } } \
@@ -205,7 +206,7 @@ list-make-variables-as-database:
 
 #. List all make variables
 list-make-variables:
-	@$(MAKE) list-make-variables-as-database \
+	@$(MAKE) --file="$(firstword $(MAKEFILE_LIST))" list-make-variables-as-database \
 		| awk -F ";" -v STYLE_UNDERLINED="$(STYLE_UNDERLINED)" -v STYLE_RESET="$(STYLE_RESET)" ' \
 			{ \
 				if ($$1 != printed_file) { printf "\n" STYLE_UNDERLINED "%s" STYLE_RESET "\n",$$1; printed_file=$$1 } \
@@ -216,7 +217,7 @@ list-make-variables:
 
 #. List all make targets as semi-colon separated list
 list-make-targets-as-database:
-	@$(MAKE) --jobs=1 --always-make --print-data-base --no-builtin-rules --no-builtin-variables : 2>/dev/null \
+	@$(MAKE) --file="$(firstword $(MAKEFILE_LIST))" --jobs=1 --always-make --print-data-base --no-builtin-rules --no-builtin-variables : 2>/dev/null \
 		| awk ' \
 			{ if (/^# Variables/) { skip_segment=1 } } \
 			{ if (/^# Directories/) { skip_segment=1 } } \
@@ -260,7 +261,7 @@ list-make-targets-as-database:
 
 #. List all make targets
 list-make-targets:
-	@$(MAKE) list-make-targets-as-database  \
+	@$(MAKE) --file="$(firstword $(MAKEFILE_LIST))" list-make-targets-as-database  \
 		| awk -F ";" -v STYLE_UNDERLINED="$(STYLE_UNDERLINED)" -v STYLE_TITLE="$(STYLE_TITLE)" -v STYLE_WARNING="$(STYLE_WARNING)" -v STYLE_RESET="$(STYLE_RESET)" ' \
 			{ \
 				{ if ($$1 != printed_file) { printf "\n" STYLE_UNDERLINED "%s" STYLE_RESET "\n",$$1; printed_file=$$1 } } \
@@ -281,7 +282,7 @@ $(realpath $(CWD)/..)/makefile ../makefile: force
 	@printf "%s\n" ".PHONY: force" >> "$(@)"
 	@printf "%s\n" ".DEFAULT_GOAL:=$(.DEFAULT_GOAL)" >> "$(@)"
 	@printf "%s\n" "\$$(MAKEFILE_LIST): ; @true" >> "$(@)"
-	@printf "%s\n" "%: force; @cd "$(notdir $(CWD))" && \$$(MAKE) \$$(*)" >> "$(@)"
+	@printf "%s\n" "%: force; @cd \"$(notdir $(CWD))\" && \$$(MAKE) --file=\"$(firstword $(MAKEFILE_LIST))\" \$$(*)" >> "$(@)"
 	@printf "%s\n" "force:" >> "$(@)"
 
 ###
