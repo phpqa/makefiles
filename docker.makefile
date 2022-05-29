@@ -40,7 +40,7 @@ ifneq ($(DOCKER_COMPOSE_DIRECTORY),)
 compose.build:
 	@$(if $(DOCKER_COMPOSE_DIRECTORY),cd "$(DOCKER_COMPOSE_DIRECTORY)";) \
 	$(DOCKER_COMPOSE)$(if $(DOCKER_COMPOSE_FLAGS), $(DOCKER_COMPOSE_FLAGS)) build --pull
-.PHONY: compose.images.build
+.PHONY: compose.build
 
 # Up the service(s)
 compose.up:
