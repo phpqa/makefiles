@@ -92,15 +92,16 @@ ensure-keycloak-realm-client=\
 		$(call add-keycloak-realm-client,$(1),$(2)); \
 	fi
 
-# $1 is the realm, $2 is the client name, $3 are the redirect uris (as a space separated list)
-update-keycloak-realm-client-redirectUris=\
+# $1 is the realm, $2 is the client name, $3 is the field, $4 is the value
+update-keycloak-realm-client-field=\
 	REALM="$(if $(1),$(strip $(1)),master)"; \
 	CLIENT_NAME="$(if $(2),$(strip $(2)),admin-cli)"; \
-	REDIRECT_URI="$(3)"; \
+	FIELD="$(subst ",\",$(subst ',\',$(3)))"; \
+	VALUE="$(subst ",\",$(subst ',\',$(4)))"; \
 	$(DOCKER_COMPOSE) exec $(DOCKER_COMPOSE_SERVICE_NAME_FOR_KEYCLOAK) sh -c " \
 		/opt/keycloak/bin/kcadm.sh update clients/$$($(call find-keycloak-realm-client-id,$${REALM},$${CLIENT_NAME})) \
 			--target-realm $${REALM} \
-			--set 'redirectUris=[$(subst $(space),$(comma),$(foreach uri,$(3),\"$(uri)\"))]' \
+			--set '$${FIELD}=$${VALUE}' \
 			--merge \
 	"
 
@@ -182,12 +183,12 @@ reset-keycloak-realm-user-password=\
 update-keycloak-realm-user-field=\
 	REALM="$(if $(1),$(strip $(1)),master)"; \
 	USERNAME="$(if $(2),$(strip $(2)),$(shell whoami))"; \
-	FIELD="$(3)"; \
-	VALUE="$(4)"; \
+	FIELD="$(subst ",\",$(subst ',\',$(3)))"; \
+	VALUE="$(subst ",\",$(subst ',\',$(4)))"; \
 	$(DOCKER_COMPOSE) exec $(DOCKER_COMPOSE_SERVICE_NAME_FOR_KEYCLOAK) sh -c " \
 		/opt/keycloak/bin/kcadm.sh update users/$$($(call find-keycloak-realm-user-id,$${REALM},$${USERNAME})) \
 			--target-realm $${REALM} \
-			--set $${FIELD}=$${VALUE} \
+			--set '$${FIELD}=$${VALUE}' \
 	"
 
 # $1 is the realm, $2 is the username, $3 is the client name, $4 is the role
