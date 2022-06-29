@@ -27,6 +27,12 @@ ifeq ($(findstring --configuration,$(PHPSTAN_FLAGS)),)
 PHPSTAN_FLAGS+=--configuration="$(PHPSTAN_CONFIG)"
 endif
 endif
+PHPSTAN_CLEAR_CACHE_FLAGS?=
+ifneq ($(wildcard $(PHPSTAN_CONFIG)),)
+ifeq ($(findstring --configuration,$(PHPSTAN_CLEAR_CACHE_FLAGS)),)
+PHPSTAN_CLEAR_CACHE_FLAGS+=--configuration="$(PHPSTAN_CONFIG)"
+endif
+endif
 PHPSTAN_MEMORY_LIMIT?=
 ifneq ($(PHPSTAN_MEMORY_LIMIT),)
 ifeq ($(findstring --memory-limit,$(PHPSTAN_FLAGS)),)
@@ -51,3 +57,8 @@ phpstan: $(wildcard $(PHPSTAN_CONFIG)) | $(PHPSTAN_DEPENDENCY)
 # Generate a baseline for PHPStan
 phpstan-baseline.neon: | $(PHPSTAN_DEPENDENCY)
 	@$(PHPSTAN)$(if $(PHPSTAN_FLAGS), $(PHPSTAN_FLAGS)) --generate-baseline$(if $(PHPSTAN_BASELINE),="$(PHPSTAN_BASELINE)")
+
+# Clear the PHPStan cache
+phpstan.clear-cache:: $(wildcard $(PHPSTAN_CONFIG)) | $(PHPSTAN_DEPENDENCY)
+	@$(PHPSTAN)$(if $(PHPSTAN_CLEAR_CACHE_FLAGS), $(PHPSTAN_CLEAR_CACHE_FLAGS)) clear-result-cache
+.PHONY: phpstan.clear-cache:
