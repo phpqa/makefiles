@@ -50,6 +50,11 @@ psalm: | $(PSALM_CONFIG) $(PSALM_DEPENDENCY)
 psalm-baseline.xml: | $(PSALM_CONFIG) $(PSALM_DEPENDENCY)
 	@$(PSALM)$(if $(PSALM_FLAGS), $(PSALM_FLAGS)) --set-baseline="$(if $(PSALM_BASELINE),$(PSALM_BASELINE),psalm-baseline.xml)"
 
+# Clear the Psalm cache
+psalm.clear-cache:
+	@$(PSALM)$(if $(PSALM_FLAGS), $(PSALM_FLAGS)) --clear-cache
+.PHONY: psalm.clear-cache
+
 # Run Psalter #!
 # @see https://psalm.dev/docs/manipulating_code/fixing/
 psalter: | $(PSALM_CONFIG) $(PSALM_DEPENDENCY)
