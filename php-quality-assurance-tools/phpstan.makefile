@@ -17,7 +17,8 @@ else
 PHPSTAN_DEPENDENCY?=$(wildcard $(PHPSTAN))
 endif
 
-PHPSTAN_CONFIG?=$(wildcard phpstan.neon)
+PHPSTAN_POSSIBLE_CONFIGS?=phpstan.neon phpstan.neon.dist phpstan.dist.neon
+PHPSTAN_CONFIG?=$(firstword $(wildcard $(PHPSTAN_POSSIBLE_CONFIGS)))
 PHPSTAN_BASELINE?=$(wildcard phpstan-baseline.neon)
 PHPSTAN_DIRECTORIES_TO_CHECK?=$(if $(PHPSTAN_CONFIG),,src)
 PHPSTAN_FLAGS?=
