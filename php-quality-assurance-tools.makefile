@@ -18,5 +18,6 @@ include $(PHP_QUALITY_ASSURANCE_TOOLS_DIRECTORY)/squizlabs-php_codesniffer.makef
 include $(PHP_QUALITY_ASSURANCE_TOOLS_DIRECTORY)/friendsofphp-php-cs-fixer.makefile
 include $(PHP_QUALITY_ASSURANCE_TOOLS_DIRECTORY)/phpstan.makefile
 include $(PHP_QUALITY_ASSURANCE_TOOLS_DIRECTORY)/vimeo-psalm.makefile
+include $(PHP_QUALITY_ASSURANCE_TOOLS_DIRECTORY)/qossmic-deptrac.makefile
 include $(PHP_QUALITY_ASSURANCE_TOOLS_DIRECTORY)/rector.makefile
 include $(PHP_QUALITY_ASSURANCE_TOOLS_DIRECTORY)/combined.makefile
