@@ -57,6 +57,7 @@ phpstan: $(wildcard $(PHPSTAN_CONFIG)) | $(PHPSTAN_DEPENDENCY)
 # Generate a baseline for PHPStan
 phpstan-baseline.neon: | $(PHPSTAN_DEPENDENCY)
 	@$(PHPSTAN)$(if $(PHPSTAN_FLAGS), $(PHPSTAN_FLAGS)) --generate-baseline$(if $(PHPSTAN_BASELINE),="$(PHPSTAN_BASELINE)")
+.PRECIOUS: phpstan-baseline.neon
 
 # Clear the PHPStan cache
 phpstan.clear-cache:: $(wildcard $(PHPSTAN_CONFIG)) | $(PHPSTAN_DEPENDENCY)

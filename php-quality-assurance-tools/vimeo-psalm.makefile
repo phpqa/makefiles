@@ -49,6 +49,7 @@ psalm: | $(PSALM_CONFIG) $(PSALM_DEPENDENCY)
 # Generate a baseline for Psalm
 psalm-baseline.xml: | $(PSALM_CONFIG) $(PSALM_DEPENDENCY)
 	@$(PSALM)$(if $(PSALM_FLAGS), $(PSALM_FLAGS)) --set-baseline="$(if $(PSALM_BASELINE),$(PSALM_BASELINE),psalm-baseline.xml)"
+.PRECIOUS: psalm-baseline.xml
 
 # Clear the Psalm cache
 psalm.clear-cache:
