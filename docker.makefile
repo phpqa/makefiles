@@ -96,4 +96,18 @@ compose.service.%.ensure-stopped:
 		$(DOCKER_COMPOSE)$(if $(DOCKER_COMPOSE_FLAGS), $(DOCKER_COMPOSE_FLAGS)) stop $(*); \
 	fi
 
+# Open a shell in service %
+compose.service.%.shell: compose.service.%.ensure-running
+	@$(if $(DOCKER_COMPOSE_DIRECTORY),cd "$(DOCKER_COMPOSE_DIRECTORY)";) \
+	$(DOCKER_COMPOSE)$(if $(DOCKER_COMPOSE_FLAGS), $(DOCKER_COMPOSE_FLAGS)) exec "$(*)" sh
+
+#. Open a shell in service % (alias)
+compose.service.%.sh: compose.service.%.shell
+	@true
+
+# Open a bash shell in service %
+compose.service.%.bash: compose.service.%.ensure-running
+	@$(if $(DOCKER_COMPOSE_DIRECTORY),cd "$(DOCKER_COMPOSE_DIRECTORY)";) \
+	$(DOCKER_COMPOSE)$(if $(DOCKER_COMPOSE_FLAGS), $(DOCKER_COMPOSE_FLAGS)) exec "$(*)" bash
+
 endif
