@@ -1,5 +1,6 @@
-/bin
-/vendor
+/.composer
 /.env
+/bin
 /composer.json
 /composer.lock
+/vendor
