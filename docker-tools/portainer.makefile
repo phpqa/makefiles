@@ -44,3 +44,8 @@ portainer.reset:%.reset:
 	-@$(DOCKER) volume rm portainer_data
 	@$(MAKE) portainer.start
 .PHONY: portainer.reset
+
+#. Start the Portainer container (alias)
+portainer: portainer.start
+	@true
+.PHONY: portainer
