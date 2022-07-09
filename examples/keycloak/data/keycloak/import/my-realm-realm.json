@@ -1,0 +1,54 @@
+{
+  "keycloakVersion": "18.0.0",
+  "id": "0926773e-332b-4a45-a25d-c375f1c318a5",
+  "realm": "my-realm",
+  "enabled": "true",
+  "clients": [
+    {
+      "id": "2254ca5b-6746-4c36-96a4-994c3b3b9210",
+      "clientId": "my-client",
+      "clientAuthenticatorType": "client-secret",
+      "secret": "whatever",
+      "redirectUris": [
+        "http://keycloak-example.localhost:8080/*"
+      ]
+    }
+  ],
+  "roles": {
+    "client": {
+      "my-client": [
+        {
+          "id": "d11b8bf9-29a2-43c9-95ca-b15cab7df13a",
+          "name": "ROLE_EXAMPLE",
+          "clientRole": true,
+          "containerId": "2254ca5b-6746-4c36-96a4-994c3b3b9210"
+        }
+      ]
+    }
+  },
+  "users": [
+    {
+      "id": "bc968a0c-f544-4f03-a0c5-54a851153e78",
+      "username": "user",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "User",
+      "lastName": "Test",
+      "email": "user@example.com",
+      "credentials": [
+        {
+          "id": "fa8c308d-46d1-4921-a797-433fa7a71832",
+          "type": "password",
+          "createdDate": 1657342622190,
+          "secretData": "{\"value\":\"IVksFDdGop44N40MXZPQwPk8VxOLKqqPavBzUVsiaErzRK1kicIzOuGupGwCko+utVNP295kddcgF6DniOz52Q==\",\"salt\":\"b1hmeqiwCUzSqvL70mFdTw==\",\"additionalParameters\":{}}",
+          "credentialData": "{\"hashIterations\":27500,\"algorithm\":\"pbkdf2-sha256\",\"additionalParameters\":{}}"
+        }
+      ],
+      "clientRoles": {
+        "my-client": [
+          "ROLE_EXAMPLE"
+        ]
+      }
+    }
+  ]
+}

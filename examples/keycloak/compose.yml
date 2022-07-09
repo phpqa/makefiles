@@ -1,7 +1,49 @@
+volumes:
+
+  keycloak-import:
+    driver: local
+    driver_opts:
+      o: bind
+      type: none
+      device: ./data/keycloak/import
+
+  keycloak-export:
+    driver: local
+    driver_opts:
+      o: bind
+      type: none
+      device: ./data/keycloak/export
+
 networks:
+
   traefik:
 
 services:
+
+  # Traefik: https://doc.traefik.io/traefik/
+  traefik:
+    image: traefik:v2.6.6
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+    command:
+      - --log.level=ERROR
+      - --providers.docker=true
+      - --providers.docker.exposedbydefault=false
+      - --api.insecure=true
+      - --entrypoints.web.address=:80
+      - --accesslog=true
+    networks:
+      - traefik
+    ports:
+      - "${PROJECT_PORT?Please set the PROJECT_PORT variable}:80"
+      - "8080"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.${COMPOSE_PROJECT_NAME?Please set the COMPOSE_PROJECT_NAME variable}-traefik.rule=Host(`traefik.${PROJECT_DOMAIN}`)"
+      - "traefik.http.services.${COMPOSE_PROJECT_NAME?Please set the COMPOSE_PROJECT_NAME variable}-traefik.loadbalancer.server.port=8080"
+    restart: unless-stopped
+
+  # Keycloak: https://www.keycloak.org/documentation
   keycloak:
     hostname: keycloak.${PROJECT_DOMAIN?Please set the PROJECT_DOMAIN variable} # Run keycloak on the same host as the external traefik url
     image: quay.io/keycloak/keycloak:18.0.0
@@ -12,7 +54,10 @@ services:
       - KC_LOG_LEVEL=DEBUG # Default is "ERROR"
       - KEYCLOAK_ADMIN=${KEYCLOAK_ADMIN-admin}
       - KEYCLOAK_ADMIN_PASSWORD=${KEYCLOAK_ADMIN_PASSWORD-admin}
-    command: start-dev
+    volumes:
+      - keycloak-import:/opt/keycloak/data/import
+      - keycloak-export:/opt/keycloak/data/export
+    command: start-dev --import-realm
     networks:
       - traefik
     ports:
@@ -20,6 +65,6 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=${COMPOSE_PROJECT_NAME?Please set the COMPOSE_PROJECT_NAME variable}_traefik"
-      - "traefik.http.routers.${COMPOSE_PROJECT_NAME?Please set the COMPOSE_PROJECT_NAME variable}_traefik.rule=Host(`keycloak.${PROJECT_DOMAIN?Please set the PROJECT_DOMAIN variable}`)"
-      - "traefik.http.services.${COMPOSE_PROJECT_NAME?Please set the COMPOSE_PROJECT_NAME variable}_traefik.loadbalancer.server.port=${PROJECT_PORT?Please set the PROJECT_PORT variable}"
+      - "traefik.http.routers.${COMPOSE_PROJECT_NAME?Please set the COMPOSE_PROJECT_NAME variable}-keycloak.rule=Host(`keycloak.${PROJECT_DOMAIN?Please set the PROJECT_DOMAIN variable}`)"
+      - "traefik.http.services.${COMPOSE_PROJECT_NAME?Please set the COMPOSE_PROJECT_NAME variable}-keycloak.loadbalancer.server.port=${PROJECT_PORT?Please set the PROJECT_PORT variable}"
     restart: unless-stopped
