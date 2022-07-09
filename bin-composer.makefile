@@ -71,14 +71,18 @@ composer.json: | $(COMPOSER_DEPENDENCY)
 
 # Build the composer.lock file
 composer.lock: composer.json | $(COMPOSER_DEPENDENCY)
-	@if test ! -f "$(@)"; then \
-		$(COMPOSER_EXECUTABLE) install --no-progress; \
-	else \
-		$(COMPOSER_EXECUTABLE) update --lock; \
-		touch "$(@)"; \
+	@if test "$(@)" -ot "$(<)"; then \
+		if test ! -f "$(@)"; then \
+			$(COMPOSER_EXECUTABLE) install --no-progress; \
+		else \
+			$(COMPOSER_EXECUTABLE) update --lock; \
+		fi; \
 	fi
+	@touch "$(@)"
 
 # Build the vendor directory
 vendor: composer.lock | $(COMPOSER_DEPENDENCY)
-	@$(COMPOSER_EXECUTABLE) install --no-progress --no-suggest
+	@if test "$(@)" -ot "$(<)"; then \
+		$(COMPOSER_EXECUTABLE) install --no-progress; \
+	fi
 	@touch "$(@)"

@@ -1,0 +1,5 @@
+/bin
+/vendor
+/.env
+/composer.json
+/composer.lock
