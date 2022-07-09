@@ -10,7 +10,9 @@ ifeq ($(DOCKER),)
 $(error Please provide the variable DOCKER before including this file.)
 endif
 
+PORTAINER_IMAGE?=cr.portainer.io/portainer/portainer-ce:latest
 PORTAINER_ADMIN_PASSWORD?=superpassword
+PORTAINER_NETWORK?=
 
 ###
 ## Docker Tools
@@ -18,19 +20,24 @@ PORTAINER_ADMIN_PASSWORD?=superpassword
 
 # Start the Portainer container
 portainer.start:%.start:
-	@ID=""; \
-	if test -z "$$($(DOCKER) container inspect --format "{{ .ID }}" portainer 2> /dev/null)"; then \
-		$(DOCKER) container run --rm --detach --name portainer \
+	@if test -z "$$($(DOCKER) container inspect --format "{{ .ID }}" "$(*)" 2> /dev/null)"; then \
+		$(DOCKER) container run --rm --detach --name "$(*)" \
 			--volume "portainer_data:/data" \
-			--volume "$(DOCKER_SOCKET):$(DOCKER_SOCKET):ro" \
+			--volume "$(DOCKER_SOCKET):/var/run/docker.sock:ro" \
 			--publish "9000" \
-			cr.portainer.io/portainer/portainer-ce \
+			--label "traefik.enable=true" \
+			$(if $(PORTAINER_NETWORK),--label "traefik.docker.network=$(PORTAINER_NETWORK)") \
+			--label "traefik.http.routers.$(*).entrypoints=web" \
+			--label "traefik.http.routers.$(*).rule=Host(\`$(*).localhost\`)" \
+			--label "traefik.http.services.$(*).loadbalancer.server.port=9000" \
+			$(if $(PORTAINER_NETWORK),--network "$(PORTAINER_NETWORK)") \
+			"$(PORTAINER_IMAGE)" \
 			--admin-password "$(subst $$,\$$,$(shell $(DOCKER) run --rm httpd:2.4-alpine sh -c "htpasswd -nbB admin '$(PORTAINER_ADMIN_PASSWORD)' | cut -d ':' -f 2"))" \
-			--host=unix://$(DOCKER_SOCKET); \
+			--host "unix:///var/run/docker.sock"; \
 	else \
-		$(DOCKER) container inspect --format "{{ .ID }}" portainer; \
-	fi
-	@printf "http://$$($(DOCKER) container port portainer 9000)"
+		$(DOCKER) container inspect --format "{{ .ID }}" "$(*)"; \
+	fi; \
+	printf "http://$$($(DOCKER) container port portainer 9000)"
 .PHONY: portainer.start
 
 # Stop the Portainer container
