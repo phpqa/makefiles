@@ -14,7 +14,7 @@ endif
 ## Docker Tools
 ###
 
-# Open lazydocker in a Docker container
+# Run lazydocker in a container
 # A simple terminal UI for both docker and docker-compose
 # @see https://github.com/jesseduffield/lazydocker
 lazydocker:

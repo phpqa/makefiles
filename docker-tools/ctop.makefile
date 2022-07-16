@@ -14,7 +14,7 @@ endif
 ## Docker Tools
 ###
 
-# Open ctop in a Docker container
+# Run ctop in a container
 # Concise commandline monitoring for containers
 # @see https://ctop.sh/
 ctop:
