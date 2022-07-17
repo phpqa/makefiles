@@ -79,7 +79,7 @@ dozzle.ensure:%.ensure: | %.start
 
 #. List the url to the Dozzle container
 dozzle.list:%.list: | %.ensure
-	@printf "Open Dozzle: http://$$($(DOCKER) container port "$(*)" "$(DOZZLE_HTTP_PORT)")"
+	@printf "Open Dozzle: %s\n" "http://$$($(DOCKER) container port "$(*)" "$(DOZZLE_HTTP_PORT)")"
 .PHONY: dozzle.list
 
 #. List the logs of the Dozzle container

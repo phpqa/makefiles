@@ -115,7 +115,7 @@ portainer.setup:%.setup: | %.ensure
 
 #. List the url to the Portainer container
 portainer.list:%.list: | %.ensure
-	@printf "Open Portainer (admin/$(PORTAINER_ADMIN_PASSWORD)): http://$$($(DOCKER) container port "$(*)" "$(PORTAINER_HTTP_PORT)")"
+	@printf "Open Portainer: %s (admin/%s)\n" "http://$$($(DOCKER) container port "$(*)" "$(PORTAINER_HTTP_PORT)")" "$(PORTAINER_ADMIN_PASSWORD)"
 .PHONY: portainer.list
 
 #. List the logs of the Portainer container

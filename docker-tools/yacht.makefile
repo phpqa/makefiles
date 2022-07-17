@@ -78,7 +78,7 @@ yacht.ensure:%.ensure: | %.start
 
 #. List the url to the Yacht container
 yacht.list:%.list: | %.ensure
-	@printf "Open Yacht: http://$$($(DOCKER) container port "$(*)" "$(YACHT_HTTP_PORT)")" # TODO
+	@printf "Open Yacht: %s\n" "http://$$($(DOCKER) container port "$(*)" "$(YACHT_HTTP_PORT)")"
 .PHONY: yacht.list
 
 #. List the logs of the Yacht container
