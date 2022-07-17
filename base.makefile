@@ -23,6 +23,10 @@ space:=$(empty) $(empty)
 escaped_space:=\$(space)
 encoded_space:=+
 comma:=,
+define newline
+
+$(empty)
+endef
 
 ###
 ##. Conversions
