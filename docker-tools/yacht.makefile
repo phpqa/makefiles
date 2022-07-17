@@ -14,6 +14,8 @@ YACHT_IMAGE?=selfhostedpro/yacht:latest
 YACHT_DATA_VOLUME?=yacht_data
 YACHT_HTTP_PORT?=8000
 
+YACHT_PROJECTS_ROOT_DIR?=
+
 YACHT_TRAEFIK_NETWORK?=$(TRAEFIK_NETWORK)
 
 ###
@@ -32,6 +34,10 @@ yacht.start:%.start:
 			--env "DISABLE_AUTH=true" \
 			--volume "$(YACHT_DATA_VOLUME):/config" \
 			--volume "$(DOCKER_SOCKET):/var/run/docker.sock:ro" \
+			$(if $(YACHT_PROJECTS_ROOT_DIR), \
+				--env "COMPOSE_DIR=/compose/" \
+				--volume "$(YACHT_PROJECTS_ROOT_DIR):/compose" \
+			) \
 			--publish "$(YACHT_HTTP_PORT)" \
 			$(if $(YACHT_TRAEFIK_NETWORK), \
 				--label "traefik.enable=true" \
