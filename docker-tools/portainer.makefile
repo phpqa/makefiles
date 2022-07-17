@@ -21,7 +21,6 @@ endif
 
 PORTAINER_IMAGE?=cr.portainer.io/portainer/portainer-ce:latest
 PORTAINER_DATA_VOLUME?=portainer_data
-PORTAINER_HTTP_PORT?=9000
 
 PORTAINER_ADMIN_PASSWORD?=admin
 PORTAINER_ADMIN_PASSWORD_LENGTH?=5
@@ -29,7 +28,7 @@ PORTAINER_ADMIN_PASSWORD_LENGTH?=5
 PORTAINER_LOGO_URL?=
 PORTAINER_SESSION_TIMEOUT_IN_HOURS?=8640
 
-PORTAINER_TRAEFIK_NETWORK?=$(TRAEFIK_NETWORK)
+PORTAINER_TRAEFIK_NETWORK?=$(TRAEFIK_PROVIDERS_DOCKER_NETWORK)
 
 ###
 ## Docker Tools
@@ -46,17 +45,17 @@ portainer.start:%.start:
 		$(DOCKER) container run --detach --name "$(*)" \
 			--volume "$(PORTAINER_DATA_VOLUME):/data" \
 			--volume "$(DOCKER_SOCKET):/var/run/docker.sock:ro" \
-			--publish "$(PORTAINER_HTTP_PORT)" \
+			--publish "9000" \
 			$(if $(PORTAINER_TRAEFIK_NETWORK), \
 				--label "traefik.enable=true" \
 				--label "traefik.docker.network=$(PORTAINER_TRAEFIK_NETWORK)" \
 				--label "traefik.http.routers.$(*).entrypoints=web" \
 				--label "traefik.http.routers.$(*).rule=Host(\`$(*).localhost\`)" \
-				--label "traefik.http.services.$(*).loadbalancer.server.port=$(PORTAINER_HTTP_PORT)" \
+				--label "traefik.http.services.$(*).loadbalancer.server.port=9000" \
 				--network "$(PORTAINER_TRAEFIK_NETWORK)" \
 			) \
 			"$(PORTAINER_IMAGE)" \
-			--bind ":$(PORTAINER_HTTP_PORT)" \
+			--bind ":9000" \
 			--admin-password "$(subst $$,\$$,$(shell $(DOCKER) run --rm httpd:2.4-alpine sh -c "htpasswd -nbB admin '$(PORTAINER_ADMIN_PASSWORD)' | cut -d ':' -f 2"))" \
 			--host "unix:///var/run/docker.sock"; \
 	else \
@@ -77,7 +76,7 @@ portainer.ensure:%.ensure: | %.start
 		fi; \
 		sleep 1; \
 	done
-	@until test -n "$$(curl -sSL --fail "http://$$($(DOCKER) container port "$(*)" "$(PORTAINER_HTTP_PORT)" 2>/dev/null)" 2>/dev/null)"; do \
+	@until test -n "$$(curl -sSL --fail "http://$$($(DOCKER) container port "$(*)" "9000" 2>/dev/null)" 2>/dev/null)"; do \
 		if test -z "$$($(DOCKER) container ls --quiet --filter "status=running" --filter "name=^$(*)$$" 2>/dev/null)"; then \
 			printf "$(STYLE_ERROR)%s$(STYLE_RESET)\n" "The container \"$(*)\" stopped before being available."; \
 			$(DOCKER) container logs --since "$$($(DOCKER) container inspect --format "{{ .State.StartedAt }}" "$(*)")" "$(*)"; \
@@ -90,23 +89,23 @@ portainer.ensure:%.ensure: | %.start
 #. Setup the Portainer container
 portainer.setup:%.setup: | %.ensure
 	@AUTHORIZATION="$$( \
-		curl -sSL "http://$$($(DOCKER) container port "$(*)" "$(PORTAINER_HTTP_PORT)")/api/auth" \
+		curl -sSL "http://$$($(DOCKER) container port "$(*)" "9000")/api/auth" \
 			-X POST \
 			--data-raw '{"username":"admin","password":"$(PORTAINER_ADMIN_PASSWORD)"}' \
 		| $(JQ) -r '.jwt' \
 	)"; \
 	$(if $(PORTAINER_LOGO_URL), \
-		curl -sSL "http://$$($(DOCKER) container port "$(*)" "$(PORTAINER_HTTP_PORT)")/api/settings" \
+		curl -sSL "http://$$($(DOCKER) container port "$(*)" "9000")/api/settings" \
 			-X PUT -H "Authorization: Bearer $${AUTHORIZATION}" \
 			--data-raw '{"LogoUrl":"$(PORTAINER_LOGO_URL)"}' > /dev/null; \
 	) \
 	$(if $(PORTAINER_ADMIN_PASSWORD_LENGTH), \
-		curl -sSL "http://$$($(DOCKER) container port "$(*)" "$(PORTAINER_HTTP_PORT)")/api/settings" \
+		curl -sSL "http://$$($(DOCKER) container port "$(*)" "9000")/api/settings" \
 			-X PUT -H "Authorization: Bearer $${AUTHORIZATION}" \
 			--data-raw '{"InternalAuthSettings":{"RequiredPasswordLength":$(PORTAINER_ADMIN_PASSWORD_LENGTH)}}' > /dev/null; \
 	) \
 	$(if $(PORTAINER_SESSION_TIMEOUT_IN_HOURS), \
-		curl -sSL "http://$$($(DOCKER) container port "$(*)" "$(PORTAINER_HTTP_PORT)")/api/settings" \
+		curl -sSL "http://$$($(DOCKER) container port "$(*)" "9000")/api/settings" \
 			-X PUT -H "Authorization: Bearer $${AUTHORIZATION}" \
 			--data-raw '{"UserSessionTimeout":"$(PORTAINER_SESSION_TIMEOUT_IN_HOURS)h"}' > /dev/null; \
 	) \
@@ -115,7 +114,7 @@ portainer.setup:%.setup: | %.ensure
 
 #. List the url to the Portainer container
 portainer.list:%.list: | %.ensure
-	@printf "Open Portainer: %s (admin/%s)\n" "http://$$($(DOCKER) container port "$(*)" "$(PORTAINER_HTTP_PORT)")" "$(PORTAINER_ADMIN_PASSWORD)"
+	@printf "Open Portainer: %s (admin/%s)\n" "http://$$($(DOCKER) container port "$(*)" "9000")" "$(PORTAINER_ADMIN_PASSWORD)"
 .PHONY: portainer.list
 
 #. List the logs of the Portainer container

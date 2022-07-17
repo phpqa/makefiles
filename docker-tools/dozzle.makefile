@@ -11,18 +11,17 @@ $(error Please provide the variable DOCKER before including this file.)
 endif
 
 DOZZLE_IMAGE?=amir20/dozzle:latest
-DOZZLE_HTTP_PORT?=8080
 
 #. Overwrite the Dozzle defaults
-DOZZLE_ADDR?=:$(DOZZLE_HTTP_PORT)
+DOZZLE_ADDR?=:8080
 DOZZLE_NO_ANALYTICS?=true
 
 #. Support for all Dozzle variables
 DOZZLE_VARIABLES_PREFIX?=DOZZLE_
-DOZZLE_VARIABLES_EXCLUDED?=IMAGE HTTP_PORT VARIABLES_PREFIX VARIABLES_EXCLUDED TRAEFIK_NETWORK
+DOZZLE_VARIABLES_EXCLUDED?=IMAGE VARIABLES_PREFIX VARIABLES_EXCLUDED VARIABLES_UNPREFIXED TRAEFIK_NETWORK
 
 #. Support for Traefik
-DOZZLE_TRAEFIK_NETWORK?=$(TRAEFIK_NETWORK)
+DOZZLE_TRAEFIK_NETWORK?=$(TRAEFIK_PROVIDERS_DOCKER_NETWORK)
 
 ###
 ## Docker Tools
@@ -39,13 +38,13 @@ dozzle.start:%.start:
 		$(DOCKER) container run --detach --name "$(*)" \
 			$(foreach variable,$(filter-out $(addprefix $(DOZZLE_VARIABLES_PREFIX),$(DOZZLE_VARIABLES_EXCLUDED)),$(filter $(DOZZLE_VARIABLES_PREFIX)%,$(.VARIABLES))),--env "$(variable)=$($(variable))") \
 			--volume "$(DOCKER_SOCKET):/var/run/docker.sock:ro" \
-			--publish "$(DOZZLE_HTTP_PORT)" \
+			--publish "8080" \
 			$(if $(DOZZLE_TRAEFIK_NETWORK), \
 				--label "traefik.enable=true" \
 				--label "traefik.docker.network=$(DOZZLE_TRAEFIK_NETWORK)" \
 				--label "traefik.http.routers.$(*).entrypoints=web" \
 				--label "traefik.http.routers.$(*).rule=Host(\`$(*).localhost\`)" \
-				--label "traefik.http.services.$(*).loadbalancer.server.port=$(DOZZLE_HTTP_PORT)" \
+				--label "traefik.http.services.$(*).loadbalancer.server.port=8080" \
 				--network "$(DOZZLE_TRAEFIK_NETWORK)" \
 			) \
 			"$(DOZZLE_IMAGE)"; \
@@ -67,7 +66,7 @@ dozzle.ensure:%.ensure: | %.start
 		fi; \
 		sleep 1; \
 	done
-	@until test -n "$$(curl -sSL --fail "http://$$($(DOCKER) container port "$(*)" "$(DOZZLE_HTTP_PORT)" 2>/dev/null)" 2>/dev/null)"; do \
+	@until test -n "$$(curl -sSL --fail "http://$$($(DOCKER) container port "$(*)" "8080" 2>/dev/null)" 2>/dev/null)"; do \
 		if test -z "$$($(DOCKER) container ls --quiet --filter "status=running" --filter "name=^$(*)$$" 2>/dev/null)"; then \
 			printf "$(STYLE_ERROR)%s$(STYLE_RESET)\n" "The container \"$(*)\" stopped before being available."; \
 			$(DOCKER) container logs --since "$$($(DOCKER) container inspect --format "{{ .State.StartedAt }}" "$(*)")" "$(*)"; \
@@ -79,7 +78,7 @@ dozzle.ensure:%.ensure: | %.start
 
 #. List the url to the Dozzle container
 dozzle.list:%.list: | %.ensure
-	@printf "Open Dozzle: %s\n" "http://$$($(DOCKER) container port "$(*)" "$(DOZZLE_HTTP_PORT)")"
+	@printf "Open Dozzle: %s\n" "http://$$($(DOCKER) container port "$(*)" "8080")"
 .PHONY: dozzle.list
 
 #. List the logs of the Dozzle container
