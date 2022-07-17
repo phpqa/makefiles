@@ -10,11 +10,16 @@ ifeq ($(DOCKER),)
 $(error Please provide the variable DOCKER before including this file.)
 endif
 
+#. Docker variables for Yacht
 YACHT_IMAGE?=selfhostedpro/yacht:latest
+YACHT_SERVICE_NAME?=yacht
 YACHT_DATA_VOLUME?=yacht_data
 
+#. Extra variables for Yacht
 YACHT_PROJECTS_ROOT_DIR?=
 
+#. Support for Traefik
+YACHT_TRAEFIK_DOMAIN?=$(YACHT_SERVICE_NAME).localhost
 YACHT_TRAEFIK_NETWORK?=$(TRAEFIK_PROVIDERS_DOCKER_NETWORK)
 
 ###
@@ -28,8 +33,8 @@ yacht.pull:%.pull:
 
 #. Start the Yacht container
 yacht.start:%.start:
-	@if test -z "$$($(DOCKER) container inspect --format "{{ .ID }}" "$(*)" 2> /dev/null)"; then \
-		$(DOCKER) container run --detach --name "$(*)" \
+	@if test -z "$$($(DOCKER) container inspect --format "{{ .ID }}" "$(YACHT_SERVICE_NAME)" 2> /dev/null)"; then \
+		$(DOCKER) container run --detach --name "$(YACHT_SERVICE_NAME)" \
 			--env "DISABLE_AUTH=true" \
 			--volume "$(YACHT_DATA_VOLUME):/config" \
 			--volume "$(DOCKER_SOCKET):/var/run/docker.sock:ro" \
@@ -41,34 +46,34 @@ yacht.start:%.start:
 			$(if $(YACHT_TRAEFIK_NETWORK), \
 				--label "traefik.enable=true" \
 				--label "traefik.docker.network=$(YACHT_TRAEFIK_NETWORK)" \
-				--label "traefik.http.routers.$(*).entrypoints=web" \
-				--label "traefik.http.routers.$(*).rule=Host(\`$(*).localhost\`)" \
-				--label "traefik.http.services.$(*).loadbalancer.server.port=8000" \
+				--label "traefik.http.routers.$(YACHT_SERVICE_NAME).entrypoints=web" \
+				--label "traefik.http.routers.$(YACHT_SERVICE_NAME).rule=Host(\`$(YACHT_TRAEFIK_DOMAIN)\`)" \
+				--label "traefik.http.services.$(YACHT_SERVICE_NAME).loadbalancer.server.port=8000" \
 				--network "$(YACHT_TRAEFIK_NETWORK)" \
 			) \
-			"$(YACHT_IMAGE)"; \
+			"$(YACHT_IMAGE)" \
+			>/dev/null; \
 	else \
-		if test -z "$$($(DOCKER) container ls --quiet --filter "status=running" --filter "name=^$(*)$$" 2>/dev/null)"; then \
-			$(DOCKER) container start "$(*)" >/dev/null; \
+		if test -z "$$($(DOCKER) container ls --quiet --filter "status=running" --filter "name=^$(YACHT_SERVICE_NAME)$$" 2>/dev/null)"; then \
+			$(DOCKER) container start "$(YACHT_SERVICE_NAME)" >/dev/null; \
 		fi; \
-		$(DOCKER) container inspect --format "{{ .ID }}" "$(*)"; \
 	fi
 .PHONY: yacht.start
 
 #. Wait for the Yacht container to be running
 yacht.ensure:%.ensure: | %.start
-	@until test -n "$$($(DOCKER) container ls --quiet --filter "status=running" --filter "name=^$(*)$$" 2>/dev/null)"; do \
-		if test -z "$$($(DOCKER) container ls --quiet --filter "status=created" --filter "status=running" --filter "name=^$(*)$$" 2>/dev/null)"; then \
-			printf "$(STYLE_ERROR)%s$(STYLE_RESET)\n" "The container \"$(*)\" never started."; \
-			$(DOCKER) container logs --since "$$($(DOCKER) container inspect --format "{{ .State.StartedAt }}" "$(*)")" "$(*)"; \
+	@until test -n "$$($(DOCKER) container ls --quiet --filter "status=running" --filter "name=^$(YACHT_SERVICE_NAME)$$" 2>/dev/null)"; do \
+		if test -z "$$($(DOCKER) container ls --quiet --filter "status=created" --filter "status=running" --filter "name=^$(YACHT_SERVICE_NAME)$$" 2>/dev/null)"; then \
+			printf "$(STYLE_ERROR)%s$(STYLE_RESET)\n" "The container \"$(YACHT_SERVICE_NAME)\" never started."; \
+			$(DOCKER) container logs --since "$$($(DOCKER) container inspect --format "{{ .State.StartedAt }}" "$(YACHT_SERVICE_NAME)")" "$(YACHT_SERVICE_NAME)"; \
 			exit 1; \
 		fi; \
 		sleep 1; \
 	done
-	@until test -n "$$(curl -sSL --fail "http://$$($(DOCKER) container port "$(*)" "8000" 2>/dev/null)" 2>/dev/null)"; do \
-		if test -z "$$($(DOCKER) container ls --quiet --filter "status=running" --filter "name=^$(*)$$" 2>/dev/null)"; then \
-			printf "$(STYLE_ERROR)%s$(STYLE_RESET)\n" "The container \"$(*)\" stopped before being available."; \
-			$(DOCKER) container logs --since "$$($(DOCKER) container inspect --format "{{ .State.StartedAt }}" "$(*)")" "$(*)"; \
+	@until test -n "$$(curl -sSL --fail "http://$$($(DOCKER) container port "$(YACHT_SERVICE_NAME)" "8000" 2>/dev/null)" 2>/dev/null)"; do \
+		if test -z "$$($(DOCKER) container ls --quiet --filter "status=running" --filter "name=^$(YACHT_SERVICE_NAME)$$" 2>/dev/null)"; then \
+			printf "$(STYLE_ERROR)%s$(STYLE_RESET)\n" "The container \"$(YACHT_SERVICE_NAME)\" stopped before being available."; \
+			$(DOCKER) container logs --since "$$($(DOCKER) container inspect --format "{{ .State.StartedAt }}" "$(YACHT_SERVICE_NAME)")" "$(YACHT_SERVICE_NAME)"; \
 			exit 1; \
 		fi; \
 		sleep 1; \
@@ -77,23 +82,23 @@ yacht.ensure:%.ensure: | %.start
 
 #. List the url to the Yacht container
 yacht.list:%.list: | %.ensure
-	@printf "Open Yacht: %s\n" "http://$$($(DOCKER) container port "$(*)" "8000")"
+	@printf "Open Yacht: %s or %s\n" "http://$(YACHT_TRAEFIK_DOMAIN)$(if $(filter-out 80,$(TRAEFIK_HTTP_PORT)),:$(TRAEFIK_HTTP_PORT))" "http://$$($(DOCKER) container port "$(YACHT_SERVICE_NAME)" "8000")"
 .PHONY: yacht.list
 
 #. List the logs of the Yacht container
 yacht.log:%.log:
-	@$(DOCKER) container logs --since "$$($(DOCKER) container inspect --format "{{ .State.StartedAt }}" "$(*)")" "$(*)"
+	@$(DOCKER) container logs --since "$$($(DOCKER) container inspect --format "{{ .State.StartedAt }}" "$(YACHT_SERVICE_NAME)")" "$(YACHT_SERVICE_NAME)"
 .PHONY: yacht.log
 
 #. Stop the Yacht container
 yacht.stop:%.stop:
-	@$(DOCKER) container stop "$(*)"
+	@$(DOCKER) container stop "$(YACHT_SERVICE_NAME)"
 .PHONY: yacht.stop
 
 #. Clear the Yacht container
 yacht.clear:%.clear:
-	@$(DOCKER) container kill "$(*)" &>/dev/null || true
-	@$(DOCKER) container rm --force --volumes "$(*)" &>/dev/null || true
+	@$(DOCKER) container kill "$(YACHT_SERVICE_NAME)" &>/dev/null || true
+	@$(DOCKER) container rm --force --volumes "$(YACHT_SERVICE_NAME)" &>/dev/null || true
 	@$(DOCKER) volume rm --force "$(YACHT_DATA_VOLUME)" &>/dev/null || true
 .PHONY: yacht.clear
 

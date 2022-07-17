@@ -10,6 +10,10 @@ ifeq ($(DOCKER),)
 $(error Please provide the variable DOCKER before including this file.)
 endif
 
+#. Docker variables for ctop
+CTOP_IMAGE?=quay.io/vektorlab/ctop:latest
+CTOP_SERVICE_NAME?=ctop
+
 ###
 ## Docker Tools
 ###
@@ -18,11 +22,11 @@ endif
 # Concise commandline monitoring for containers
 # @see https://ctop.sh/
 ctop:
-	@if test -z "$$($(DOCKER) container inspect --format "{{ .ID }}" "$(@)" 2> /dev/null)"; then \
-		$(DOCKER) container run --rm --interactive --tty --name $(@) \
-			--volume $(DOCKER_SOCKET):$(DOCKER_SOCKET):ro \
-			quay.io/vektorlab/ctop:latest; \
+	@if test -z "$$($(DOCKER) container inspect --format "{{ .ID }}" "$(CTOP_SERVICE_NAME)" 2> /dev/null)"; then \
+		$(DOCKER) container run --rm --interactive --tty --name "$(CTOP_SERVICE_NAME)" \
+			--volume "$(DOCKER_SOCKET):/var/run/docker.sock:ro" \
+			"$(CTOP_IMAGE)"; \
 	else \
-		$(DOCKER) attach $(@); \
+		$(DOCKER) container attach "$(CTOP_SERVICE_NAME)"; \
 	fi
 .PHONY: ctop
