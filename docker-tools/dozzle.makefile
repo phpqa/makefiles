@@ -13,15 +13,15 @@ endif
 DOZZLE_IMAGE?=amir20/dozzle:latest
 DOZZLE_HTTP_PORT?=8080
 
+#. Overwrite the Dozzle defaults
 DOZZLE_ADDR?=:$(DOZZLE_HTTP_PORT)
-DOZZLE_BASE?=/
-DOZZLE_LEVEL?=info
-DOZZLE_TAILSIZE?=300
-DOZZLE_FILTER?=
-DOZZLE_USERNAME?=
-DOZZLE_PASSWORD?=
 DOZZLE_NO_ANALYTICS?=true
 
+#. Support for all Dozzle variables
+DOZZLE_VARIABLES_PREFIX?=DOZZLE_
+DOZZLE_VARIABLES_EXCLUDED?=IMAGE HTTP_PORT VARIABLES_PREFIX VARIABLES_EXCLUDED TRAEFIK_NETWORK
+
+#. Support for Traefik
 DOZZLE_TRAEFIK_NETWORK?=$(TRAEFIK_NETWORK)
 
 ###
@@ -37,7 +37,7 @@ dozzle.pull:%.pull:
 dozzle.start:%.start:
 	@if test -z "$$($(DOCKER) container inspect --format "{{ .ID }}" "$(*)" 2> /dev/null)"; then \
 		$(DOCKER) container run --detach --name "$(*)" \
-			$(foreach variable,ADDR BASE LEVEL TAILSIZE FILTER USERNAME PASSWORD NO_ANALYTICS,--env "DOZZLE_$(variable)=$(DOZZLE_$(variable))") \
+			$(foreach variable,$(filter-out $(addprefix $(DOZZLE_VARIABLES_PREFIX),$(DOZZLE_VARIABLES_EXCLUDED)),$(filter $(DOZZLE_VARIABLES_PREFIX)%,$(.VARIABLES))),--env "$(variable)=$($(variable))") \
 			--volume "$(DOCKER_SOCKET):/var/run/docker.sock:ro" \
 			--publish "$(DOZZLE_HTTP_PORT)" \
 			$(if $(DOZZLE_TRAEFIK_NETWORK), \
