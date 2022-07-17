@@ -12,11 +12,10 @@ endif
 
 YACHT_IMAGE?=selfhostedpro/yacht:latest
 YACHT_DATA_VOLUME?=yacht_data
-YACHT_HTTP_PORT?=8000
 
 YACHT_PROJECTS_ROOT_DIR?=
 
-YACHT_TRAEFIK_NETWORK?=$(TRAEFIK_NETWORK)
+YACHT_TRAEFIK_NETWORK?=$(TRAEFIK_PROVIDERS_DOCKER_NETWORK)
 
 ###
 ## Docker Tools
@@ -38,13 +37,13 @@ yacht.start:%.start:
 				--env "COMPOSE_DIR=/compose/" \
 				--volume "$(YACHT_PROJECTS_ROOT_DIR):/compose" \
 			) \
-			--publish "$(YACHT_HTTP_PORT)" \
+			--publish "8000" \
 			$(if $(YACHT_TRAEFIK_NETWORK), \
 				--label "traefik.enable=true" \
 				--label "traefik.docker.network=$(YACHT_TRAEFIK_NETWORK)" \
 				--label "traefik.http.routers.$(*).entrypoints=web" \
 				--label "traefik.http.routers.$(*).rule=Host(\`$(*).localhost\`)" \
-				--label "traefik.http.services.$(*).loadbalancer.server.port=$(YACHT_HTTP_PORT)" \
+				--label "traefik.http.services.$(*).loadbalancer.server.port=8000" \
 				--network "$(YACHT_TRAEFIK_NETWORK)" \
 			) \
 			"$(YACHT_IMAGE)"; \
@@ -66,7 +65,7 @@ yacht.ensure:%.ensure: | %.start
 		fi; \
 		sleep 1; \
 	done
-	@until test -n "$$(curl -sSL --fail "http://$$($(DOCKER) container port "$(*)" "$(YACHT_HTTP_PORT)" 2>/dev/null)" 2>/dev/null)"; do \
+	@until test -n "$$(curl -sSL --fail "http://$$($(DOCKER) container port "$(*)" "8000" 2>/dev/null)" 2>/dev/null)"; do \
 		if test -z "$$($(DOCKER) container ls --quiet --filter "status=running" --filter "name=^$(*)$$" 2>/dev/null)"; then \
 			printf "$(STYLE_ERROR)%s$(STYLE_RESET)\n" "The container \"$(*)\" stopped before being available."; \
 			$(DOCKER) container logs --since "$$($(DOCKER) container inspect --format "{{ .State.StartedAt }}" "$(*)")" "$(*)"; \
@@ -78,7 +77,7 @@ yacht.ensure:%.ensure: | %.start
 
 #. List the url to the Yacht container
 yacht.list:%.list: | %.ensure
-	@printf "Open Yacht: %s\n" "http://$$($(DOCKER) container port "$(*)" "$(YACHT_HTTP_PORT)")"
+	@printf "Open Yacht: %s\n" "http://$$($(DOCKER) container port "$(*)" "8000")"
 .PHONY: yacht.list
 
 #. List the logs of the Yacht container
