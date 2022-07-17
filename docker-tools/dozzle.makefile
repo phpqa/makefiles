@@ -36,7 +36,7 @@ dozzle.pull:%.pull:
 dozzle.start:%.start:
 	@if test -z "$$($(DOCKER) container inspect --format "{{ .ID }}" "$(*)" 2> /dev/null)"; then \
 		$(DOCKER) container run --detach --name "$(*)" \
-			$(foreach variable,$(filter-out $(addprefix $(DOZZLE_VARIABLES_PREFIX),$(DOZZLE_VARIABLES_EXCLUDED)),$(filter $(DOZZLE_VARIABLES_PREFIX)%,$(.VARIABLES))),--env "$(variable)=$($(variable))") \
+			$(foreach variable,$(filter-out $(addprefix $(DOZZLE_VARIABLES_PREFIX),$(DOZZLE_VARIABLES_EXCLUDED)),$(filter $(DOZZLE_VARIABLES_PREFIX)%,$(.VARIABLES))),--env "$(if $(filter $(DOZZLE_VARIABLES_UNPREFIXED),$(patsubst $(DOZZLE_VARIABLES_PREFIX)%,%,$(variable))),$(patsubst $(DOZZLE_VARIABLES_PREFIX)%,%,$(variable)),$(variable))=$($(variable))") \
 			--volume "$(DOCKER_SOCKET):/var/run/docker.sock:ro" \
 			--publish "8080" \
 			$(if $(DOZZLE_TRAEFIK_NETWORK), \
