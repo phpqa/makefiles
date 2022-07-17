@@ -4,6 +4,7 @@
 
 DOCKER?=$(shell command -v docker || which docker 2>/dev/null)
 DOCKER_SOCKET?=/var/run/docker.sock
+DOCKER_CONFIG?=$(firstword $(wildcard ~/.docker/config.json $(HOME)/.docker/config.json))
 DOCKER_REGISTRIES?=
 ifeq ($(DOCKER),)
 $(error Please install docker.)
