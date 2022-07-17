@@ -142,6 +142,7 @@ portainer.reset:%.reset:
 .PHONY: portainer.reset
 
 # Run Portainer in a container
+# @see https://docs.portainer.io/
 portainer:%: | %.start %.setup %.list
 	@true
 .PHONY: portainer

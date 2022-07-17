@@ -105,6 +105,7 @@ dozzle.reset:%.reset:
 .PHONY: dozzle.reset
 
 # Run Dozzle in a container
+# @see https://github.com/amir20/dozzle
 dozzle:%: | %.start %.list
 	@true
 .PHONY: dozzle
