@@ -68,7 +68,7 @@ dozzle.ensure:%.ensure: | %.start
 		fi; \
 		sleep 1; \
 	done
-	@until test -n "$$(curl -sSL --fail "http://$$($(DOCKER) container port "$(DOZZLE_SERVICE_NAME)" "8080" 2>/dev/null)" 2>/dev/null)"; do \
+	@until test -n "$$(curl -sSL --fail "http://$$($(DOCKER) container port "$(DOZZLE_SERVICE_NAME)" "8080" | grep "$(if $(LOCALHOST_FILTER_IP),$(LOCALHOST_FILTER_IP),0.0.0.0)" 2>/dev/null)" 2>/dev/null)"; do \
 		if test -z "$$($(DOCKER) container ls --quiet --filter "status=running" --filter "name=^$(DOZZLE_SERVICE_NAME)$$" 2>/dev/null)"; then \
 			printf "$(STYLE_ERROR)%s$(STYLE_RESET)\n" "The container \"$(DOZZLE_SERVICE_NAME)\" stopped before being available."; \
 			$(DOCKER) container logs --since "$$($(DOCKER) container inspect --format "{{ .State.StartedAt }}" "$(DOZZLE_SERVICE_NAME)")" "$(DOZZLE_SERVICE_NAME)"; \
@@ -80,7 +80,9 @@ dozzle.ensure:%.ensure: | %.start
 
 #. List the url to the Dozzle container
 dozzle.list:%.list: | %.ensure
-	@printf "Open Dozzle: %s or %s\n" "http://$(DOZZLE_TRAEFIK_DOMAIN)$(if $(filter-out 80,$(TRAEFIK_HTTP_PORT)),:$(TRAEFIK_HTTP_PORT))" "http://$$($(DOCKER) container port "$(DOZZLE_SERVICE_NAME)" "8080")"
+	@printf "Open Dozzle: %s or %s\n" \
+		"http://$(DOZZLE_TRAEFIK_DOMAIN)$(if $(filter-out 80,$(TRAEFIK_HTTP_PORT)),:$(TRAEFIK_HTTP_PORT))" \
+		"http://$$($(DOCKER) container port "$(DOZZLE_SERVICE_NAME)" "8080" | grep "$(if $(LOCALHOST_FILTER_IP),$(LOCALHOST_FILTER_IP),0.0.0.0)")"
 .PHONY: dozzle.list
 
 #. List the logs of the Dozzle container
