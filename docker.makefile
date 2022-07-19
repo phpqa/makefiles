@@ -12,6 +12,7 @@ endif
 
 DOCKER_COMPOSE?=$(shell command -v docker-compose || which docker-compose 2>/dev/null)
 DOCKER_COMPOSE_FLAGS?=
+DOCKER_COMPOSE_BUILD_FLAGS?=
 DOCKER_COMPOSE_UP_FLAGS?=--detach
 DOCKER_COMPOSE_FILES?=compose.yaml compose.yml docker-compose.yaml docker-compose.yml
 DOCKER_COMPOSE_DIRECTORY?=$(if $(wildcard $(DOCKER_COMPOSE_FILES)),.)
@@ -40,7 +41,7 @@ ifneq ($(DOCKER_COMPOSE_DIRECTORY),)
 # Build the image(s)
 compose.build:
 	@$(if $(DOCKER_COMPOSE_DIRECTORY),cd "$(DOCKER_COMPOSE_DIRECTORY)";) \
-	$(DOCKER_COMPOSE)$(if $(DOCKER_COMPOSE_FLAGS), $(DOCKER_COMPOSE_FLAGS)) build --pull
+	$(DOCKER_COMPOSE)$(if $(DOCKER_COMPOSE_FLAGS), $(DOCKER_COMPOSE_FLAGS)) build$(if $(DOCKER_COMPOSE_BUILD_FLAGS), $(DOCKER_COMPOSE_BUILD_FLAGS)) --pull
 .PHONY: compose.build
 
 # Up the service(s)
