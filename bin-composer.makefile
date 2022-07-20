@@ -31,7 +31,9 @@ bin/composer$(if $(COMPOSER_VERSION),-$(COMPOSER_VERSION)): | $(wildcard $(DOCKE
 	@$(DOCKER) image pull $(COMPOSER_IMAGE)$(if $(COMPOSER_VERSION),:$(COMPOSER_VERSION))
 	@$(DOCKER) run --rm --init --pull=missing --volume "$(CWD)":"/app" --workdir "/app" $(COMPOSER_IMAGE)$(if $(COMPOSER_VERSION),:$(COMPOSER_VERSION)) cat /usr/bin/composer > "$(@)"
 	@$(DOCKER) image rm $(COMPOSER_IMAGE)$(if $(COMPOSER_VERSION),:$(COMPOSER_VERSION))
-	@chmod +x "$(@)"
+	@if test -f "$(@)"; then \
+		chmod +x "$(@)"; \
+	fi
 else
 #. Download Composer to bin/composer or bin/composer-COMPOSER_VERSION
 bin/composer$(if $(COMPOSER_VERSION),-$(COMPOSER_VERSION)): | $(PHP_DEPENDENCY)
@@ -52,8 +54,12 @@ bin/composer$(if $(COMPOSER_VERSION),-$(COMPOSER_VERSION)): | $(PHP_DEPENDENCY)
 	@$(PHP) setup.php --no-ansi --install-dir=$(dir $(@)) --filename=$(notdir $(@))$(if $(COMPOSER_VERSION), --version=$(COMPOSER_VERSION))
 	@$(PHP) -r "unlink('setup.php');"
 	@$(PHP) -r "unlink('setup.sig');"
-	@chmod +x "$(@)"
+	@if test -f "$(@)"; then \
+		chmod +x "$(@)"; \
+	fi
 endif
+
+# what happens if you use the makefile from another repo, that has not yet loaded the .makefiles subfolder?
 
 ifneq ($(COMPOSER_VERSION),)
 # Download Composer to bin/composer
@@ -78,11 +84,15 @@ composer.lock: composer.json | $(COMPOSER_DEPENDENCY)
 			$(COMPOSER_EXECUTABLE) update --lock; \
 		fi; \
 	fi
-	@touch "$(@)"
+	@if test -f "$(@)"; then \
+		touch "$(@)"; \
+	fi
 
 # Build the vendor directory
 vendor: composer.lock | $(COMPOSER_DEPENDENCY)
 	@if test "$(@)" -ot "$(<)"; then \
 		$(COMPOSER_EXECUTABLE) install --no-progress; \
 	fi
-	@touch "$(@)"
+	@if test -d "$(@)"; then \
+		touch "$(@)"; \
+	fi
