@@ -19,14 +19,17 @@ MAKEFILES_LOG:=$(shell \
 	fi \
 )
 
+#. At least include the base.makefile file
+include $(MAKEFILES_DIRECTORY)/builtins.makefile     # Reset the default makefile builtins
+include $(MAKEFILES_DIRECTORY)/base.makefile         # Base functionality
+
 #. This section contains the variables required by the included makefiles, before including the makefiles themselves.
 #. In this case, these variables define the own directory as repository to update with the commands in git.makefile
 REPOSITORIES=self
 REPOSITORY_DIRECTORY_self=.
 
-#. At least include the includes/base.makefile and includes/repositories.makefile files
-include $(MAKEFILES_DIRECTORY)/builtins.makefile     # Reset the default makefile builtins
-include $(MAKEFILES_DIRECTORY)/base.makefile         # Base functionality
+#. Then include the repositories.makefile file
+
 include $(MAKEFILES_DIRECTORY)/repositories.makefile # Repositories management
 ```
 
