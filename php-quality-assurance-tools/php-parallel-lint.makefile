@@ -32,8 +32,12 @@ endif
 vendor/bin/parallel-lint: | $(COMPOSER_DEPENDENCY) vendor
 	@if test ! -f "$(@)"; then $(COMPOSER_EXECUTABLE) require --dev php-parallel-lint/php-parallel-lint; fi
 
+ifneq ($(wildcard $(filter-out $(PHP_DEPENDENCY),$(PARALLEL_LINT_DEPENDENCY))),)
+
 # Run Parallel Lint
 # @see https://github.com/php-parallel-lint/PHP-Parallel-Lint
 parallel-lint: | $(PARALLEL_LINT_DEPENDENCY) $(if $(COMPOSER),$(patsubst %.json,%.lock,$(COMPOSER)),composer.lock)
 	@$(PARALLEL_LINT)$(if $(PARALLEL_LINT_FLAGS), $(PARALLEL_LINT_FLAGS)) $(PARALLEL_LINT_DIRECTORIES_TO_CHECK)
 .PHONY: parallel-lint
+
+endif

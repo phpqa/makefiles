@@ -34,6 +34,8 @@ endif
 vendor/bin/rector: | $(COMPOSER_DEPENDENCY) vendor
 	@if test ! -f "$(@)"; then $(COMPOSER_EXECUTABLE) require --dev rector/rector; fi
 
+ifneq ($(wildcard $(filter-out $(PHP_DEPENDENCY),$(RECTOR_DEPENDENCY))),)
+
 #. Initialize Rector
 rector.php: | $(RECTOR_DEPENDENCY)
 	@$(RECTOR) init
@@ -48,3 +50,5 @@ rector: | $(RECTOR_DEPENDENCY) rector.php
 rector.dryrun: | $(RECTOR_DEPENDENCY) rector.php
 	@$(RECTOR)$(if $(RECTOR_FLAGS), $(RECTOR_FLAGS)) --dry-run process $(RECTOR_DIRECTORIES_TO_CHECK)
 .PHONY: rector.dryrun
+
+endif

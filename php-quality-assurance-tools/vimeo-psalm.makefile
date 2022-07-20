@@ -36,6 +36,8 @@ PSALTER_ISSUES?=
 vendor/bin/psalm: | $(COMPOSER_DEPENDENCY) vendor
 	@if test ! -f "$(@)"; then $(COMPOSER_EXECUTABLE) require --dev vimeo/psalm; fi
 
+ifneq ($(wildcard $(filter-out $(PHP_DEPENDENCY),$(PSALM_DEPENDENCY))),)
+
 #. Initialize Psalm # TODO This needs a HOME environment variable to be overwritten https://github.com/vimeo/psalm/issues/4267
 psalm.xml: | $(PSALM_DEPENDENCY)
 	@$(PSALM) --init
@@ -66,3 +68,5 @@ psalter: | $(PSALM_CONFIG) $(PSALM_DEPENDENCY)
 psalter.dryrun: | $(PSALM_CONFIG) $(PSALM_DEPENDENCY)
 	@$(PSALM) --alter --dry-run$(if $(PSALM_FLAGS), $(PSALM_FLAGS)) --issues="$(if $(PSALTER_ISSUES),$(PSALTER_ISSUES),all)"
 .PHONY: psalter.dryrun
+
+endif

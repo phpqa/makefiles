@@ -5,23 +5,23 @@
 
 # Run a complete analysis
 php.check:\
-	$(if $(PARALLEL_LINT),parallel-lint) \
+	$(if $(wildcard $(filter-out $(PHP_DEPENDENCY),$(PARALLEL_LINT_DEPENDENCY))),parallel-lint) \
 	$(if $(findstring composer.makefile,$(MAKEFILE_LIST)),composer.validate composer.check-platform-reqs) \
 	$(if $(findstring composer-normalize.makefile,$(MAKEFILE_LIST)),composer-normalize.dryrun) \
-	$(if $(PHPCS),phpcs) \
-	$(if $(PHPCSFIXER),php-cs-fixer.dryrun) \
-	$(if $(PHPSTAN),phpstan) \
-	$(if $(PSALM),psalm psalter.dryrun) \
-	$(if $(RECTOR),rector.dryrun)
+	$(if $(wildcard $(filter-out $(PHP_DEPENDENCY),$(PHPCS_DEPENDENCY))),phpcs) \
+	$(if $(wildcard $(filter-out $(PHP_DEPENDENCY),$(PHPCSFIXER_DEPENDENCY))),php-cs-fixer.dryrun) \
+	$(if $(wildcard $(filter-out $(PHP_DEPENDENCY),$(PHPSTAN_DEPENDENCY))),phpstan) \
+	$(if $(wildcard $(filter-out $(PHP_DEPENDENCY),$(PSALM_DEPENDENCY))),psalm psalter.dryrun) \
+	$(if $(wildcard $(filter-out $(PHP_DEPENDENCY),$(RECTOR_DEPENDENCY))),rector.dryrun)
 	@true
 .PHONY: php.check
 
 # Fix your files #!
 php.fix:\
 	$(if $(findstring composer-normalize.makefile,$(MAKEFILE_LIST)),composer-normalize) \
-	$(if $(PSALM),psalter) \
-	$(if $(RECTOR),rector) \
-	$(if $(PHPCBF),phpcbf) \
-	$(if $(PHPCSFIXER),php-cs-fixer)
+	$(if $(wildcard $(filter-out $(PHP_DEPENDENCY),$(PSALM_DEPENDENCY))),psalter) \
+	$(if $(wildcard $(filter-out $(PHP_DEPENDENCY),$(RECTOR_DEPENDENCY))),rector) \
+	$(if $(wildcard $(filter-out $(PHP_DEPENDENCY),$(PHPCBF_DEPENDENCY))),phpcbf) \
+	$(if $(wildcard $(filter-out $(PHP_DEPENDENCY),$(PHPCSFIXER_DEPENDENCY))),php-cs-fixer)
 	@true
 .PHONY: php.fix

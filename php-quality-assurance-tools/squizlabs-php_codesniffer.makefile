@@ -51,18 +51,26 @@ endif
 vendor/bin/phpcs: | $(COMPOSER_DEPENDENCY) vendor
 	@if test ! -f "$(@)"; then $(COMPOSER_EXECUTABLE) require --dev squizlabs/php_codesniffer; fi
 
+ifneq ($(wildcard $(filter-out $(PHP_DEPENDENCY),$(PHPCS_DEPENDENCY))),)
+
 # Run PHP_CodeSniffer
 # @see https://github.com/squizlabs/PHP_CodeSniffer
 phpcs: | $(wildcard $(PHPCS_STANDARD)) $(PHPCS_DEPENDENCY)
 	@$(PHPCS)$(if $(PHPCS_FLAGS), $(PHPCS_FLAGS)) $(PHPCS_DIRECTORIES_TO_CHECK)
 .PHONY: phpcs
 
+endif
+
 #. Install PHP_CodeSniffer # TODO Also add installation as phar
 vendor/bin/phpcbf: | $(COMPOSER_DEPENDENCY) vendor
 	@if test ! -f "$(@)"; then $(COMPOSER_EXECUTABLE) require --dev squizlabs/php_codesniffer; fi
+
+ifneq ($(wildcard $(filter-out $(PHP_DEPENDENCY),$(PHPCBF_DEPENDENCY))),)
 
 # Run PHP Code Beautifier and Fixer #!
 # @see https://github.com/squizlabs/PHP_CodeSniffer
 phpcbf: | $(wildcard $(PHPCBF_STANDARD)) bin/php vendor/bin/phpcbf
 	@$(PHPCBF)$(if $(PHPCBF_FLAGS), $(PHPCBF_FLAGS)) $(PHPCBF_DIRECTORIES_TO_CHECK)
 .PHONY: phpcbf
+
+endif
