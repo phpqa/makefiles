@@ -2,6 +2,10 @@
 ##. Configuration
 ###
 
+ifeq ($(DOCKER_COMPOSE),)
+$(error Please provide the variable DOCKER_COMPOSE before including this file.)
+endif
+
 # TODO Move to DOCKER_CONTAINER_NAME_FOR_PHP
 DOCKER_COMPOSE_SERVICE_NAME_FOR_PHP?=
 ifeq ($(DOCKER_COMPOSE_SERVICE_NAME_FOR_PHP),)
