@@ -25,31 +25,31 @@ DIVE_CONTAINER_RUN_FLAGS?=
 DIVE_FLAGS?=
 
 ifneq ($(DOCKER_SOCKET),)
-	DIVE_CONTAINER_RUN_FLAGS+=--volume "$(DOCKER_SOCKET):/var/run/docker.sock:ro"
+DIVE_CONTAINER_RUN_FLAGS+=--volume "$(DOCKER_SOCKET):/var/run/docker.sock:ro"
 endif
 
 ifneq ($(wildcard $(DIVE_CONFIG)),)
-	DIVE_CONTAINER_RUN_FLAGS+=--volume "$(realpath $(DIVE_CONFIG))":"/root/.dive.yaml"
+DIVE_CONTAINER_RUN_FLAGS+=--volume "$(realpath $(DIVE_CONFIG))":"/root/.dive.yaml"
 endif
 
 ifneq ($(DIVE_CI),)
-	DIVE_CONTAINER_RUN_FLAGS+=--env "CI=$(DIVE_CI)"
+DIVE_CONTAINER_RUN_FLAGS+=--env "CI=$(DIVE_CI)"
 endif
 
 ifneq ($(DOCKER_API_VERSION),)
-	DIVE_CONTAINER_RUN_FLAGS+=--env "DOCKER_API_VERSION=$(DOCKER_API_VERSION)"
+DIVE_CONTAINER_RUN_FLAGS+=--env "DOCKER_API_VERSION=$(DOCKER_API_VERSION)"
 endif
 
 ifneq ($(DIVE_SOURCE),)
 ifeq ($(findstring --source,$(DIVE_FLAGS)),)
-	DIVE_FLAGS+=--source "$(DIVE_SOURCE)"
+DIVE_FLAGS+=--source "$(DIVE_SOURCE)"
 endif
 endif
 
 ifneq ($(wildcard $(DIVE_TARGET)),)
-	DIVE_CONTAINER_RUN_FLAGS+=--volume "$(realpath $(DIVE_TARGET)):$(realpath $(DIVE_TARGET))"
+DIVE_CONTAINER_RUN_FLAGS+=--volume "$(realpath $(DIVE_TARGET)):$(realpath $(DIVE_TARGET))"
 ifeq ($(findstring --source,$(DIVE_FLAGS)),)
-	DIVE_FLAGS+=--source "docker-archive"
+DIVE_FLAGS+=--source "docker-archive"
 endif
 endif
 
@@ -57,7 +57,7 @@ endif
 ## Docker Tools
 ###
 
-# Run dive in a container to inspect the image/image-archive $DIVE_TARGET
+# Run dive in a container to inspect $DIVE_TARGET
 # Exploring a docker image and its layer contents
 # @see https://github.com/wagoodman/dive
 dive: | $(DOCKER_DEPENDENCY)
@@ -73,11 +73,11 @@ endif
 .PHONY: dive
 
 #. Run dive in a container to inspect the image $DIVE_TARGET
-dive-image:
+dive-image: | $(DOCKER_DEPENDENCY)
 	@DIVE_TARGET="$(DIVE_TARGET)" $(MAKE) dive
 .PHONY: dive-image
 
-#. Run dive in a container to inspect the image-archive $DIVE_TARGET
-dive-archive:
+#. Run dive in a container to inspect the image archive $DIVE_TARGET
+dive-archive: | $(DOCKER_DEPENDENCY)
 	@DIVE_TARGET="$(DIVE_TARGET)" DIVE_SOURCE="docker-archive" $(MAKE) dive
 .PHONY: dive-archive
