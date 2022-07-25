@@ -15,8 +15,7 @@ DOCKER_COMPOSE?=$(shell command -v docker-compose || which docker-compose 2>/dev
 DOCKER_COMPOSE_FLAGS?=
 DOCKER_COMPOSE_BUILD_FLAGS?=
 DOCKER_COMPOSE_UP_FLAGS?=--detach
-DOCKER_COMPOSE_FILES?=compose.yaml compose.yml docker-compose.yaml docker-compose.yml
-DOCKER_COMPOSE_DIRECTORY?=$(if $(wildcard $(DOCKER_COMPOSE_FILES)),.)
+DOCKER_COMPOSE_DIRECTORY?=$(if $(wildcard compose.yaml compose.yml docker-compose.yaml docker-compose.yml),.)
 ifeq ($(DOCKER_COMPOSE),)
 $(error Please install docker-compose.)
 endif
