@@ -2,21 +2,17 @@
 ##. Configuration
 ###
 
-JQ?=$(shell command -v jq || which jq 2>/dev/null)
-ifeq ($(JQ),)
-ifeq ($(DOCKER),)
-$(error Please provide the variable JQ or the variable DOCKER before including this file.)
-else
-JQ?=$(DOCKER) run --rm --interactive stedolan/jq
-endif
-endif
-
 ifeq ($(DOCKER_SOCKET),)
 $(error Please provide the variable DOCKER_SOCKET before including this file.)
 endif
 
 ifeq ($(DOCKER),)
 $(error Please provide the variable DOCKER before including this file.)
+endif
+
+JQ?=$(shell command -v jq || which jq 2>/dev/null)
+ifeq ($(JQ),)
+JQ?=$(DOCKER) run --rm --interactive stedolan/jq
 endif
 
 #. Docker variables for Portainer
