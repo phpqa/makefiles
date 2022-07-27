@@ -16,6 +16,7 @@ include $(DOCKER_TOOLS_DIRECTORY)/dive.makefile
 include $(DOCKER_TOOLS_DIRECTORY)/dockly.makefile
 include $(DOCKER_TOOLS_DIRECTORY)/dozzle.makefile
 include $(DOCKER_TOOLS_DIRECTORY)/dry.makefile
+include $(DOCKER_TOOLS_DIRECTORY)/hadolint.makefile
 include $(DOCKER_TOOLS_DIRECTORY)/lazydocker.makefile
 include $(DOCKER_TOOLS_DIRECTORY)/portainer.makefile
 include $(DOCKER_TOOLS_DIRECTORY)/traefik.makefile
