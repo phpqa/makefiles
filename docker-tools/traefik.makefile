@@ -45,7 +45,7 @@ traefik.start:%.start:
 		$(DOCKER) container run --detach --name "$(TRAEFIK_SERVICE_NAME)" \
 			$(foreach variable,$(filter-out $(addprefix $(TRAEFIK_VARIABLES_PREFIX),$(TRAEFIK_VARIABLES_EXCLUDED)),$(filter $(TRAEFIK_VARIABLES_PREFIX)%,$(.VARIABLES))),--env "$(if $(filter $(TRAEFIK_VARIABLES_UNPREFIXED),$(patsubst $(TRAEFIK_VARIABLES_PREFIX)%,%,$(variable))),$(patsubst $(TRAEFIK_VARIABLES_PREFIX)%,%,$(variable)),$(variable))=$($(variable))") \
 			--volume "$(DOCKER_SOCKET):/var/run/docker.sock:ro" \
-			--label "com.centurylinklabs.traefik.enable=true" \
+			--label "com.centurylinklabs.watchtower.enable=true" \
 			--publish "$(TRAEFIK_HTTP_PORT):$(TRAEFIK_HTTP_PORT)" \
 			--publish "8080" \
 			$(if $(TRAEFIK_PROVIDERS_DOCKER_NETWORK), \
