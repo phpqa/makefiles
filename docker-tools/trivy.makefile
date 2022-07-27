@@ -30,7 +30,7 @@ TRIVY_CACHE_DIR?=$(wildcard .cache/trivy)
 TRIVY_CONTAINER_RUN_FLAGS?=
 TRIVY_FLAGS?=
 
-ifneq ($(TRIVY_SCONFIG),)
+ifneq ($(TRIVY_CONFIG),)
 TRIVY_CONTAINER_RUN_FLAGS+=--volume "$(realpath $(TRIVY_CONFIG)):$(realpath $(TRIVY_CONFIG))"
 ifeq ($(findstring --config,$(TRIVY_FLAGS)),)
 TRIVY_FLAGS+=--config "$(realpath $(TRIVY_CONFIG))"
