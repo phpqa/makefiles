@@ -59,8 +59,6 @@ bin/composer$(if $(COMPOSER_VERSION),-$(COMPOSER_VERSION)): | $(PHP_DEPENDENCY)
 	fi
 endif
 
-# what happens if you use the makefile from another repo, that has not yet loaded the .makefiles subfolder?
-
 ifneq ($(COMPOSER_VERSION),)
 # Download Composer to bin/composer
 bin/composer: bin/composer-$(COMPOSER_VERSION)
