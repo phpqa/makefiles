@@ -76,21 +76,21 @@ endif
 .PHONY: trivy
 
 #. Run Trivy in a container to inspect the image $TRIVY_TARGET
-trivy-image: | $(DOCKER_DEPENDENCY)
+trivy-image:
 	@TRIVY_TARGET_COMMAND="image" TRIVY_TARGET="$(TRIVY_TARGET)" $(MAKE) trivy
 .PHONY: trivy-image
 
 #. Run Trivy in a container to inspect the image archive $TRIVY_TARGET
-trivy-archive: | $(DOCKER_DEPENDENCY)
+trivy-archive:
 	@TRIVY_TARGET_COMMAND="image --input" TRIVY_TARGET="$(TRIVY_TARGET)" $(MAKE) trivy
 .PHONY: trivy-archive
 
 #. Run Trivy in a container to inspect the file $TRIVY_TARGET
-trivy-file: | $(DOCKER_DEPENDENCY)
+trivy-file:
 	@TRIVY_TARGET_COMMAND="fs" TRIVY_TARGET="$(TRIVY_TARGET)" $(MAKE) trivy
 .PHONY: trivy-file
 
 #. Run Trivy in a container to inspect the directory $TRIVY_TARGET
-trivy-directory: | $(DOCKER_DEPENDENCY)
+trivy-directory:
 	@TRIVY_TARGET_COMMAND="fs" TRIVY_TARGET="$(TRIVY_TARGET)" $(MAKE) trivy
 .PHONY: trivy-directory

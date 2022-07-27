@@ -73,11 +73,11 @@ endif
 .PHONY: dive
 
 #. Run dive in a container to inspect the image $DIVE_TARGET
-dive-image: | $(DOCKER_DEPENDENCY)
+dive-image:
 	@DIVE_TARGET="$(DIVE_TARGET)" $(MAKE) dive
 .PHONY: dive-image
 
 #. Run dive in a container to inspect the image archive $DIVE_TARGET
-dive-archive: | $(DOCKER_DEPENDENCY)
+dive-archive:
 	@DIVE_TARGET="$(DIVE_TARGET)" DIVE_SOURCE="docker-archive" $(MAKE) dive
 .PHONY: dive-archive
