@@ -10,6 +10,7 @@ ifeq ($(COMPOSER_EXECUTABLE),)
 $(error Please install Composer.)
 endif
 
+PARALLEL_LINT_PACKAGE?=php-parallel-lint/php-parallel-lint
 PARALLEL_LINT?=$(PHP) vendor/bin/parallel-lint
 ifeq ($(PARALLEL_LINT),$(PHP) vendor/bin/parallel-lint)
 PARALLEL_LINT_DEPENDENCY?=$(PHP_DEPENDENCY) vendor/bin/parallel-lint
@@ -28,11 +29,13 @@ endif
 ## PHP Quality Assurance Tools
 ###
 
-#. Install Parallel Lint
-vendor/bin/parallel-lint: | $(COMPOSER_DEPENDENCY) vendor
-	@if test ! -f "$(@)"; then $(COMPOSER_EXECUTABLE) require --dev php-parallel-lint/php-parallel-lint; fi
+ifeq ($(wildcard $(filter-out $(PHP_DEPENDENCY),$(PARALLEL_LINT_DEPENDENCY))),)
 
-ifneq ($(wildcard $(filter-out $(PHP_DEPENDENCY),$(PARALLEL_LINT_DEPENDENCY))),)
+# Install Parallel Lint as dev dependency in vendor # TODO Also add installation as phar
+vendor/bin/parallel-lint: | $(COMPOSER_DEPENDENCY) vendor
+	@$(COMPOSER_EXECUTABLE) require --dev "$(PARALLEL_LINT_PACKAGE)"
+
+else
 
 # Run Parallel Lint
 # @see https://github.com/php-parallel-lint/PHP-Parallel-Lint

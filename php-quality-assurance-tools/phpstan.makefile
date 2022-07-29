@@ -10,6 +10,7 @@ ifeq ($(COMPOSER_EXECUTABLE),)
 $(error Please install Composer.)
 endif
 
+PHPSTAN_PACKAGE?=phpstan/phpstan
 PHPSTAN?=$(PHP) vendor/bin/phpstan
 ifeq ($(PHPSTAN),$(PHP) vendor/bin/phpstan)
 PHPSTAN_DEPENDENCY?=$(PHP_DEPENDENCY) vendor/bin/phpstan
@@ -44,11 +45,13 @@ endif
 ## PHP Quality Assurance Tools
 ###
 
-#. Install PHPStan
-vendor/bin/phpstan: | $(COMPOSER_DEPENDENCY) vendor
-	@if test ! -f "$(@)"; then $(COMPOSER_EXECUTABLE) require --dev phpstan/phpstan; fi
+ifeq ($(wildcard $(filter-out $(PHP_DEPENDENCY),$(PHPSTAN_DEPENDENCY))),)
 
-ifneq ($(wildcard $(filter-out $(PHP_DEPENDENCY),$(PHPSTAN_DEPENDENCY))),)
+# Install PHPStan as dev dependency in vendor # TODO Also add installation as phar
+vendor/bin/phpstan: | $(COMPOSER_DEPENDENCY) vendor
+	@$(COMPOSER_EXECUTABLE) require --dev "$(PHPSTAN_PACKAGE)"
+
+else
 
 # Run PHPStan
 # @see https://phpstan.org/

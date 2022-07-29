@@ -10,6 +10,7 @@ ifeq ($(COMPOSER_EXECUTABLE),)
 $(error Please install Composer.)
 endif
 
+RECTOR_PACKAGE?=rector/rector
 RECTOR?=$(PHP) vendor/bin/rector
 ifeq ($(RECTOR),$(PHP) vendor/bin/rector)
 RECTOR_DEPENDENCY?=$(PHP_DEPENDENCY) vendor/bin/rector
@@ -30,11 +31,13 @@ endif
 ## PHP Quality Assurance Tools
 ###
 
-#. Install Rector
-vendor/bin/rector: | $(COMPOSER_DEPENDENCY) vendor
-	@if test ! -f "$(@)"; then $(COMPOSER_EXECUTABLE) require --dev rector/rector; fi
+ifeq ($(wildcard $(filter-out $(PHP_DEPENDENCY),$(RECTOR_DEPENDENCY))),)
 
-ifneq ($(wildcard $(filter-out $(PHP_DEPENDENCY),$(RECTOR_DEPENDENCY))),)
+# Install Rector as dev dependency in vendor # TODO Also add installation as phar
+vendor/bin/rector: | $(COMPOSER_DEPENDENCY) vendor
+	@$(COMPOSER_EXECUTABLE) require --dev "$(RECTOR_PACKAGE)"
+
+else
 
 #. Initialize Rector
 rector.php: | $(RECTOR_DEPENDENCY)

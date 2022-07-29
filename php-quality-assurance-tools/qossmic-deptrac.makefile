@@ -10,6 +10,7 @@ ifeq ($(COMPOSER_EXECUTABLE),)
 $(error Please install Composer.)
 endif
 
+DEPTRAC_PACKAGE?=qossmic/deptrac-shim
 DEPTRAC?=$(PHP) vendor/bin/deptrac
 ifeq ($(DEPTRAC),$(PHP) vendor/bin/deptrac)
 DEPTRAC_DEPENDENCY?=$(PHP_DEPENDENCY) vendor/bin/deptrac
@@ -29,11 +30,13 @@ endif
 ## PHP Quality Assurance Tools
 ###
 
-#. Install Deptrac
-vendor/bin/deptrac: | $(COMPOSER_DEPENDENCY) vendor
-	@if test ! -f "$(@)"; then $(COMPOSER_EXECUTABLE) require --dev qossmic/deptrac-shim; fi
+ifeq ($(wildcard $(filter-out $(PHP_DEPENDENCY),$(DEPTRAC_DEPENDENCY))),)
 
-ifneq ($(wildcard $(filter-out $(PHP_DEPENDENCY),$(DEPTRAC_DEPENDENCY))),)
+# Install Deptrac as dev dependency in vendor # TODO Also add installation as phar
+vendor/bin/deptrac: | $(COMPOSER_DEPENDENCY) vendor
+	@$(COMPOSER_EXECUTABLE) require --dev "$(DEPTRAC_PACKAGE)"
+
+else
 
 #. Initialize Deptrac
 $(if $(DEPTRAC_CONFIG),$(DEPTRAC_CONFIG),deptrac.yaml): | $(DEPTRAC_DEPENDENCY)

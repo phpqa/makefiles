@@ -10,6 +10,7 @@ ifeq ($(COMPOSER_EXECUTABLE),)
 $(error Please install Composer.)
 endif
 
+PSALM_PACKAGE?=vimeo/psalm
 PSALM?=$(PHP) vendor/bin/psalm
 ifeq ($(PSALM),$(PHP) vendor/bin/psalm)
 PSALM_DEPENDENCY?=$(PHP_DEPENDENCY) vendor/bin/psalm
@@ -32,11 +33,13 @@ PSALTER_ISSUES?=
 ## PHP Quality Assurance Tools
 ###
 
-#. Install Psalm # TODO Also add installation as phar
-vendor/bin/psalm: | $(COMPOSER_DEPENDENCY) vendor
-	@if test ! -f "$(@)"; then $(COMPOSER_EXECUTABLE) require --dev vimeo/psalm; fi
+ifeq ($(wildcard $(filter-out $(PHP_DEPENDENCY),$(PSALM_DEPENDENCY))),)
 
-ifneq ($(wildcard $(filter-out $(PHP_DEPENDENCY),$(PSALM_DEPENDENCY))),)
+# Install Psalm as dev dependency in vendor # TODO Also add installation as phar
+vendor/bin/psalm: | $(COMPOSER_DEPENDENCY) vendor
+	@$(COMPOSER_EXECUTABLE) require --dev "$(PSALM_PACKAGE)"
+
+else
 
 #. Initialize Psalm # TODO This needs a HOME environment variable to be overwritten https://github.com/vimeo/psalm/issues/4267
 psalm.xml: | $(PSALM_DEPENDENCY)
