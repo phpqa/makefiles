@@ -4,7 +4,7 @@
 
 RUN_UID?=$(shell cat /dev/urandom | env LC_CTYPE=C tr -dc 'a-z0-9' | fold -w 16 | head -n 1)
 CWD?=$(shell cd "$(dir $(firstword $(MAKEFILE_LIST)))"; pwd)
-TZ?=$(if $(wildcard /etc/timezone),$(shell cat /etc/timezone),$(if $(shell which timedatectl),$(shell timedatectl show --property=Timezone --value)))
+TZ?=$(if $(wildcard /etc/timezone),$(shell cat /etc/timezone),$(if $(shell command -v timedatectl || which timedatectl 2>/dev/null),$(shell timedatectl show --property=Timezone --value)))
 LOCALHOST_FILTER_IP?=0.0.0.0
 
 ###
