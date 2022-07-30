@@ -28,12 +28,12 @@ MAKEFLAGS+=--no-print-directory --no-builtin-rules --environment-overrides
 ##. POSIX dependencies - @see https://pubs.opengroup.org/onlinepubs/9699919799/idx/utilities.html
 ###
 
-define check-command
+define check-base-command
 ifeq ($$(shell command -v $(1) || which $(1) 2>/dev/null),)
 $$(error Please provide the command "$(1)")
 endif
 endef
-$(foreach command,test printf exit,$(eval $(call check-command,$(command))))
+$(foreach command,test printf exit,$(eval $(call check-base-command,$(command))))
 
 ###
 ##. Characters

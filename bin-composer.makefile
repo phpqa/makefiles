@@ -1,4 +1,15 @@
 ###
+##. POSIX dependencies - @see https://pubs.opengroup.org/onlinepubs/9699919799/idx/utilities.html
+###
+
+define check-bin-composer-command
+ifeq ($$(shell command -v $(1) || which $(1) 2>/dev/null),)
+$$(error Please provide the command "$(1)" before including the "managed-files.makefile" file)
+endif
+endef
+$(foreach command,touch ln chmod rm,$(eval $(call check-bin-composer-command,$(command))))
+
+###
 ##. Configuration
 ###
 
@@ -29,9 +40,11 @@ bin/composer$(if $(COMPOSER_VERSION),-$(COMPOSER_VERSION)): | $(wildcard $(DOCKE
 	@if test -f "$(@)"; then rm -f "$(@)"; fi
 	@$(if $(COMPOSER_VERSION),if test -L "bin/composer" || -f "bin/composer"; then rm -f "bin/composer"; fi)
 	@$(DOCKER) image pull $(COMPOSER_IMAGE)$(if $(COMPOSER_VERSION),:$(COMPOSER_VERSION))
-	@$(DOCKER) run --rm --init --pull=missing --volume "$(CWD)":"/app" --workdir "/app" $(COMPOSER_IMAGE)$(if $(COMPOSER_VERSION),:$(COMPOSER_VERSION)) cat /usr/bin/composer > "$(@)"
+	@$(DOCKER) run --rm --init --pull=missing --volume "$(shell pwd)":"/app" --workdir "/app" $(COMPOSER_IMAGE)$(if $(COMPOSER_VERSION),:$(COMPOSER_VERSION)) cat /usr/bin/composer > "$(@)"
 	@$(DOCKER) image rm $(COMPOSER_IMAGE)$(if $(COMPOSER_VERSION),:$(COMPOSER_VERSION))
-	@if test -f "$(@)"; then \
+	@if test ! -f "$(@)"; then \
+		printf "$(STYLE_ERROR)%s$(STYLE_RESET)\n" "The \"$(@)\" file is not present. Something went wrong."; \
+	else \
 		chmod +x "$(@)"; \
 	fi
 else
@@ -54,7 +67,9 @@ bin/composer$(if $(COMPOSER_VERSION),-$(COMPOSER_VERSION)): | $(PHP_DEPENDENCY)
 	@$(PHP) setup.php --no-ansi --install-dir=$(dir $(@)) --filename=$(notdir $(@))$(if $(COMPOSER_VERSION), --version=$(COMPOSER_VERSION))
 	@$(PHP) -r "unlink('setup.php');"
 	@$(PHP) -r "unlink('setup.sig');"
-	@if test -f "$(@)"; then \
+	@if test ! -f "$(@)"; then \
+		printf "$(STYLE_ERROR)%s$(STYLE_RESET)\n" "The \"$(@)\" file is not present. Something went wrong."; \
+	else \
 		chmod +x "$(@)"; \
 	fi
 endif
@@ -82,7 +97,9 @@ composer.lock: composer.json | $(COMPOSER_DEPENDENCY)
 			$(COMPOSER_EXECUTABLE) update --lock; \
 		fi; \
 	fi
-	@if test -f "$(@)"; then \
+	@if test ! -f "$(@)"; then \
+		printf "$(STYLE_ERROR)%s$(STYLE_RESET)\n" "The \"$(@)\" file is not present. Something went wrong."; \
+	else \
 		touch "$(@)"; \
 	fi
 
@@ -91,6 +108,8 @@ vendor: composer.lock | $(COMPOSER_DEPENDENCY)
 	@if test "$(@)" -ot "$(<)"; then \
 		$(COMPOSER_EXECUTABLE) install --no-progress; \
 	fi
-	@if test -d "$(@)"; then \
+	@if test ! -d "$(@)"; then \
+		printf "$(STYLE_ERROR)%s$(STYLE_RESET)\n" "The \"$(@)\" directory is not present. Something went wrong."; \
+	else \
 		touch "$(@)"; \
 	fi
