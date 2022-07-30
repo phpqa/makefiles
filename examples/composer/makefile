@@ -2,8 +2,8 @@
 ##. Configuration
 ###
 
-include ../../builtins.makefile
 include ../../base.makefile
+include ../../help.makefile
 include ../../docker.makefile
 
 DOCKER_COMPOSE_SERVICE_NAME_FOR_PHP:=php
