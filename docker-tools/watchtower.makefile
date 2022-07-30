@@ -15,7 +15,7 @@ WATCHTOWER_IMAGE?=containrrr/watchtower:latest
 WATCHTOWER_SERVICE_NAME?=watchtower
 
 #. Overwrite the Watchtower defaults
-WATCHTOWER_TZ?=$(TZ)
+WATCHTOWER_TZ?=$(if $(wildcard /etc/timezone),$(shell cat /etc/timezone 2>/dev/null),$(if $(shell command -v timedatectl || which timedatectl 2>/dev/null),$(shell timedatectl show --property=Timezone --value 2>/dev/null)))
 WATCHTOWER_LABEL_ENABLE?=true
 
 #. Support for all Watchtower variables
