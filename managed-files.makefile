@@ -1,4 +1,15 @@
 ###
+##. POSIX dependencies - @see https://pubs.opengroup.org/onlinepubs/9699919799/idx/utilities.html
+###
+
+define check-command
+ifeq ($$(shell command -v $(1) || which $(1) 2>/dev/null),)
+$$(error Please provide the command "$(1)" before including the "managed-files.makefile" file)
+endif
+endef
+$(foreach command,mkdir find sort tail diff cp,$(eval $(call check-command,$(command))))
+
+###
 ##. Configuration
 ###
 
@@ -6,6 +17,10 @@ MANAGED_FILES?=$(if $(GIT),$(shell $(GIT) clean -nX 2>/dev/null | sed 's/Would r
 MANAGED_FILES_ORIGIN_DIRECTORY?=.
 MANAGED_FILES_BACKUP_DIRECTORY?=./.backups
 MANAGED_FILES_BACKUP_EXTENSION?=.bck
+
+ifeq ($(MANAGED_FILES),)
+$(error Please provide the variable MANAGED_FILES before including this file!)
+endif
 
 ifeq ($(MANAGED_FILES_ORIGIN_DIRECTORY),)
 $(error Please provide the variable MANAGED_FILES_ORIGIN_DIRECTORY before including this file!)
