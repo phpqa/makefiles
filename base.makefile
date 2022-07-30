@@ -28,17 +28,12 @@ MAKEFLAGS+=--no-print-directory --no-builtin-rules --environment-overrides
 ##. POSIX dependencies - @see https://pubs.opengroup.org/onlinepubs/9699919799/idx/utilities.html
 ###
 
-ifeq ($(shell command -v test || which test 2>/dev/null),)
-$(error These makefiles use test a lot. Please provide it.)
+define check-command
+ifeq ($$(shell command -v $(1) || which $(1) 2>/dev/null),)
+$$(error Please provide the command "$(1)")
 endif
-
-ifeq ($(shell command -v printf || which printf 2>/dev/null),)
-$(error These makefiles use printf a lot. Please provide it.)
-endif
-
-ifeq ($(shell command -v exit || which exit 2>/dev/null),)
-$(error These makefiles use exit a lot. Please provide it.)
-endif
+endef
+$(foreach command,test printf exit,$(eval $(call check-command,$(command))))
 
 ###
 ##. Characters
