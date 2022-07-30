@@ -83,7 +83,7 @@ compose.service.%.ensure-running:
 		$(DOCKER_COMPOSE)$(if $(DOCKER_COMPOSE_FLAGS), $(DOCKER_COMPOSE_FLAGS)) up -d --remove-orphans $(*); \
 		until $(DOCKER_COMPOSE)$(if $(DOCKER_COMPOSE_FLAGS), $(DOCKER_COMPOSE_FLAGS)) ps --services --filter "status=running" | grep -q "$(*)" 2> /dev/null; do \
 			if $(DOCKER_COMPOSE)$(if $(DOCKER_COMPOSE_FLAGS), $(DOCKER_COMPOSE_FLAGS)) ps --services --filter "status=stopped" | grep -q "$(*)" 2> /dev/null; then \
-				$(call println_in_style,The service "$(*)" stopped unexpectedly.); \
+				printf "$(STYLE_ERROR)%s$(STYLE_RESET)\n" "The service \"$(*)\" stopped unexpectedly."; \
 				exit 1; \
 			fi; \
 			sleep 1; \

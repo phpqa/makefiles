@@ -27,7 +27,7 @@ endif
 back-up-managed-file=\
 	FILENAME="$(1)"; \
 	if test ! -f "$(MANAGED_FILES_ORIGIN_DIRECTORY)/$${FILENAME}"; then \
-		$(call println_in_style,warning,Could not find the file "$(MANAGED_FILES_ORIGIN_DIRECTORY)/$${FILENAME}"$(comma) skipped making a backup...); \
+		printf "$(STYLE_WARNING)%s\033[0m\n" "Could not find the file \"$(MANAGED_FILES_ORIGIN_DIRECTORY)/$${FILENAME}\", skipped making a backup..."; \
 	else \
 		mkdir -p "$(MANAGED_FILES_BACKUP_DIRECTORY)"; \
 		LATEST_BACKUP_FILE="$$(find "$(MANAGED_FILES_BACKUP_DIRECTORY)" -name "$${FILENAME}.*$(MANAGED_FILES_BACKUP_EXTENSION)" 2>/dev/null | sort | tail -1)"; \
@@ -46,7 +46,7 @@ recover-managed-file=\
 				$(call back-up-managed-file,$${FILENAME}); \
 			fi; \
 			cp "$(MANAGED_FILES_BACKUP_DIRECTORY)/$${FILENAME}" "$(MANAGED_FILES_ORIGIN_DIRECTORY)/$${FILENAME}"; \
-			$(call println_in_style,success,Updated the file "$(MANAGED_FILES_ORIGIN_DIRECTORY)/$${FILENAME}" from "$(MANAGED_FILES_BACKUP_DIRECTORY)/$${FILENAME}". The old version was backed up.); \
+			printf "$(STYLE_SUCCESS)%s\033[0m\n" "Updated the file \"$(MANAGED_FILES_ORIGIN_DIRECTORY)/$${FILENAME}\" from \"$(MANAGED_FILES_BACKUP_DIRECTORY)/$${FILENAME}\". The old version was backed up."; \
 		fi; \
 	else \
 		LATEST_BACKUP_FILE="$$(find "$(MANAGED_FILES_BACKUP_DIRECTORY)" -wholename "$(MANAGED_FILES_BACKUP_DIRECTORY)/$${FILENAME}.*$(MANAGED_FILES_BACKUP_EXTENSION)" 2>/dev/null | sort | tail -1)"; \
@@ -56,14 +56,14 @@ recover-managed-file=\
 					$(call back-up-managed-file,$${FILENAME}); \
 				fi; \
 				cp "$${LATEST_BACKUP_FILE}" "$(MANAGED_FILES_ORIGIN_DIRECTORY)/$${FILENAME}"; \
-				$(call println_in_style,success,Updated the file "$(MANAGED_FILES_ORIGIN_DIRECTORY)/$${FILENAME}" from "$${LATEST_BACKUP_FILE}".); \
+				printf "$(STYLE_SUCCESS)%s\033[0m\n" "Updated the file \"$(MANAGED_FILES_ORIGIN_DIRECTORY)/$${FILENAME}\" from \"$${LATEST_BACKUP_FILE}\"."; \
 			fi; \
 		else \
 			if test -f "$(MANAGED_FILES_ORIGIN_DIRECTORY)/$${FILENAME}.dist"; then \
 				cp "$(MANAGED_FILES_ORIGIN_DIRECTORY)/$${FILENAME}.dist" "$(MANAGED_FILES_ORIGIN_DIRECTORY)/$${FILENAME}"; \
-				$(call println_in_style,success,Created the file "$(MANAGED_FILES_ORIGIN_DIRECTORY)/$${FILENAME}" from "$(MANAGED_FILES_ORIGIN_DIRECTORY)/$${FILENAME}.dist".); \
+				printf "$(STYLE_SUCCESS)%s\033[0m\n" "Created the file \"$(MANAGED_FILES_ORIGIN_DIRECTORY)/$${FILENAME}\" from \"$(MANAGED_FILES_ORIGIN_DIRECTORY)/$${FILENAME}.dist\"."; \
 			else \
-				$(call println_in_style,warning,Please create the file "$(MANAGED_FILES_ORIGIN_DIRECTORY)/$${FILENAME}" manually.); \
+				printf "$(STYLE_WARNING)%s\033[0m\n" "Please create the file \"$(MANAGED_FILES_ORIGIN_DIRECTORY)/$${FILENAME}\" manually."; \
 				exit 1; \
 			fi; \
 		fi; \
@@ -75,7 +75,7 @@ remove-managed-file=\
 	if test -f "$(MANAGED_FILES_ORIGIN_DIRECTORY)/$${FILENAME}"; then \
 		$(call back-up-managed-file,$${FILENAME}); \
 		rm -f "$(MANAGED_FILES_ORIGIN_DIRECTORY)/$${FILENAME}"; \
-		$(call println_in_style,success,Removed the file "$(MANAGED_FILES_ORIGIN_DIRECTORY)/$${FILENAME}".); \
+		printf "$(STYLE_SUCCESS)%s\033[0m\n" "Removed the file \"$(MANAGED_FILES_ORIGIN_DIRECTORY)/$${FILENAME}\"."; \
 	fi
 
 ###
