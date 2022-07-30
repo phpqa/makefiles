@@ -70,7 +70,7 @@ yacht.ensure:%.ensure: | %.start
 		fi; \
 		sleep 1; \
 	done
-	@until test -n "$$(curl -sSL --fail "http://$$($(DOCKER) container port "$(YACHT_SERVICE_NAME)" "8000" | grep "$(if $(LOCALHOST_FILTER_IP),$(LOCALHOST_FILTER_IP),0.0.0.0)" 2>/dev/null)" 2>/dev/null)"; do \
+	@until test -n "$$(curl -sSL --fail "http://$$($(DOCKER) container port "$(YACHT_SERVICE_NAME)" "8000" | grep "0.0.0.0" 2>/dev/null)" 2>/dev/null)"; do \
 		if test -z "$$($(DOCKER) container ls --quiet --filter "status=running" --filter "name=^$(YACHT_SERVICE_NAME)$$" 2>/dev/null)"; then \
 			printf "$(STYLE_ERROR)%s$(STYLE_RESET)\n" "The container \"$(YACHT_SERVICE_NAME)\" stopped before being available."; \
 			$(DOCKER) container logs --since "$$($(DOCKER) container inspect --format "{{ .State.StartedAt }}" "$(YACHT_SERVICE_NAME)")" "$(YACHT_SERVICE_NAME)"; \
@@ -84,7 +84,7 @@ yacht.ensure:%.ensure: | %.start
 yacht.list:%.list: | %.ensure
 	@printf "Open Yacht: %s or %s\n" \
 		"http://$(YACHT_TRAEFIK_DOMAIN)$(if $(filter-out 80,$(TRAEFIK_HTTP_PORT)),:$(TRAEFIK_HTTP_PORT))" \
-		"http://$$($(DOCKER) container port "$(YACHT_SERVICE_NAME)" "8000" | grep "$(if $(LOCALHOST_FILTER_IP),$(LOCALHOST_FILTER_IP),0.0.0.0)")"
+		"http://$$($(DOCKER) container port "$(YACHT_SERVICE_NAME)" "8000" | grep "0.0.0.0")"
 .PHONY: yacht.list
 
 #. List the logs of the Yacht container

@@ -76,7 +76,7 @@ portainer.ensure:%.ensure: | %.start
 		fi; \
 		sleep 1; \
 	done
-	@until test -n "$$(curl -sSL --fail "http://$$($(DOCKER) container port "$(PORTAINER_SERVICE_NAME)" "9000" | grep "$(if $(LOCALHOST_FILTER_IP),$(LOCALHOST_FILTER_IP),0.0.0.0)" 2>/dev/null)" 2>/dev/null)"; do \
+	@until test -n "$$(curl -sSL --fail "http://$$($(DOCKER) container port "$(PORTAINER_SERVICE_NAME)" "9000" | grep "0.0.0.0" 2>/dev/null)" 2>/dev/null)"; do \
 		if test -z "$$($(DOCKER) container ls --quiet --filter "status=running" --filter "name=^$(PORTAINER_SERVICE_NAME)$$" 2>/dev/null)"; then \
 			printf "$(STYLE_ERROR)%s$(STYLE_RESET)\n" "The container \"$(PORTAINER_SERVICE_NAME)\" stopped before being available."; \
 			$(DOCKER) container logs --since "$$($(DOCKER) container inspect --format "{{ .State.StartedAt }}" "$(PORTAINER_SERVICE_NAME)")" "$(PORTAINER_SERVICE_NAME)"; \
@@ -89,23 +89,23 @@ portainer.ensure:%.ensure: | %.start
 #. Setup the Portainer container
 portainer.setup:%.setup: | %.ensure
 	@AUTHORIZATION="$$( \
-		curl -sSL "http://$$($(DOCKER) container port "$(PORTAINER_SERVICE_NAME)" "9000" | grep "$(if $(LOCALHOST_FILTER_IP),$(LOCALHOST_FILTER_IP),0.0.0.0)")/api/auth" \
+		curl -sSL "http://$$($(DOCKER) container port "$(PORTAINER_SERVICE_NAME)" "9000" | grep "0.0.0.0")/api/auth" \
 			-X POST \
 			--data-raw '{"username":"admin","password":"$(PORTAINER_ADMIN_PASSWORD)"}' \
 		| $(JQ) -r '.jwt' \
 	)"; \
 	$(if $(PORTAINER_LOGO_URL), \
-		curl -sSL "http://$$($(DOCKER) container port "$(PORTAINER_SERVICE_NAME)" "9000" | grep "$(if $(LOCALHOST_FILTER_IP),$(LOCALHOST_FILTER_IP),0.0.0.0)")/api/settings" \
+		curl -sSL "http://$$($(DOCKER) container port "$(PORTAINER_SERVICE_NAME)" "9000" | grep "0.0.0.0")/api/settings" \
 			-X PUT -H "Authorization: Bearer $${AUTHORIZATION}" \
 			--data-raw '{"LogoUrl":"$(PORTAINER_LOGO_URL)"}' > /dev/null; \
 	) \
 	$(if $(PORTAINER_ADMIN_PASSWORD_LENGTH), \
-		curl -sSL "http://$$($(DOCKER) container port "$(PORTAINER_SERVICE_NAME)" "9000" | grep "$(if $(LOCALHOST_FILTER_IP),$(LOCALHOST_FILTER_IP),0.0.0.0)")/api/settings" \
+		curl -sSL "http://$$($(DOCKER) container port "$(PORTAINER_SERVICE_NAME)" "9000" | grep "0.0.0.0")/api/settings" \
 			-X PUT -H "Authorization: Bearer $${AUTHORIZATION}" \
 			--data-raw '{"InternalAuthSettings":{"RequiredPasswordLength":$(PORTAINER_ADMIN_PASSWORD_LENGTH)}}' > /dev/null; \
 	) \
 	$(if $(PORTAINER_SESSION_TIMEOUT_IN_HOURS), \
-		curl -sSL "http://$$($(DOCKER) container port "$(PORTAINER_SERVICE_NAME)" "9000" | grep "$(if $(LOCALHOST_FILTER_IP),$(LOCALHOST_FILTER_IP),0.0.0.0)")/api/settings" \
+		curl -sSL "http://$$($(DOCKER) container port "$(PORTAINER_SERVICE_NAME)" "9000" | grep "0.0.0.0")/api/settings" \
 			-X PUT -H "Authorization: Bearer $${AUTHORIZATION}" \
 			--data-raw '{"UserSessionTimeout":"$(PORTAINER_SESSION_TIMEOUT_IN_HOURS)h"}' > /dev/null; \
 	) \
@@ -116,7 +116,7 @@ portainer.setup:%.setup: | %.ensure
 portainer.list:%.list: | %.ensure
 	@printf "Open Portainer: %s or %s (admin/%s)\n" \
 		"http://$(PORTAINER_TRAEFIK_DOMAIN)$(if $(filter-out 80,$(TRAEFIK_HTTP_PORT)),:$(TRAEFIK_HTTP_PORT))" \
-		"http://$$($(DOCKER) container port "$(PORTAINER_SERVICE_NAME)" "9000" | grep "$(if $(LOCALHOST_FILTER_IP),$(LOCALHOST_FILTER_IP),0.0.0.0)")" "$(PORTAINER_ADMIN_PASSWORD)"
+		"http://$$($(DOCKER) container port "$(PORTAINER_SERVICE_NAME)" "9000" | grep "0.0.0.0")" "$(PORTAINER_ADMIN_PASSWORD)"
 .PHONY: portainer.list
 
 #. List the logs of the Portainer container
