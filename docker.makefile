@@ -24,7 +24,7 @@ endif
 ## Docker
 ###
 
-# Login to all DOCKER_REGISTRIES
+# Login to all $DOCKER_REGISTRIES
 docker.login:
 	@$(foreach registry,$(DOCKER_REGISTRIES),docker login $(registry);)
 
