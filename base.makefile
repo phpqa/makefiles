@@ -1,7 +1,8 @@
 ###
-##. Check for Make
+##. Make
 ###
 
+#. Check for GNU Make
 ifneq ($(firstword $(shell $(MAKE) --version)),GNU)
 $(error Please use GNU Make)
 endif
@@ -22,6 +23,22 @@ SHELL?=/bin/sh
 
 #. Add extra flags to the make command
 MAKEFLAGS+=--no-print-directory --no-builtin-rules --environment-overrides
+
+###
+##. POSIX dependencies - @see https://pubs.opengroup.org/onlinepubs/9699919799/idx/utilities.html
+###
+
+ifeq ($(shell command -v test || which test 2>/dev/null),)
+$(error These makefiles use test a lot. Please provide it.)
+endif
+
+ifeq ($(shell command -v printf || which printf 2>/dev/null),)
+$(error These makefiles use printf a lot. Please provide it.)
+endif
+
+ifeq ($(shell command -v exit || which exit 2>/dev/null),)
+$(error These makefiles use exit a lot. Please provide it.)
+endif
 
 ###
 ##. Characters
