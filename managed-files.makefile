@@ -34,7 +34,7 @@ back-up-managed-file=\
 		if test -z "$${LATEST_BACKUP_FILE}" || ! diff -q "$(1)" "$${LATEST_BACKUP_FILE}" &>/dev/null; then \
 			NEW_BACKUP_FILE="$(MANAGED_FILES_BACKUP_DIRECTORY)/$${FILENAME}.$$(date +%s)$(MANAGED_FILES_BACKUP_EXTENSION)"; \
 			cp "$(MANAGED_FILES_ORIGIN_DIRECTORY)/$${FILENAME}" "$${NEW_BACKUP_FILE}"; \
-			$(call println_in_style,success,The file "$(MANAGED_FILES_ORIGIN_DIRECTORY)/$${FILENAME}" was backed up to "$${NEW_BACKUP_FILE}".); \
+			printf "$(STYLE_SUCCESS)%s\033[0m\n" "The file \"$(MANAGED_FILES_ORIGIN_DIRECTORY)/$${FILENAME}\" was backed up to \"$${NEW_BACKUP_FILE}\"."; \
 		fi; \
 	fi
 # $(1) is the relative file path from the MANAGED_FILES_ORIGIN_DIRECTORY
