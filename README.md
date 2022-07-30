@@ -20,8 +20,8 @@ MAKEFILES_LOG:=$(shell \
 )
 
 #. At least include the base.makefile file
-include $(MAKEFILES_DIRECTORY)/builtins.makefile     # Reset the default makefile builtins
-include $(MAKEFILES_DIRECTORY)/base.makefile         # Base functionality
+include $(MAKEFILES_DIRECTORY)/base.makefile         # Provide some base functionality
+include $(MAKEFILES_DIRECTORY)/help.makefile         # Provide documentation automatically
 
 #. This section contains the variables required by the included makefiles, before including the makefiles themselves.
 #. In this case, these variables define the own directory as repository to update with the commands in git.makefile
