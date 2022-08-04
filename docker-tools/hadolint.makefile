@@ -11,7 +11,8 @@ HADOLINT_IMAGE?=hadolint/hadolint:latest
 HADOLINT_SERVICE_NAME?=hadolint-$(subst .,-,$(subst :,-,$(HADOLINT_TARGET)))
 
 #. Adding our own Hadolint variables
-HADOLINT_CONFIG?=$(firstword $(wildcard .hadolint.yaml $${XDG_CONFIG_HOME}/hadolint.yaml $${HOME}/.config/hadolint.yaml $${HOME}/.hadolint/hadolint.yaml $${HOME}/hadolint/config.yaml $${HOME}/.hadolint.yaml))
+HADOLINT_POSSIBLE_CONFIGS?=.hadolint.yaml $${XDG_CONFIG_HOME}/hadolint.yaml $${HOME}/.config/hadolint.yaml $${HOME}/.hadolint/hadolint.yaml $${HOME}/hadolint/config.yaml $${HOME}/.hadolint.yaml
+HADOLINT_CONFIG?=$(firstword $(wildcard $(HADOLINT_POSSIBLE_CONFIGS)))
 HADOLINT_TARGET?=$(if $(TARGET),$(TARGET),$(wildcard Dockerfile))
 HADOLINT_NO_COLOR?=$(NO_COLOR)
 

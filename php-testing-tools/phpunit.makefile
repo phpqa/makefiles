@@ -16,7 +16,15 @@ PHPUNIT_DEPENDENCY?=$(PHP_DEPENDENCY) vendor/bin/phpunit
 else
 PHPUNIT_DEPENDENCY?=$(wildcard $(PHPUNIT))
 endif
+
+PHPUNIT_POSSIBLE_CONFIGS?=phpstan.neon phpstan.neon.dist phpstan.dist.neon
+PHPUNIT_CONFIG?=$(firstword $(wildcard $(PHPUNIT_POSSIBLE_CONFIGS)))
 PHPUNIT_FLAGS?=
+ifneq ($(wildcard $(PHPUNIT_CONFIG)),)
+ifeq ($(findstring --configuration,$(PHPUNIT_FLAGS)),)
+PHPUNIT_FLAGS+=--configuration="$(PHPUNIT_CONFIG)"
+endif
+endif
 
 ###
 ## PHP Testing Tools

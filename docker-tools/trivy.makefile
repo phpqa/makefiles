@@ -11,7 +11,8 @@ TRIVY_IMAGE?=aquasec/trivy:latest
 TRIVY_SERVICE_NAME?=trivy-$(subst .,-,$(subst :,-,$(TRIVY_TARGET)))
 
 #. Adding our own Trivy variables
-TRIVY_CONFIG?=$(firstword $(wildcard trivy.yaml trivy.yml))
+TRIVY_POSSIBLE_CONFIGS?=trivy.yaml trivy.yml
+TRIVY_CONFIG?=$(firstword $(wildcard $(TRIVY_POSSIBLE_CONFIGS)))
 TRIVY_TARGET?=$(TARGET)
 
 #. Add repository tokens

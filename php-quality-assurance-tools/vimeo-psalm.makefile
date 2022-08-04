@@ -18,7 +18,8 @@ else
 PSALM_DEPENDENCY?=$(wildcard $(PSALM))
 endif
 
-PSALM_CONFIG?=psalm.xml
+PSALM_POSSIBLE_CONFIGS?=psalm.xml
+PSALM_CONFIG?=$(wildcard $(PSALM_POSSIBLE_CONFIGS))
 PSALM_BASELINE?=$(wildcard psalm-baseline.xml)
 PSALM_FLAGS?=
 ifneq ($(wildcard $(PSALM_CONFIG)),)

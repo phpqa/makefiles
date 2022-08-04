@@ -15,7 +15,8 @@ DIVE_IMAGE?=wagoodman/dive:latest
 DIVE_SERVICE_NAME?=dive-$(subst .,-,$(subst :,-,$(DIVE_TARGET)))
 
 #. Adding our own dive variables
-DIVE_CONFIG?=$(firstword $(wildcard .dive.yaml .dive.yml))
+DIVE_POSSIBLE_CONFIGS?=.dive.yaml .dive.yml
+DIVE_CONFIG?=$(firstword $(wildcard $(DIVE_POSSIBLE_CONFIGS)))
 DIVE_SOURCE?=$(if $(wildcard $(DIVE_TARGET)),docker-archive)
 DIVE_TARGET?=$(TARGET)
 DIVE_CI?=$(CI)

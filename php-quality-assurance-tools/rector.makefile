@@ -18,7 +18,8 @@ else
 RECTOR_DEPENDENCY?=$(wildcard $(RECTOR))
 endif
 
-RECTOR_CONFIG?=$(wildcard rector.php)
+RECTOR_POSSIBLE_CONFIGS?=rector.php
+RECTOR_CONFIG?=$(wildcard $(RECTOR_POSSIBLE_CONFIGS))
 RECTOR_DIRECTORIES_TO_CHECK?=$(if $(RECTOR_CONFIG),,src)
 RECTOR_FLAGS?=
 ifneq ($(wildcard $(RECTOR_CONFIG)),)
