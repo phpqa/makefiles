@@ -12,7 +12,12 @@ endif
 
 JQ?=$(shell command -v jq || which jq 2>/dev/null)
 ifeq ($(JQ),)
-JQ?=$(DOCKER) run --rm --interactive stedolan/jq
+JQ?=$(DOCKER) run --rm --interactive stedolan/jq:latest
+endif
+
+CURL?=$(shell command -v curl || which curl 2>/dev/null)
+ifeq ($(CURL),)
+CURL?=$(DOCKER) run --rm --network host curlimages/curl:latest
 endif
 
 #. Docker variables for Portainer
@@ -46,14 +51,12 @@ portainer.start:%.start:
 			--volume "$(PORTAINER_DATA_VOLUME):/data" \
 			--volume "$(DOCKER_SOCKET):/var/run/docker.sock:ro" \
 			--publish "9000" \
-			$(if $(PORTAINER_TRAEFIK_NETWORK), \
-				--label "traefik.enable=true" \
-				--label "traefik.docker.network=$(PORTAINER_TRAEFIK_NETWORK)" \
-				--label "traefik.http.routers.$(PORTAINER_SERVICE_NAME).entrypoints=web" \
-				--label "traefik.http.routers.$(PORTAINER_SERVICE_NAME).rule=Host(\`$(PORTAINER_TRAEFIK_DOMAIN)\`)" \
-				--label "traefik.http.services.$(PORTAINER_SERVICE_NAME).loadbalancer.server.port=9000" \
-				--network "$(PORTAINER_TRAEFIK_NETWORK)" \
-			) \
+			--label "traefik.enable=true" \
+			--label "traefik.docker.network=$(if $(PORTAINER_TRAEFIK_NETWORK),$(PORTAINER_TRAEFIK_NETWORK),traefik)" \
+			--label "traefik.http.routers.$(PORTAINER_SERVICE_NAME).entrypoints=web" \
+			--label "traefik.http.routers.$(PORTAINER_SERVICE_NAME).rule=Host(\`$(PORTAINER_TRAEFIK_DOMAIN)\`)" \
+			--label "traefik.http.services.$(PORTAINER_SERVICE_NAME).loadbalancer.server.port=9000" \
+			--network "$(if $(PORTAINER_TRAEFIK_NETWORK),$(PORTAINER_TRAEFIK_NETWORK),traefik)" \
 			"$(PORTAINER_IMAGE)" \
 			--bind ":9000" \
 			--admin-password "$(subst $$,\$$,$(shell $(DOCKER) run --rm httpd:2.4-alpine sh -c "htpasswd -nbB admin '$(PORTAINER_ADMIN_PASSWORD)' | cut -d ':' -f 2"))" \
@@ -76,7 +79,7 @@ portainer.ensure:%.ensure: | %.start
 		fi; \
 		sleep 1; \
 	done
-	@until test -n "$$(curl -sSL --fail "http://$$($(DOCKER) container port "$(PORTAINER_SERVICE_NAME)" "9000" | grep "0.0.0.0" 2>/dev/null)" 2>/dev/null)"; do \
+	@until test "$$($(CURL) --location --silent --fail --output /dev/null --write-out "%{http_code}" "http://$$($(DOCKER) container port "$(PORTAINER_SERVICE_NAME)" "9000" 2>/dev/null | grep "0.0.0.0")")" = "200"; do \
 		if test -z "$$($(DOCKER) container ls --quiet --filter "status=running" --filter "name=^$(PORTAINER_SERVICE_NAME)$$" 2>/dev/null)"; then \
 			printf "$(STYLE_ERROR)%s$(STYLE_RESET)\n" "The container \"$(PORTAINER_SERVICE_NAME)\" stopped before being available."; \
 			$(DOCKER) container logs --since "$$($(DOCKER) container inspect --format "{{ .State.StartedAt }}" "$(PORTAINER_SERVICE_NAME)")" "$(PORTAINER_SERVICE_NAME)"; \
@@ -89,23 +92,23 @@ portainer.ensure:%.ensure: | %.start
 #. Setup the Portainer container
 portainer.setup:%.setup: | %.ensure
 	@AUTHORIZATION="$$( \
-		curl -sSL "http://$$($(DOCKER) container port "$(PORTAINER_SERVICE_NAME)" "9000" | grep "0.0.0.0")/api/auth" \
+		$(CURL) --location --silent --show-error "http://$$($(DOCKER) container port "$(PORTAINER_SERVICE_NAME)" "9000" | grep "0.0.0.0")/api/auth" \
 			-X POST \
 			--data-raw '{"username":"admin","password":"$(PORTAINER_ADMIN_PASSWORD)"}' \
 		| $(JQ) -r '.jwt' \
 	)"; \
 	$(if $(PORTAINER_LOGO_URL), \
-		curl -sSL "http://$$($(DOCKER) container port "$(PORTAINER_SERVICE_NAME)" "9000" | grep "0.0.0.0")/api/settings" \
+		$(CURL) --location --silent --show-error "http://$$($(DOCKER) container port "$(PORTAINER_SERVICE_NAME)" "9000" | grep "0.0.0.0")/api/settings" \
 			-X PUT -H "Authorization: Bearer $${AUTHORIZATION}" \
 			--data-raw '{"LogoUrl":"$(PORTAINER_LOGO_URL)"}' > /dev/null; \
 	) \
 	$(if $(PORTAINER_ADMIN_PASSWORD_LENGTH), \
-		curl -sSL "http://$$($(DOCKER) container port "$(PORTAINER_SERVICE_NAME)" "9000" | grep "0.0.0.0")/api/settings" \
+		$(CURL) --location --silent --show-error "http://$$($(DOCKER) container port "$(PORTAINER_SERVICE_NAME)" "9000" | grep "0.0.0.0")/api/settings" \
 			-X PUT -H "Authorization: Bearer $${AUTHORIZATION}" \
 			--data-raw '{"InternalAuthSettings":{"RequiredPasswordLength":$(PORTAINER_ADMIN_PASSWORD_LENGTH)}}' > /dev/null; \
 	) \
 	$(if $(PORTAINER_SESSION_TIMEOUT_IN_HOURS), \
-		curl -sSL "http://$$($(DOCKER) container port "$(PORTAINER_SERVICE_NAME)" "9000" | grep "0.0.0.0")/api/settings" \
+		$(CURL) --location --silent --show-error "http://$$($(DOCKER) container port "$(PORTAINER_SERVICE_NAME)" "9000" | grep "0.0.0.0")/api/settings" \
 			-X PUT -H "Authorization: Bearer $${AUTHORIZATION}" \
 			--data-raw '{"UserSessionTimeout":"$(PORTAINER_SESSION_TIMEOUT_IN_HOURS)h"}' > /dev/null; \
 	) \

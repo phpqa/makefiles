@@ -10,6 +10,11 @@ ifeq ($(DOCKER),)
 $(error Please provide the variable DOCKER before including this file.)
 endif
 
+CURL?=$(shell command -v curl || which curl 2>/dev/null)
+ifeq ($(CURL),)
+CURL?=$(DOCKER) run --rm --network host curlimages/curl:latest
+endif
+
 #. Docker variables for Dozzle
 DOZZLE_IMAGE?=amir20/dozzle:latest
 DOZZLE_SERVICE_NAME?=dozzle
@@ -41,14 +46,12 @@ dozzle.start:%.start:
 			$(foreach variable,$(filter-out $(addprefix $(DOZZLE_VARIABLES_PREFIX),$(DOZZLE_VARIABLES_EXCLUDED)),$(filter $(DOZZLE_VARIABLES_PREFIX)%,$(.VARIABLES))),--env "$(if $(filter $(DOZZLE_VARIABLES_UNPREFIXED),$(patsubst $(DOZZLE_VARIABLES_PREFIX)%,%,$(variable))),$(patsubst $(DOZZLE_VARIABLES_PREFIX)%,%,$(variable)),$(variable))=$($(variable))") \
 			--volume "$(DOCKER_SOCKET):/var/run/docker.sock:ro" \
 			--publish "8080" \
-			$(if $(DOZZLE_TRAEFIK_NETWORK), \
-				--label "traefik.enable=true" \
-				--label "traefik.docker.network=$(DOZZLE_TRAEFIK_NETWORK)" \
-				--label "traefik.http.routers.$(DOZZLE_SERVICE_NAME).entrypoints=web" \
-				--label "traefik.http.routers.$(DOZZLE_SERVICE_NAME).rule=Host(\`$(DOZZLE_TRAEFIK_DOMAIN)\`)" \
-				--label "traefik.http.services.$(DOZZLE_SERVICE_NAME).loadbalancer.server.port=8080" \
-				--network "$(DOZZLE_TRAEFIK_NETWORK)" \
-			) \
+			--label "traefik.enable=true" \
+			--label "traefik.docker.network=$(if $(DOZZLE_TRAEFIK_NETWORK),$(DOZZLE_TRAEFIK_NETWORK),traefik)" \
+			--label "traefik.http.routers.$(DOZZLE_SERVICE_NAME).entrypoints=web" \
+			--label "traefik.http.routers.$(DOZZLE_SERVICE_NAME).rule=Host(\`$(DOZZLE_TRAEFIK_DOMAIN)\`)" \
+			--label "traefik.http.services.$(DOZZLE_SERVICE_NAME).loadbalancer.server.port=8080" \
+			--network "$(if $(DOZZLE_TRAEFIK_NETWORK),$(DOZZLE_TRAEFIK_NETWORK),traefik)" \
 			"$(DOZZLE_IMAGE)" \
 			>/dev/null; \
 	else \
@@ -68,8 +71,8 @@ dozzle.ensure:%.ensure: | %.start
 		fi; \
 		sleep 1; \
 	done
-	@until test -n "$$(curl -sSL --fail "http://$$($(DOCKER) container port "$(DOZZLE_SERVICE_NAME)" "8080" | grep "$(if $(LOCALHOST_FILTER_IP),$(LOCALHOST_FILTER_IP),0.0.0.0)" 2>/dev/null)" 2>/dev/null)"; do \
-		if test -z "$$($(DOCKER) container ls --quiet --filter "status=running" --filter "name=^$(DOZZLE_SERVICE_NAME)$$" 2>/dev/null)"; then \
+	@until test "$$($(CURL) --location --silent --fail --output /dev/null --write-out "%{http_code}" "http://$$($(DOCKER) container port "$(DOZZLE_SERVICE_NAME)" "8080" 2>/dev/null | grep "0.0.0.0")")" = "200"; do \
+		if test -z "$$($(DOCKER) container ls --quiet --filter "status=running" --filter "health=healthy" --filter "name=^$(DOZZLE_SERVICE_NAME)$$" 2>/dev/null)"; then \
 			printf "$(STYLE_ERROR)%s$(STYLE_RESET)\n" "The container \"$(DOZZLE_SERVICE_NAME)\" stopped before being available."; \
 			$(DOCKER) container logs --since "$$($(DOCKER) container inspect --format "{{ .State.StartedAt }}" "$(DOZZLE_SERVICE_NAME)")" "$(DOZZLE_SERVICE_NAME)"; \
 			exit 1; \
@@ -82,7 +85,7 @@ dozzle.ensure:%.ensure: | %.start
 dozzle.list:%.list: | %.ensure
 	@printf "Open Dozzle: %s or %s\n" \
 		"http://$(DOZZLE_TRAEFIK_DOMAIN)$(if $(filter-out 80,$(TRAEFIK_HTTP_PORT)),:$(TRAEFIK_HTTP_PORT))" \
-		"http://$$($(DOCKER) container port "$(DOZZLE_SERVICE_NAME)" "8080" | grep "$(if $(LOCALHOST_FILTER_IP),$(LOCALHOST_FILTER_IP),0.0.0.0)")"
+		"http://$$($(DOCKER) container port "$(DOZZLE_SERVICE_NAME)" "8080" | grep "0.0.0.0")"
 .PHONY: dozzle.list
 
 #. List the logs of the Dozzle container

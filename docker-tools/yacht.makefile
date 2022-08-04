@@ -10,6 +10,11 @@ ifeq ($(DOCKER),)
 $(error Please provide the variable DOCKER before including this file.)
 endif
 
+CURL?=$(shell command -v curl || which curl 2>/dev/null)
+ifeq ($(CURL),)
+CURL?=$(DOCKER) run --rm --network host curlimages/curl:latest
+endif
+
 #. Docker variables for Yacht
 YACHT_IMAGE?=selfhostedpro/yacht:latest
 YACHT_SERVICE_NAME?=yacht
@@ -36,21 +41,17 @@ yacht.start:%.start:
 	@if test -z "$$($(DOCKER) container inspect --format "{{ .ID }}" "$(YACHT_SERVICE_NAME)" 2> /dev/null)"; then \
 		$(DOCKER) container run --detach --name "$(YACHT_SERVICE_NAME)" \
 			--env "DISABLE_AUTH=true" \
+			$(if $(YACHT_PROJECTS_ROOT_DIR),--env "COMPOSE_DIR=/compose/") \
 			--volume "$(YACHT_DATA_VOLUME):/config" \
 			--volume "$(DOCKER_SOCKET):/var/run/docker.sock:ro" \
-			$(if $(YACHT_PROJECTS_ROOT_DIR), \
-				--env "COMPOSE_DIR=/compose/" \
-				--volume "$(YACHT_PROJECTS_ROOT_DIR):/compose" \
-			) \
+			$(if $(YACHT_PROJECTS_ROOT_DIR),--volume "$(YACHT_PROJECTS_ROOT_DIR):/compose") \
 			--publish "8000" \
-			$(if $(YACHT_TRAEFIK_NETWORK), \
-				--label "traefik.enable=true" \
-				--label "traefik.docker.network=$(YACHT_TRAEFIK_NETWORK)" \
-				--label "traefik.http.routers.$(YACHT_SERVICE_NAME).entrypoints=web" \
-				--label "traefik.http.routers.$(YACHT_SERVICE_NAME).rule=Host(\`$(YACHT_TRAEFIK_DOMAIN)\`)" \
-				--label "traefik.http.services.$(YACHT_SERVICE_NAME).loadbalancer.server.port=8000" \
-				--network "$(YACHT_TRAEFIK_NETWORK)" \
-			) \
+			--label "traefik.enable=true" \
+			--label "traefik.docker.network=$(if $(YACHT_TRAEFIK_NETWORK),$(YACHT_TRAEFIK_NETWORK),traefik)" \
+			--label "traefik.http.routers.$(YACHT_SERVICE_NAME).entrypoints=web" \
+			--label "traefik.http.routers.$(YACHT_SERVICE_NAME).rule=Host(\`$(YACHT_TRAEFIK_DOMAIN)\`)" \
+			--label "traefik.http.services.$(YACHT_SERVICE_NAME).loadbalancer.server.port=8000" \
+			--network "$(if $(YACHT_TRAEFIK_NETWORK),$(YACHT_TRAEFIK_NETWORK),traefik)" \
 			"$(YACHT_IMAGE)" \
 			>/dev/null; \
 	else \
@@ -70,7 +71,7 @@ yacht.ensure:%.ensure: | %.start
 		fi; \
 		sleep 1; \
 	done
-	@until test -n "$$(curl -sSL --fail "http://$$($(DOCKER) container port "$(YACHT_SERVICE_NAME)" "8000" | grep "0.0.0.0" 2>/dev/null)" 2>/dev/null)"; do \
+	@until test "$$($(CURL) --location --silent --fail --output /dev/null --write-out "%{http_code}" "http://$$($(DOCKER) container port "$(YACHT_SERVICE_NAME)" "8000" 2>/dev/null | grep "0.0.0.0")")" = "200"; do \
 		if test -z "$$($(DOCKER) container ls --quiet --filter "status=running" --filter "name=^$(YACHT_SERVICE_NAME)$$" 2>/dev/null)"; then \
 			printf "$(STYLE_ERROR)%s$(STYLE_RESET)\n" "The container \"$(YACHT_SERVICE_NAME)\" stopped before being available."; \
 			$(DOCKER) container logs --since "$$($(DOCKER) container inspect --format "{{ .State.StartedAt }}" "$(YACHT_SERVICE_NAME)")" "$(YACHT_SERVICE_NAME)"; \
