@@ -22,15 +22,7 @@ MAKEFILES_LOG:=$(shell \
 #. At least include the base.makefile file
 include $(MAKEFILES_DIRECTORY)/base.makefile         # Provide some base functionality
 include $(MAKEFILES_DIRECTORY)/help.makefile         # Provide documentation automatically
-
-#. This section contains the variables required by the included makefiles, before including the makefiles themselves.
-#. In this case, these variables define the own directory as repository to update with the commands in git.makefile
-REPOSITORIES=self
-REPOSITORY_DIRECTORY_self=.
-
-#. Then include the repositories.makefile file
-
-include $(MAKEFILES_DIRECTORY)/repositories.makefile # Repositories management
+include $(MAKEFILES_DIRECTORY)/repositories.makefile # Add repository management
 ```
 
 Change the MAKEFILES_TAG variable to the latest tag of this project, or the tag of the version you want to use:
