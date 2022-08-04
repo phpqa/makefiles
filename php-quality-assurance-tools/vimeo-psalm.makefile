@@ -21,14 +21,15 @@ endif
 PSALM_POSSIBLE_CONFIGS?=psalm.xml
 PSALM_CONFIG?=$(wildcard $(PSALM_POSSIBLE_CONFIGS))
 PSALM_BASELINE?=$(wildcard psalm-baseline.xml)
+PSALTER_ISSUES?=
+
 PSALM_FLAGS?=
+
 ifneq ($(wildcard $(PSALM_CONFIG)),)
 ifeq ($(findstring --config,$(PSALM_FLAGS)),)
 PSALM_FLAGS+=--config="$(PSALM_CONFIG)"
 endif
 endif
-
-PSALTER_ISSUES?=
 
 ###
 ## PHP Quality Assurance Tools

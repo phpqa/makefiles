@@ -20,7 +20,9 @@ endif
 
 DEPTRAC_POSSIBLE_CONFIGS?=deptrac.yaml
 DEPTRAC_CONFIG?=$(wildcard $(DEPTRAC_POSSIBLE_CONFIGS))
+
 DEPTRAC_FLAGS?=
+
 ifneq ($(wildcard $(DEPTRAC_CONFIG)),)
 ifeq ($(findstring --config-file,$(DEPTRAC_FLAGS)),)
 DEPTRAC_FLAGS+=--config-file="$(DEPTRAC_CONFIG)"

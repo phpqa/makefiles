@@ -18,7 +18,9 @@ else
 PARALLEL_LINT_DEPENDENCY?=$(wildcard $(PARALLEL_LINT))
 endif
 PARALLEL_LINT_DIRECTORIES_TO_CHECK?=.
+
 PARALLEL_LINT_FLAGS?=$(if $(wildcard vendor),--exclude vendor)
+
 ifneq ($(GIT),)
 ifeq ($(findstring --blame,$(PARALLEL_LINT_FLAGS)),)
 PARALLEL_LINT_FLAGS+=--blame

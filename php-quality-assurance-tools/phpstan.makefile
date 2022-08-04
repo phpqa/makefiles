@@ -22,19 +22,23 @@ PHPSTAN_POSSIBLE_CONFIGS?=phpstan.neon phpstan.neon.dist phpstan.dist.neon
 PHPSTAN_CONFIG?=$(firstword $(wildcard $(PHPSTAN_POSSIBLE_CONFIGS)))
 PHPSTAN_BASELINE?=$(wildcard phpstan-baseline.neon)
 PHPSTAN_DIRECTORIES_TO_CHECK?=$(if $(PHPSTAN_CONFIG),,src)
+PHPSTAN_MEMORY_LIMIT?=
+
 PHPSTAN_FLAGS?=
+PHPSTAN_CLEAR_CACHE_FLAGS?=
+
 ifneq ($(wildcard $(PHPSTAN_CONFIG)),)
 ifeq ($(findstring --configuration,$(PHPSTAN_FLAGS)),)
 PHPSTAN_FLAGS+=--configuration="$(PHPSTAN_CONFIG)"
 endif
 endif
-PHPSTAN_CLEAR_CACHE_FLAGS?=
+
 ifneq ($(wildcard $(PHPSTAN_CONFIG)),)
 ifeq ($(findstring --configuration,$(PHPSTAN_CLEAR_CACHE_FLAGS)),)
 PHPSTAN_CLEAR_CACHE_FLAGS+=--configuration="$(PHPSTAN_CONFIG)"
 endif
 endif
-PHPSTAN_MEMORY_LIMIT?=
+
 ifneq ($(PHPSTAN_MEMORY_LIMIT),)
 ifeq ($(findstring --memory-limit,$(PHPSTAN_FLAGS)),)
 PHPSTAN_FLAGS+=--memory-limit="$(PHPSTAN_MEMORY_LIMIT)"

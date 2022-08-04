@@ -21,7 +21,9 @@ endif
 RECTOR_POSSIBLE_CONFIGS?=rector.php
 RECTOR_CONFIG?=$(wildcard $(RECTOR_POSSIBLE_CONFIGS))
 RECTOR_DIRECTORIES_TO_CHECK?=$(if $(RECTOR_CONFIG),,src)
+
 RECTOR_FLAGS?=
+
 ifneq ($(wildcard $(RECTOR_CONFIG)),)
 ifeq ($(findstring --config,$(RECTOR_FLAGS)),)
 RECTOR_FLAGS+=--config="$(RECTOR_CONFIG)"
