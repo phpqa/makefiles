@@ -50,3 +50,12 @@ Run the following command to see if it works:
 ```shell
 make help
 ```
+
+## Planned
+
+- What happens if you use the makefile from another repo, that has not yet loaded the .makefiles subfolder?
+- Add DOCKER_CONFIG as a volume to any container that needs to pull images from remote registries
+- Use docker container names, instead of docker-compose service names to depend upon
+- Check the undocumented dependencies
+- Add phars for the different tools
+- Add docker wait until the sidecars are exiting - and check on its exit code, return an error message
