@@ -2,7 +2,7 @@
 ## Help
 ###
 
-# Undocumented dependencies: awk, sort, printf, test
+# TODO Undocumented dependencies: awk, sort
 
 .DEFAULT_GOAL:=help
 HELP_SKIP_TARGETS?=

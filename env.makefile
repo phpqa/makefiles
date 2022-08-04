@@ -2,7 +2,7 @@
 ##. Environment variables lookup
 ###
 
-# Undocumented dependencies: while, printf, grep, sed, echo, if, test, exit
+# TODO Undocumented dependencies: while, grep, sed, echo
 # TODO create a small image that can extract .env variables from files
 
 DEFAULT_ENV_FILE?=.env
