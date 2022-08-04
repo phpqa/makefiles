@@ -28,7 +28,7 @@ PHPCSFIXER_POSSIBLE_CONFIGS?=.php-cs-fixer.dist.php .php-cs-fixer.php
 PHPCSFIXER_CONFIG?=$(firstword $(wildcard $(PHPCSFIXER_POSSIBLE_CONFIGS)))
 
 #. Extra variables
-PHPCSFIXER_DIRECTORIES_TO_CHECK?=$(if $(wildcard $(PHPCSFIXER_POSSIBLE_CONFIGS)),,src)
+PHPCSFIXER_DIRECTORIES_TO_CHECK?=$(if $(wildcard $(PHPCSFIXER_POSSIBLE_CONFIGS)),,$(if $(wildcard src),src,.))
 
 #. Building the flags
 PHPCSFIXER_FLAGS?=
