@@ -2,8 +2,6 @@
 ##. Parent Makefile
 ###
 
-# Undocumented dependency: printf
-
 PARENT_MAKEFILES?=$(realpath $(dir $(firstword $(MAKEFILE_LIST)))/..)/makefile ../makefile
 
 #. Create a parent makefile to redirect commands to the current directory
