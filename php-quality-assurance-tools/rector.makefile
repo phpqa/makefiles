@@ -45,7 +45,7 @@ endif
 
 ifeq ($(wildcard $(filter-out $(PHP_DEPENDENCY),$(RECTOR_DEPENDENCY))),)
 
-# Install Rector as dev dependency in vendor # TODO Also add installation as phar
+# Install Rector as dev dependency in vendor
 vendor/bin/rector: | $(COMPOSER_DEPENDENCY) vendor
 	@$(COMPOSER_EXECUTABLE) require --dev "$(RECTOR_PACKAGE)"
 

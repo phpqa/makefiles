@@ -45,7 +45,7 @@ endif
 
 ifeq ($(wildcard $(filter-out $(PHP_DEPENDENCY),$(PHPCSFIXER_DEPENDENCY))),)
 
-# Install PHP Coding Standards Fixer as dev dependency in vendor # TODO Also add installation as phar
+# Install PHP Coding Standards Fixer as dev dependency in vendor
 vendor/bin/php-cs-fixer: | $(COMPOSER_DEPENDENCY) vendor
 	@$(COMPOSER_EXECUTABLE) require --dev "$(PHPCSFIXER_PACKAGE)"
 

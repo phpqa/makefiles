@@ -39,7 +39,7 @@ endif
 
 ifeq ($(wildcard $(filter-out $(PHP_DEPENDENCY),$(PARALLEL_LINT_DEPENDENCY))),)
 
-# Install Parallel Lint as dev dependency in vendor # TODO Also add installation as phar
+# Install Parallel Lint as dev dependency in vendor
 vendor/bin/parallel-lint: | $(COMPOSER_DEPENDENCY) vendor
 	@$(COMPOSER_EXECUTABLE) require --dev "$(PARALLEL_LINT_PACKAGE)"
 
