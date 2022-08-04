@@ -1,5 +1,5 @@
 ###
-##. Configuration
+##. Dependencies
 ###
 
 ifeq ($(PHP),)
@@ -10,6 +10,11 @@ ifeq ($(COMPOSER_EXECUTABLE),)
 $(error Please install Composer.)
 endif
 
+###
+##. Configuration
+###
+
+#. Package variables
 DEPTRAC_PACKAGE?=qossmic/deptrac-shim
 DEPTRAC?=$(PHP) vendor/bin/deptrac
 ifeq ($(DEPTRAC),$(PHP) vendor/bin/deptrac)
@@ -18,9 +23,11 @@ else
 DEPTRAC_DEPENDENCY?=$(wildcard $(DEPTRAC))
 endif
 
+#. Configuration variables
 DEPTRAC_POSSIBLE_CONFIGS?=deptrac.yaml
 DEPTRAC_CONFIG?=$(wildcard $(DEPTRAC_POSSIBLE_CONFIGS))
 
+#. Building the flags
 DEPTRAC_FLAGS?=
 
 ifneq ($(wildcard $(DEPTRAC_CONFIG)),)

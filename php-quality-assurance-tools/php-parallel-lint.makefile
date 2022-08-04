@@ -1,5 +1,5 @@
 ###
-##. Configuration
+##. Dependencies
 ###
 
 ifeq ($(PHP),)
@@ -10,6 +10,11 @@ ifeq ($(COMPOSER_EXECUTABLE),)
 $(error Please install Composer.)
 endif
 
+###
+##. Configuration
+###
+
+#. Package variables
 PARALLEL_LINT_PACKAGE?=php-parallel-lint/php-parallel-lint
 PARALLEL_LINT?=$(PHP) vendor/bin/parallel-lint
 ifeq ($(PARALLEL_LINT),$(PHP) vendor/bin/parallel-lint)
@@ -19,6 +24,7 @@ PARALLEL_LINT_DEPENDENCY?=$(wildcard $(PARALLEL_LINT))
 endif
 PARALLEL_LINT_DIRECTORIES_TO_CHECK?=.
 
+#. Building the flags
 PARALLEL_LINT_FLAGS?=$(if $(wildcard vendor),--exclude vendor)
 
 ifneq ($(GIT),)

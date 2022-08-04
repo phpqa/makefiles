@@ -1,10 +1,14 @@
 ###
-##. Configuration
+##. Dependencies
 ###
 
 ifeq ($(DOCKER),)
 $(error Please provide the variable DOCKER before including this file.)
 endif
+
+###
+##. Configuration
+###
 
 #. Docker variables for Trivy
 TRIVY_IMAGE?=aquasec/trivy:latest

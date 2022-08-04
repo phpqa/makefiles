@@ -1,5 +1,5 @@
 ###
-##. Configuration
+##. Dependencies
 ###
 
 ifeq ($(PHP),)
@@ -10,6 +10,11 @@ ifeq ($(COMPOSER_EXECUTABLE),)
 $(error Please install Composer.)
 endif
 
+###
+##. Configuration
+###
+
+#. Package variables
 RECTOR_PACKAGE?=rector/rector
 RECTOR?=$(PHP) vendor/bin/rector
 ifeq ($(RECTOR),$(PHP) vendor/bin/rector)
@@ -18,10 +23,14 @@ else
 RECTOR_DEPENDENCY?=$(wildcard $(RECTOR))
 endif
 
+#. Configuration variables
 RECTOR_POSSIBLE_CONFIGS?=rector.php
 RECTOR_CONFIG?=$(wildcard $(RECTOR_POSSIBLE_CONFIGS))
+
+#. Extra variables
 RECTOR_DIRECTORIES_TO_CHECK?=$(if $(RECTOR_CONFIG),,src)
 
+#. Building the flags
 RECTOR_FLAGS?=
 
 ifneq ($(wildcard $(RECTOR_CONFIG)),)

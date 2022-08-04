@@ -1,5 +1,5 @@
 ###
-##. Configuration
+##. Dependencies
 ###
 
 ifeq ($(DOCKER_SOCKET),)
@@ -19,6 +19,10 @@ CURL?=$(shell command -v curl || which curl 2>/dev/null)
 ifeq ($(CURL),)
 CURL?=$(DOCKER) run --rm --network host curlimages/curl:latest
 endif
+
+###
+##. Configuration
+###
 
 #. Docker variables for Portainer
 PORTAINER_IMAGE?=cr.portainer.io/portainer/portainer-ce:latest

@@ -1,5 +1,5 @@
 ###
-##. Configuration
+##. Dependencies
 ###
 
 ifeq ($(PHP),)
@@ -10,6 +10,11 @@ ifeq ($(COMPOSER_EXECUTABLE),)
 $(error Please install Composer.)
 endif
 
+###
+##. Configuration
+###
+
+#. Package variables
 PHPSTAN_PACKAGE?=phpstan/phpstan
 PHPSTAN?=$(PHP) vendor/bin/phpstan
 ifeq ($(PHPSTAN),$(PHP) vendor/bin/phpstan)
@@ -18,12 +23,16 @@ else
 PHPSTAN_DEPENDENCY?=$(wildcard $(PHPSTAN))
 endif
 
+#. Configuration variables
 PHPSTAN_POSSIBLE_CONFIGS?=phpstan.neon phpstan.neon.dist phpstan.dist.neon
 PHPSTAN_CONFIG?=$(firstword $(wildcard $(PHPSTAN_POSSIBLE_CONFIGS)))
+
+#. Extra variables
 PHPSTAN_BASELINE?=$(wildcard phpstan-baseline.neon)
 PHPSTAN_DIRECTORIES_TO_CHECK?=$(if $(PHPSTAN_CONFIG),,src)
 PHPSTAN_MEMORY_LIMIT?=
 
+#. Building the flags
 PHPSTAN_FLAGS?=
 PHPSTAN_CLEAR_CACHE_FLAGS?=
 

@@ -1,5 +1,5 @@
 ###
-##. Configuration
+##. Dependencies
 ###
 
 ifeq ($(DOCKER_SOCKET),)
@@ -9,6 +9,10 @@ endif
 ifeq ($(DOCKER),)
 $(error Please provide the variable DOCKER before including this file.)
 endif
+
+###
+##. Configuration
+###
 
 #. Docker variables for dockly
 DOCKLY_IMAGE?=lirantal/dockly:latest

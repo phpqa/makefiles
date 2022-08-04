@@ -1,10 +1,14 @@
 ###
-##. Configuration
+##. Dependencies
 ###
 
 ifeq ($(DOCKER),)
 $(error Please provide the variable DOCKER before including this file.)
 endif
+
+###
+##. Configuration
+###
 
 #. Docker variables for Hadolint
 HADOLINT_IMAGE?=hadolint/hadolint:latest

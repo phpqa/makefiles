@@ -1,5 +1,5 @@
 ###
-##. Configuration
+##. Dependencies
 ###
 
 ifeq ($(PHP),)
@@ -10,6 +10,11 @@ ifeq ($(COMPOSER_EXECUTABLE),)
 $(error Please install Composer.)
 endif
 
+###
+##. Configuration
+###
+
+#. Package variables
 PHPUNIT?=$(PHP) vendor/bin/phpunit
 ifeq ($(PHPUNIT),$(PHP) vendor/bin/phpunit)
 PHPUNIT_DEPENDENCY?=$(PHP_DEPENDENCY) vendor/bin/phpunit
@@ -17,12 +22,17 @@ else
 PHPUNIT_DEPENDENCY?=$(wildcard $(PHPUNIT))
 endif
 
+#. Configuration variables
 PHPUNIT_POSSIBLE_CONFIGS?=phpstan.neon phpstan.neon.dist phpstan.dist.neon
 PHPUNIT_CONFIG?=$(firstword $(wildcard $(PHPUNIT_POSSIBLE_CONFIGS)))
+
+#. Extra variables
 PHPUNIT_COVERAGE_DIRECTORY?=
 PHPUNIT_JUNIT?=
 
+#. Building the flags
 PHPUNIT_FLAGS?=
+
 ifneq ($(wildcard $(PHPUNIT_CONFIG)),)
 ifeq ($(findstring --configuration,$(PHPUNIT_FLAGS)),)
 PHPUNIT_FLAGS+=--configuration="$(PHPUNIT_CONFIG)"

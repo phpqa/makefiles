@@ -1,5 +1,5 @@
 ###
-##. Configuration
+##. Dependencies
 ###
 
 ifeq ($(PHP),)
@@ -10,6 +10,11 @@ ifeq ($(COMPOSER_EXECUTABLE),)
 $(error Please install Composer.)
 endif
 
+###
+##. Configuration
+###
+
+#. Package variables
 PSALM_PACKAGE?=vimeo/psalm
 PSALM?=$(PHP) vendor/bin/psalm
 ifeq ($(PSALM),$(PHP) vendor/bin/psalm)
@@ -18,11 +23,15 @@ else
 PSALM_DEPENDENCY?=$(wildcard $(PSALM))
 endif
 
+#. Configuration variables
 PSALM_POSSIBLE_CONFIGS?=psalm.xml
 PSALM_CONFIG?=$(wildcard $(PSALM_POSSIBLE_CONFIGS))
+
+#. Extra variables
 PSALM_BASELINE?=$(wildcard psalm-baseline.xml)
 PSALTER_ISSUES?=
 
+#. Building the flags
 PSALM_FLAGS?=
 
 ifneq ($(wildcard $(PSALM_CONFIG)),)

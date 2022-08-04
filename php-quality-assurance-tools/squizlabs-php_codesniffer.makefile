@@ -1,5 +1,5 @@
 ###
-##. Configuration
+##. Dependencies
 ###
 
 ifeq ($(PHP),)
@@ -10,6 +10,11 @@ ifeq ($(COMPOSER_EXECUTABLE),)
 $(error Please install Composer.)
 endif
 
+###
+##. Configuration
+###
+
+#. Package variables
 PHPCS_PACKAGE?=squizlabs/php_codesniffer
 PHPCS?=$(PHP) vendor/bin/phpcs
 ifeq ($(PHPCS),$(PHP) vendor/bin/phpcs)
@@ -17,17 +22,6 @@ PHPCS_DEPENDENCY?=$(PHP_DEPENDENCY) vendor/bin/phpcs
 else
 PHPCS_DEPENDENCY?=$(wildcard $(PHPCS))
 endif
-
-PHPCS_POSSIBLE_STANDARDS?=.phpcs.xml phpcs.xml .phpcs.xml.dist phpcs.xml.dist
-PHPCS_STANDARD?=$(firstword $(wildcard $(PHPCS_POSSIBLE_STANDARDS)))
-PHPCS_DIRECTORIES_TO_CHECK?=$(if $(wildcard $(PHPCS_POSSIBLE_STANDARDS)),,src)
-PHPCS_FLAGS?=
-ifneq ($(wildcard $(PHPCS_STANDARD)),)
-ifeq ($(findstring --standard,$(PHPCS_FLAGS)),)
-PHPCS_FLAGS+=--standard="$(PHPCS_STANDARD)"
-endif
-endif
-
 PHPCBF_PACKAGE?=squizlabs/php_codesniffer
 PHPCBF?=$(PHP) vendor/bin/phpcbf
 ifeq ($(PHPCBF),$(PHP) vendor/bin/phpcbf)
@@ -36,9 +30,25 @@ else
 PHPCBF_DEPENDENCY?=$(wildcard $(PHPCBF))
 endif
 
+#. Configuration variables
+PHPCS_POSSIBLE_STANDARDS?=.phpcs.xml phpcs.xml .phpcs.xml.dist phpcs.xml.dist
+PHPCS_STANDARD?=$(firstword $(wildcard $(PHPCS_POSSIBLE_STANDARDS)))
 PHPCBF_STANDARD?=$(PHPCS_STANDARD)
+
+#. Extra variables
+PHPCS_DIRECTORIES_TO_CHECK?=$(if $(wildcard $(PHPCS_POSSIBLE_STANDARDS)),,src)
 PHPCBF_DIRECTORIES_TO_CHECK?=$(PHPCS_DIRECTORIES_TO_CHECK)
+
+#. Building the flags
+PHPCS_FLAGS?=
 PHPCBF_FLAGS?=
+
+ifneq ($(wildcard $(PHPCS_STANDARD)),)
+ifeq ($(findstring --standard,$(PHPCS_FLAGS)),)
+PHPCS_FLAGS+=--standard="$(PHPCS_STANDARD)"
+endif
+endif
+
 ifneq ($(wildcard $(PHPCBF_STANDARD)),)
 ifeq ($(findstring --standard,$(PHPCBF_FLAGS)),)
 PHPCBF_FLAGS+=--standard="$(PHPCBF_STANDARD)"

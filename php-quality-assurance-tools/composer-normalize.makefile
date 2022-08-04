@@ -1,11 +1,16 @@
 ###
-##. Configuration
+##. Dependencies
 ###
 
 ifeq ($(COMPOSER_EXECUTABLE),)
 $(error Please install Composer.)
 endif
 
+###
+##. Configuration
+###
+
+#. Package variables
 COMPOSER_NORMALIZE_PACKAGE?=ergebnis/composer-normalize
 COMPOSER_NORMALIZE?=$(COMPOSER_EXECUTABLE) normalize
 ifeq ($(COMPOSER_NORMALIZE),$(COMPOSER_EXECUTABLE) normalize)
@@ -14,6 +19,7 @@ else
 COMPOSER_NORMALIZE_DEPENDENCY?=$(wildcard $(COMPOSER_NORMALIZE))
 endif
 
+#. Building the flags
 COMPOSER_NORMALIZE_FLAGS?=
 
 ###

@@ -1,5 +1,5 @@
 ###
-##. Configuration
+##. Dependencies
 ###
 
 ifeq ($(DOCKER_SOCKET),)
@@ -9,6 +9,10 @@ endif
 ifeq ($(DOCKER),)
 $(error Please include the "docker.makefile" file)
 endif
+
+###
+##. Configuration
+###
 
 #. Docker variables for Traefik
 TRAEFIK_IMAGE?=traefik:latest
