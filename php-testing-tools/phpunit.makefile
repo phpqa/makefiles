@@ -19,10 +19,25 @@ endif
 
 PHPUNIT_POSSIBLE_CONFIGS?=phpstan.neon phpstan.neon.dist phpstan.dist.neon
 PHPUNIT_CONFIG?=$(firstword $(wildcard $(PHPUNIT_POSSIBLE_CONFIGS)))
+PHPUNIT_COVERAGE_DIRECTORY?=
+PHPUNIT_JUNIT?=
+
 PHPUNIT_FLAGS?=
 ifneq ($(wildcard $(PHPUNIT_CONFIG)),)
 ifeq ($(findstring --configuration,$(PHPUNIT_FLAGS)),)
 PHPUNIT_FLAGS+=--configuration="$(PHPUNIT_CONFIG)"
+endif
+endif
+
+ifneq ($(PHPUNIT_COVERAGE_DIRECTORY),)
+ifeq ($(findstring --coverage-html,$(PHPUNIT_FLAGS)),)
+PHPUNIT_FLAGS+=--coverage-html="$(PHPUNIT_COVERAGE_DIRECTORY)"
+endif
+endif
+
+ifneq ($(PHPUNIT_JUNIT),)
+ifeq ($(findstring --log-junit,$(PHPUNIT_FLAGS)),)
+PHPUNIT_FLAGS+=--log-junit="$(PHPUNIT_JUNIT)"
 endif
 endif
 
