@@ -1,5 +1,5 @@
 ###
-##. Configuration
+##. Dependencies
 ###
 
 PHP_TESTING_TOOLS_DIRECTORY?=$(wildcard $(patsubst %.makefile,%,$(filter %/php-testing-tools.makefile,$(MAKEFILE_LIST))))

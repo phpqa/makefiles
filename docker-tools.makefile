@@ -1,5 +1,5 @@
 ###
-##. Configuration
+##. Dependencies
 ###
 
 DOCKER_TOOLS_DIRECTORY?=$(wildcard $(patsubst %.makefile,%,$(filter %/docker-tools.makefile,$(MAKEFILE_LIST))))

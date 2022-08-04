@@ -1,5 +1,5 @@
 ###
-##. Configuration
+##. Dependencies
 ###
 
 PHP_QUALITY_ASSURANCE_TOOLS_DIRECTORY?=$(wildcard $(patsubst %.makefile,%,$(filter %/php-quality-assurance-tools.makefile,$(MAKEFILE_LIST))))

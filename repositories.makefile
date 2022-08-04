@@ -1,11 +1,15 @@
 ###
-##. Configuration
+##. Dependencies
 ###
 
 GIT?=$(shell command -v git || which git 2>/dev/null)
 ifeq ($(GIT),)
 $(error Please install git.)
 endif
+
+###
+##. Configuration
+###
 
 GIT_SUBDIRECTORY?=.git
 

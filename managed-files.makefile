@@ -1,7 +1,8 @@
 ###
-##. POSIX dependencies - @see https://pubs.opengroup.org/onlinepubs/9699919799/idx/utilities.html
+##. Dependencies
 ###
 
+#. POSIX dependencies - @see https://pubs.opengroup.org/onlinepubs/9699919799/idx/utilities.html
 define check-managed-files-command
 ifeq ($$(shell command -v $(1) || which $(1) 2>/dev/null),)
 $$(error Please provide the command "$(1)" before including the "managed-files.makefile" file)

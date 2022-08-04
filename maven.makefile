@@ -1,5 +1,5 @@
 ###
-##. Configuration
+##. Dependencies
 ###
 
 MVN?=$(shell command -v mvn || which mvn 2>/dev/null)

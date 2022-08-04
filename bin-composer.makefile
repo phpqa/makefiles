@@ -1,7 +1,8 @@
 ###
-##. POSIX dependencies - @see https://pubs.opengroup.org/onlinepubs/9699919799/idx/utilities.html
+##. Dependencies
 ###
 
+#. POSIX dependencies - @see https://pubs.opengroup.org/onlinepubs/9699919799/idx/utilities.html
 define check-bin-composer-command
 ifeq ($$(shell command -v $(1) || which $(1) 2>/dev/null),)
 $$(error Please provide the command "$(1)" before including the "managed-files.makefile" file)
@@ -9,13 +10,13 @@ endif
 endef
 $(foreach command,touch ln chmod rm,$(eval $(call check-bin-composer-command,$(command))))
 
-###
-##. Configuration
-###
-
 ifeq ($(PHP),)
 $(error Please provide the variable PHP before including this file.)
 endif
+
+###
+##. Configuration
+###
 
 COMPOSER_IMAGE?=composer
 COMPOSER_VERSION?=

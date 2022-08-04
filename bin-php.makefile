@@ -1,5 +1,5 @@
 ###
-##. Configuration
+##. Dependencies
 ###
 
 ifeq ($(DOCKER_COMPOSE),)
@@ -11,6 +11,10 @@ DOCKER_COMPOSE_SERVICE_NAME_FOR_PHP?=
 ifeq ($(DOCKER_COMPOSE_SERVICE_NAME_FOR_PHP),)
 $(error Please provide the variable DOCKER_COMPOSE_SERVICE_NAME_FOR_PHP before including this file.)
 endif
+
+###
+##. Configuration
+###
 
 #. Provide the PHP variable as installed by this file
 PHP?=bin/php
