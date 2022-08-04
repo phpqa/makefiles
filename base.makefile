@@ -33,7 +33,7 @@ ifeq ($$(shell command -v $(1) || which $(1) 2>/dev/null),)
 $$(error Please provide the command "$(1)")
 endif
 endef
-$(foreach command,test printf exit,$(eval $(call check-base-command,$(command))))
+$(foreach command,if test printf exit,$(eval $(call check-base-command,$(command))))
 
 ###
 ##. Characters
