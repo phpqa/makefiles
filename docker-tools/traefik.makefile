@@ -118,6 +118,12 @@ traefik.reset:%.reset:
 	@$(MAKE) $(*)
 .PHONY: traefik.reset
 
+#. Reset the Traefik volume
+traefik.silent-reset:%.silent-reset:
+	-@$(MAKE) $(*).clear
+	@$(MAKE) $(*).start
+.PHONY: traefik.silent-reset
+
 # Run Traefik in a container
 # @see https://doc.traefik.io/traefik/
 traefik:%: | %.start %.list
