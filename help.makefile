@@ -6,7 +6,7 @@
 
 .DEFAULT_GOAL:=help
 HELP_SKIP_TARGETS?=
-HELP_FIRST_COLUMN_WIDTH?=29
+HELP_FIRST_COLUMN_WIDTH?=34
 
 # Show this help
 help:
@@ -35,7 +35,7 @@ help:
 				if (doc == "") { doc=style_dim "No documentation" style_reset }; \
 				if (doc ~ /# TODO/) { doc=substr(doc,1,match(doc,/# TODO/)-1) }; \
 				if (doc ~ /#!/) { warning="$(ICON_WARNING)" substr(doc,match(doc,/#!/)+2); doc=substr(doc,1,match(doc,/#!/)-1) } ; \
-				if (link) { printf "\033]8;;%s\033\\%s\033]8;;\033\\", link, doc } else { printf "%s", doc }; \
+				if (link) { printf " \033]8;;%s\033\\%s\033]8;;\033\\", link, doc } else { printf " %s", doc }; \
 				if (warning) { printf style_warning "%s" style_reset,warning; }; \
 				printf "\n"; \
 				link=""; \
