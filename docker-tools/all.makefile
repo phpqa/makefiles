@@ -2,7 +2,7 @@
 ##. Dependencies
 ###
 
-DOCKER_TOOLS_DIRECTORY?=$(wildcard $(patsubst %.makefile,%,$(filter %/docker-tools.makefile,$(MAKEFILE_LIST))))
+DOCKER_TOOLS_DIRECTORY?=$(wildcard $(patsubst %/all.makefile,%,$(filter %/docker-tools/all.makefile,$(MAKEFILE_LIST))))
 ifeq ($(DOCKER_TOOLS_DIRECTORY),)
 $(error Please provide the variable DOCKER_TOOLS_DIRECTORY before including this file.)
 endif

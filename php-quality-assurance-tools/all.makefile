@@ -2,13 +2,13 @@
 ##. Dependencies
 ###
 
-PHP_QUALITY_ASSURANCE_TOOLS_DIRECTORY?=$(wildcard $(patsubst %.makefile,%,$(filter %/php-quality-assurance-tools.makefile,$(MAKEFILE_LIST))))
+PHP_QUALITY_ASSURANCE_TOOLS_DIRECTORY?=$(wildcard $(patsubst %/all.makefile,%,$(filter %/php-quality-assurance-tools/all.makefile,$(MAKEFILE_LIST))))
 ifeq ($(PHP_QUALITY_ASSURANCE_TOOLS_DIRECTORY),)
 $(error Please provide the variable PHP_QUALITY_ASSURANCE_TOOLS_DIRECTORY before including this file.)
 endif
 
 ###
-##. PHP Quality Assurance Tools
+##. Includes
 ###
 
 include $(PHP_QUALITY_ASSURANCE_TOOLS_DIRECTORY)/php-parallel-lint.makefile
