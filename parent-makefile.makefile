@@ -2,7 +2,8 @@
 ##. Parent Makefile
 ###
 
-PARENT_MAKEFILES?=$(realpath $(dir $(firstword $(MAKEFILE_LIST)))/..)/makefile ../makefile
+PARENT_MAKEFILE_DIRECTORY?=..
+PARENT_MAKEFILES?=$(realpath $(dir $(firstword $(MAKEFILE_LIST)))/$(PARENT_MAKEFILE_DIRECTORY))/makefile $(PARENT_MAKEFILE_DIRECTORY)/makefile
 
 #. Create a parent makefile to redirect commands to the current directory
 $(PARENT_MAKEFILES): force-recreate-makefile
