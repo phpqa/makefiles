@@ -20,9 +20,10 @@ MAKEFILES_LOG:=$(shell \
 )
 
 #. At least include the base.makefile file
-include $(MAKEFILES_DIRECTORY)/base.makefile         # Provide some base functionality
-include $(MAKEFILES_DIRECTORY)/help.makefile         # Provide documentation automatically
-include $(MAKEFILES_DIRECTORY)/repositories.makefile # Add repository management
+include $(MAKEFILES_DIRECTORY)/base.makefile            # Add some base functionality
+include $(MAKEFILES_DIRECTORY)/help.makefile            # Add documentation automatically
+include $(MAKEFILES_DIRECTORY)/repositories.makefile    # Add repository management
+include $(MAKEFILES_DIRECTORY)/parent-makefile.makefile # Add a makefile to the parent directory to redirect
 ```
 
 Change the MAKEFILES_TAG variable to the latest tag of this project, or the tag of the version you want to use:
