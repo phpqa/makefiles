@@ -23,7 +23,7 @@ PHPUNIT_DEPENDENCY?=$(wildcard $(PHPUNIT))
 endif
 
 #. Configuration variables
-PHPUNIT_POSSIBLE_CONFIGS?=phpstan.neon phpstan.neon.dist phpstan.dist.neon
+PHPUNIT_POSSIBLE_CONFIGS?=phpunit.xml phpunit.xml.dist
 PHPUNIT_CONFIG?=$(firstword $(wildcard $(PHPUNIT_POSSIBLE_CONFIGS)))
 
 #. Extra variables
@@ -55,16 +55,23 @@ endif
 ## PHP Testing Tools
 ###
 
-#. Install PHPUnit
+ifeq ($(wildcard $(filter-out $(PHP_DEPENDENCY),$(PHPUNIT_DEPENDENCY))),)
+
+# Install PHPUnit as dev dependency in vendor
 vendor/bin/phpunit: | $(COMPOSER_DEPENDENCY) vendor
 	@if test ! -f "$(@)"; then $(COMPOSER_EXECUTABLE) require --dev phpunit/phpunit; fi
 
+else
+
 #. Initialize PHPUnit
-phpunit.xml.dist: | $(PHPUNIT_DEPENDENCY)
+$(PHPUNIT_POSSIBLE_CONFIGS): | $(PHPUNIT_DEPENDENCY)
 	@$(PHPUNIT) --generate-configuration
+	@if test "phpunit.xml" != "$(@)"; then mv "phpunit.xml" "$(@)"; fi
 
 # Run PHPUnit
 # @see https://phpunit.de/
-phpunit: | $(PHPUNIT_DEPENDENCY) phpunit.xml.dist
+phpunit: | $(PHPUNIT_DEPENDENCY) $(if $(PHPUNIT_CONFIG),$(PHPUNIT_CONFIG),$(firstword $(PHPUNIT_POSSIBLE_CONFIGS)))
 	@$(PHPUNIT)$(if $(PHPUNIT_FLAGS), $(PHPUNIT_FLAGS))
 .PHONY: phpunit
+
+endif
