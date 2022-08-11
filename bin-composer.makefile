@@ -86,7 +86,10 @@ endif
 # Create a composer.json file
 composer.json: | $(COMPOSER_DEPENDENCY)
 	@if test ! -f "$(@)"; then \
-		$(COMPOSER_EXECUTABLE) init --no-interaction --name vendor/project; \
+		$(COMPOSER_EXECUTABLE) init --no-interaction \
+			--name "$(shell whoami)/$(notdir $(shell pwd))" \
+			--description "new project" \
+			--license "proprietary"; \
 	fi
 
 # Build the composer.lock file
