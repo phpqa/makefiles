@@ -30,8 +30,8 @@ ifeq ($(wildcard $(filter-out $(COMPOSER_DEPENDENCY),$(COMPOSER_NORMALIZE_DEPEND
 
 # Install composer-normalize as dev dependency in vendor
 vendor/ergebnis/composer-normalize: | $(COMPOSER_DEPENDENCY) vendor
-	@$(COMPOSER_EXECUTABLE) require --dev "$(COMPOSER_NORMALIZE_PACKAGE)"
 	@$(COMPOSER_EXECUTABLE) config allow-plugins.$(COMPOSER_NORMALIZE_PACKAGE) true
+	@$(COMPOSER_EXECUTABLE) require --dev "$(COMPOSER_NORMALIZE_PACKAGE)"
 
 else
 
