@@ -4,6 +4,8 @@
 
 PHP_TESTING_TOOLS?=\
 	$(if $(wildcard $(filter-out $(PHP_DEPENDENCY),$(PHPUNIT_DEPENDENCY))),phpunit)
+PHP_TESTING_TOOLS_DEPENDENCIES?=\
+	$(PHPUNIT_DEPENDENCY)
 
 ###
 ## PHP Testing Tools
