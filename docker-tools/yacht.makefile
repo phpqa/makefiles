@@ -43,6 +43,9 @@ yacht.pull:%.pull:
 #. Start the Yacht container
 yacht.start:%.start:
 	@if test -z "$$($(DOCKER) container inspect --format "{{ .ID }}" "$(YACHT_SERVICE_NAME)" 2> /dev/null)"; then \
+		if test -z "$$($(DOCKER) network ls --quiet --filter "name=^$(YACHT_TRAEFIK_NETWORK)$$")"; then \
+			$(DOCKER) network create "$(YACHT_TRAEFIK_NETWORK)" &>/dev/null; \
+		fi; \
 		$(DOCKER) container run --detach --name "$(YACHT_SERVICE_NAME)" \
 			--env "DISABLE_AUTH=true" \
 			$(if $(YACHT_PROJECTS_ROOT_DIR),--env "COMPOSE_DIR=/compose/") \
@@ -51,11 +54,11 @@ yacht.start:%.start:
 			$(if $(YACHT_PROJECTS_ROOT_DIR),--volume "$(YACHT_PROJECTS_ROOT_DIR):/compose") \
 			--publish "8000" \
 			--label "traefik.enable=true" \
-			--label "traefik.docker.network=$(if $(YACHT_TRAEFIK_NETWORK),$(YACHT_TRAEFIK_NETWORK),traefik)" \
+			$(if $(YACHT_TRAEFIK_NETWORK),--label "traefik.docker.network=$(YACHT_TRAEFIK_NETWORK)") \
 			--label "traefik.http.routers.$(YACHT_SERVICE_NAME).entrypoints=web" \
 			--label "traefik.http.routers.$(YACHT_SERVICE_NAME).rule=Host(\`$(YACHT_TRAEFIK_DOMAIN)\`)" \
 			--label "traefik.http.services.$(YACHT_SERVICE_NAME).loadbalancer.server.port=8000" \
-			--network "$(if $(YACHT_TRAEFIK_NETWORK),$(YACHT_TRAEFIK_NETWORK),traefik)" \
+			$(if $(YACHT_TRAEFIK_NETWORK),--network "$(YACHT_TRAEFIK_NETWORK)") \
 			"$(YACHT_IMAGE)" \
 			>/dev/null; \
 	else \

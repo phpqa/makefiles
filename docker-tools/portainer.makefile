@@ -36,7 +36,7 @@ PORTAINER_LOGO_URL?=
 PORTAINER_SESSION_TIMEOUT_IN_HOURS?=8640
 
 #. Support for Traefik
-PORTAINER_TRAEFIK_DOMAIN?=portainer.localhost
+PORTAINER_TRAEFIK_DOMAIN?=$(PORTAINER_SERVICE_NAME).localhost
 PORTAINER_TRAEFIK_NETWORK?=$(TRAEFIK_PROVIDERS_DOCKER_NETWORK)
 
 ###
@@ -51,16 +51,19 @@ portainer.pull:%.pull:
 #. Start the Portainer container
 portainer.start:%.start:
 	@if test -z "$$($(DOCKER) container inspect --format "{{ .ID }}" "$(PORTAINER_SERVICE_NAME)" 2> /dev/null)"; then \
+		if test -z "$$($(DOCKER) network ls --quiet --filter "name=^$(PORTAINER_TRAEFIK_NETWORK)$$")"; then \
+			$(DOCKER) network create "$(PORTAINER_TRAEFIK_NETWORK)" &>/dev/null; \
+		fi; \
 		$(DOCKER) container run --detach --name "$(PORTAINER_SERVICE_NAME)" \
 			--volume "$(PORTAINER_DATA_VOLUME):/data" \
 			--volume "$(DOCKER_SOCKET):/var/run/docker.sock:ro" \
 			--publish "9000" \
 			--label "traefik.enable=true" \
-			--label "traefik.docker.network=$(if $(PORTAINER_TRAEFIK_NETWORK),$(PORTAINER_TRAEFIK_NETWORK),traefik)" \
+			$(if $(PORTAINER_TRAEFIK_NETWORK),--label "traefik.docker.network=$(PORTAINER_TRAEFIK_NETWORK)") \
 			--label "traefik.http.routers.$(PORTAINER_SERVICE_NAME).entrypoints=web" \
 			--label "traefik.http.routers.$(PORTAINER_SERVICE_NAME).rule=Host(\`$(PORTAINER_TRAEFIK_DOMAIN)\`)" \
 			--label "traefik.http.services.$(PORTAINER_SERVICE_NAME).loadbalancer.server.port=9000" \
-			--network "$(if $(PORTAINER_TRAEFIK_NETWORK),$(PORTAINER_TRAEFIK_NETWORK),traefik)" \
+			$(if $(PORTAINER_TRAEFIK_NETWORK),--network "$(PORTAINER_TRAEFIK_NETWORK)") \
 			"$(PORTAINER_IMAGE)" \
 			--bind ":9000" \
 			--admin-password "$(subst $$,\$$,$(shell $(DOCKER) run --rm httpd:2.4-alpine sh -c "htpasswd -nbB admin '$(PORTAINER_ADMIN_PASSWORD)' | cut -d ':' -f 2"))" \
