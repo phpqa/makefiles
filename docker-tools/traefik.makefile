@@ -69,7 +69,7 @@ traefik.start:%.start: | $(DOCKER)
 .PHONY: traefik.start
 
 #. Wait for the Traefik container to be running
-traefik.ensure:%.ensure: | $(DOCKER) %.start
+traefik.ensure-running:%.ensure-running: | $(DOCKER) %.start
 	@until test -n "$$($(DOCKER) container ls --quiet --filter "status=running" --filter "name=^$(TRAEFIK_SERVICE_NAME)$$" 2>/dev/null)"; do \
 		if test -z "$$($(DOCKER) container ls --quiet --filter "status=created" --filter "status=running" --filter "name=^$(TRAEFIK_SERVICE_NAME)$$" 2>/dev/null)"; then \
 			printf "$(STYLE_ERROR)%s$(STYLE_RESET)\n" "The container \"$(TRAEFIK_SERVICE_NAME)\" never started."; \
@@ -86,7 +86,7 @@ traefik.ensure:%.ensure: | $(DOCKER) %.start
 		fi; \
 		sleep 1; \
 	done
-.PHONY: traefik.ensure
+.PHONY: traefik.ensure-running
 
 #. List the url to the Traefik container
 traefik.list:%.list: | $(DOCKER) %.ensure
@@ -112,17 +112,18 @@ traefik.clear:%.clear: | $(DOCKER)
 	@$(DOCKER) network rm --force "$(TRAEFIK_PROVIDERS_DOCKER_NETWORK)" &>/dev/null || true
 .PHONY: traefik.clear
 
-#. Reset the Traefik volume
-traefik.reset:%.reset:
-	-@$(MAKE) $(*).clear
-	@$(MAKE) $(*)
-.PHONY: traefik.reset
+#. Wait for the Traefik container to be cleared
+traefik.ensure-cleared:%.ensure-cleared: | $(DOCKER) %.clear
+	@until test -z "$$($(DOCKER) container ls --quiet --filter "status=running" --filter "name=^$(TRAEFIK_SERVICE_NAME)$$")"; do \
+		$(DOCKER) container ls --quiet --filter "status=running" --filter "name=^$(TRAEFIK_SERVICE_NAME)$$"; \
+		sleep 1; \
+	done
+.PHONY: traefik.ensure-cleared
 
 #. Reset the Traefik volume
-traefik.silent-reset:%.silent-reset:
-	-@$(MAKE) $(*).clear
-	@$(MAKE) $(*).start
-.PHONY: traefik.silent-reset
+traefik.reset:%.reset: | %.ensure-cleared %.ensure-running
+	@true
+.PHONY: traefik.reset
 
 # Run Traefik in a container
 # @see https://doc.traefik.io/traefik/
