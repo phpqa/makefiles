@@ -89,7 +89,7 @@ traefik.ensure-running:%.ensure-running: | $(DOCKER) %.start
 .PHONY: traefik.ensure-running
 
 #. List the url to the Traefik container
-traefik.list:%.list: | $(DOCKER) %.ensure
+traefik.list:%.list: | $(DOCKER) %.ensure-running
 	@printf "Open Traefik: %s or %s\n" \
 		"http://$(TRAEFIK_DOMAIN)$(if $(filter-out 80,$(TRAEFIK_HTTP_PORT)),:$(TRAEFIK_HTTP_PORT))" \
 		"http://$$($(DOCKER) container port "$(*)" "8080" | grep "0.0.0.0")"
