@@ -16,6 +16,7 @@ DOCKER_COMPOSE_FLAGS?=
 DOCKER_COMPOSE_BUILD_FLAGS?=
 DOCKER_COMPOSE_UP_FLAGS?=--detach
 DOCKER_COMPOSE_DIRECTORY?=$(if $(wildcard compose.yaml compose.yml docker-compose.yaml docker-compose.yml),.)
+DOCKER_COMPOSE_EXEC_COMMAND?=
 DOCKER_COMPOSE_EXEC_ENVIRONMENT_VARIABLES?=
 ifeq ($(DOCKER_COMPOSE),)
 $(error Please install docker-compose.)
@@ -99,18 +100,22 @@ compose.service.%.ensure-stopped:
 		$(DOCKER_COMPOSE)$(if $(DOCKER_COMPOSE_FLAGS), $(DOCKER_COMPOSE_FLAGS)) stop $(*); \
 	fi
 
-# Open a shell in service %
-compose.service.%.shell: compose.service.%.ensure-running
+# Execute a command $(DOCKER_COMPOSE_EXEC_COMMAND) in service %
+compose.service.%.exec: compose.service.%.ensure-running
 	@$(if $(DOCKER_COMPOSE_DIRECTORY),cd "$(DOCKER_COMPOSE_DIRECTORY)" &&) \
-	$(DOCKER_COMPOSE)$(if $(DOCKER_COMPOSE_FLAGS), $(DOCKER_COMPOSE_FLAGS)) exec$(foreach var,$(DOCKER_COMPOSE_EXEC_ENVIRONMENT_VARIABLES), --env $(var)="$${$(var)}") "$(*)" sh
+	$(DOCKER_COMPOSE)$(if $(DOCKER_COMPOSE_FLAGS), $(DOCKER_COMPOSE_FLAGS)) exec$(foreach var,$(DOCKER_COMPOSE_EXEC_ENVIRONMENT_VARIABLES), --env $(var)="$${$(var)}") "$(*)" $(DOCKER_COMPOSE_EXEC_COMMAND)
+
+# Open a shell in service %
+compose.service.%.shell: compose.service.%.exec; @true
+#. Pass the sh command
+compose.service.%.shell: DOCKER_COMPOSE_EXEC_COMMAND:=sh
 
 #. Open a shell in service % (alias)
-compose.service.%.sh: compose.service.%.shell
-	@true
+compose.service.%.sh: compose.service.%.shell; @true
 
 # Open a bash shell in service %
-compose.service.%.bash: compose.service.%.ensure-running
-	@$(if $(DOCKER_COMPOSE_DIRECTORY),cd "$(DOCKER_COMPOSE_DIRECTORY)" &&) \
-	$(DOCKER_COMPOSE)$(if $(DOCKER_COMPOSE_FLAGS), $(DOCKER_COMPOSE_FLAGS)) exec$(foreach var,$(DOCKER_COMPOSE_EXEC_ENVIRONMENT_VARIABLES), --env $(var)="$${$(var)}") "$(*)" bash
+compose.service.%.bash: compose.service.%.exec; @true
+#. Pass the bash command
+compose.service.%.bash: DOCKER_COMPOSE_EXEC_COMMAND:=bash
 
 endif
