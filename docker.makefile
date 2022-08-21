@@ -110,7 +110,7 @@ compose.service.%.sh: compose.service.%.shell
 
 # Open a bash shell in service %
 compose.service.%.bash: compose.service.%.ensure-running
-	$(if $(DOCKER_COMPOSE_DIRECTORY),cd "$(DOCKER_COMPOSE_DIRECTORY)" &&) \
+	@$(if $(DOCKER_COMPOSE_DIRECTORY),cd "$(DOCKER_COMPOSE_DIRECTORY)" &&) \
 	$(DOCKER_COMPOSE)$(if $(DOCKER_COMPOSE_FLAGS), $(DOCKER_COMPOSE_FLAGS)) exec$(foreach var,$(DOCKER_COMPOSE_EXEC_ENVIRONMENT_VARIABLES), --env $(var)="$${$(var)}") "$(*)" bash
 
 endif
