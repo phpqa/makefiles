@@ -28,7 +28,7 @@ RECTOR_POSSIBLE_CONFIGS?=rector.php
 RECTOR_CONFIG?=$(wildcard $(RECTOR_POSSIBLE_CONFIGS))
 
 #. Extra variables
-RECTOR_DIRECTORIES_TO_CHECK?=$(if $(RECTOR_CONFIG),,$(if $(wildcard src),src,.))
+RECTOR_DIRECTORIES_TO_CHECK?=$(if $(RECTOR_CONFIG),,.)
 
 #. Building the flags
 RECTOR_FLAGS?=

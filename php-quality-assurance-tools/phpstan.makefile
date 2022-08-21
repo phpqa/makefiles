@@ -29,7 +29,7 @@ PHPSTAN_CONFIG?=$(firstword $(wildcard $(PHPSTAN_POSSIBLE_CONFIGS)))
 
 #. Extra variables
 PHPSTAN_BASELINE?=$(wildcard phpstan-baseline.neon)
-PHPSTAN_DIRECTORIES_TO_CHECK?=$(if $(PHPSTAN_CONFIG),,$(if $(wildcard src),src,.))
+PHPSTAN_DIRECTORIES_TO_CHECK?=$(if $(PHPSTAN_CONFIG),,.)
 PHPSTAN_MEMORY_LIMIT?=
 
 #. Building the flags
