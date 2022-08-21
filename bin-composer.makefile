@@ -109,7 +109,7 @@ composer.lock: composer.json | $(COMPOSER_DEPENDENCY)
 
 # Build the vendor directory
 vendor: composer.lock | $(COMPOSER_DEPENDENCY)
-	@if test "$(@)" -ot "$(<)"; then \
+	@if test ! -d "$(@)" || test "$(@)" -ot "$(<)"; then \
 		$(COMPOSER_EXECUTABLE) install --no-progress; \
 	fi
 	@if test ! -d "$(@)"; then \
