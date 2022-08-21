@@ -39,7 +39,7 @@ ifneq ($(DOCKER),)
 bin/composer$(if $(COMPOSER_VERSION),-$(COMPOSER_VERSION)): | $(wildcard $(DOCKER))
 	@if test ! -d "$(dir $(@))"; then mkdir -p "$(dir $(@))"; fi
 	@if test -f "$(@)"; then rm -f "$(@)"; fi
-	@$(if $(COMPOSER_VERSION),if test -L "bin/composer" || -f "bin/composer"; then rm -f "bin/composer"; fi)
+	@$(if $(COMPOSER_VERSION),if test -L "bin/composer" || test -f "bin/composer"; then rm -f "bin/composer"; fi)
 	@$(DOCKER) image pull $(COMPOSER_IMAGE)$(if $(COMPOSER_VERSION),:$(COMPOSER_VERSION))
 	@$(DOCKER) run --rm --init --pull=missing --volume "$(shell pwd)":"/app" --workdir "/app" $(COMPOSER_IMAGE)$(if $(COMPOSER_VERSION),:$(COMPOSER_VERSION)) cat /usr/bin/composer > "$(@)"
 	@$(DOCKER) image rm $(COMPOSER_IMAGE)$(if $(COMPOSER_VERSION),:$(COMPOSER_VERSION))
