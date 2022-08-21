@@ -49,7 +49,7 @@ ifeq ($(wildcard $(filter-out $(PHP_DEPENDENCY),$(PHPCSFIXER_DEPENDENCY))),)
 vendor/bin/php-cs-fixer: | $(COMPOSER_DEPENDENCY) vendor
 	@$(COMPOSER_EXECUTABLE) require --dev "$(PHPCSFIXER_PACKAGE)"
 
-else
+endif
 
 # Run PHP Coding Standards Fixer #!
 # @see https://github.com/FriendsOfPHP/PHP-CS-Fixer
@@ -61,5 +61,3 @@ php-cs-fixer: | $(wildcard $(PHPCSFIXER_STANDARD)) $(PHPCSFIXER_DEPENDENCY)
 php-cs-fixer.dryrun: | $(wildcard $(PHPCSFIXER_STANDARD)) $(PHPCSFIXER_DEPENDENCY)
 	@$(PHPCSFIXER) fix --dry-run --diff$(if $(PHPCSFIXER_FLAGS), $(PHPCSFIXER_FLAGS)) $(PHPCSFIXER_DIRECTORIES_TO_CHECK)
 .PHONY: php-cs-fixer.dryrun
-
-endif

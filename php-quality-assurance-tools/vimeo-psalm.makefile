@@ -55,7 +55,7 @@ ifeq ($(wildcard $(filter-out $(PHP_DEPENDENCY),$(PSALM_DEPENDENCY))),)
 vendor/bin/psalm: | $(COMPOSER_DEPENDENCY) vendor
 	@$(COMPOSER_EXECUTABLE) require --dev "$(PSALM_PACKAGE)"
 
-else
+endif
 
 #. Initialize Psalm # TODO This needs a HOME environment variable to be overwritten https://github.com/vimeo/psalm/issues/4267
 psalm.xml: | $(PSALM_DEPENDENCY)
@@ -87,5 +87,3 @@ psalter: | $(PSALM_DEPENDENCY) $(PSALM_CONFIG)
 psalter.dryrun: | $(PSALM_DEPENDENCY) $(PSALM_CONFIG)
 	@$(PSALM) --alter --dry-run$(if $(PSALM_FLAGS), $(PSALM_FLAGS)) --issues="$(if $(PSALTER_ISSUES),$(PSALTER_ISSUES),all)"
 .PHONY: psalter.dryrun
-
-endif

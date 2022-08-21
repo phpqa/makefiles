@@ -51,12 +51,10 @@ ifeq ($(wildcard $(filter-out $(PHP_DEPENDENCY),$(PARALLEL_LINT_DEPENDENCY))),)
 vendor/bin/parallel-lint: | $(COMPOSER_DEPENDENCY) vendor
 	@$(COMPOSER_EXECUTABLE) require --dev "$(PARALLEL_LINT_PACKAGE)"
 
-else
+endif
 
 # Run Parallel Lint
 # @see https://github.com/php-parallel-lint/PHP-Parallel-Lint
 parallel-lint: | $(PARALLEL_LINT_DEPENDENCY) $(if $(COMPOSER),$(patsubst %.json,%.lock,$(COMPOSER)),composer.lock)
 	@$(PARALLEL_LINT)$(if $(PARALLEL_LINT_FLAGS), $(PARALLEL_LINT_FLAGS)) $(PARALLEL_LINT_DIRECTORIES_TO_CHECK)
 .PHONY: parallel-lint
-
-endif

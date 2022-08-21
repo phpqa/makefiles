@@ -66,7 +66,7 @@ ifeq ($(wildcard $(filter-out $(PHP_DEPENDENCY),$(PHPSTAN_DEPENDENCY))),)
 vendor/bin/phpstan: | $(COMPOSER_DEPENDENCY) vendor
 	@$(COMPOSER_EXECUTABLE) require --dev "$(PHPSTAN_PACKAGE)"
 
-else
+endif
 
 # Run PHPStan
 # @see https://phpstan.org/
@@ -83,5 +83,3 @@ phpstan-baseline.neon: $(PHPSTAN_CONFIG) | $(PHPSTAN_DEPENDENCY)
 phpstan.clear-cache:: $(PHPSTAN_CONFIG) | $(PHPSTAN_DEPENDENCY)
 	@$(PHPSTAN)$(if $(PHPSTAN_CLEAR_CACHE_FLAGS), $(PHPSTAN_CLEAR_CACHE_FLAGS)) clear-result-cache
 .PHONY: phpstan.clear-cache
-
-endif

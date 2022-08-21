@@ -65,7 +65,7 @@ ifeq ($(wildcard $(filter-out $(PHP_DEPENDENCY),$(PHPCS_DEPENDENCY))),)
 vendor/bin/phpcs: | $(COMPOSER_DEPENDENCY) vendor
 	@$(COMPOSER_EXECUTABLE) require --dev "$(PHPCS_PACKAGE)"
 
-else
+endif
 
 # Run PHP_CodeSniffer
 # @see https://github.com/squizlabs/PHP_CodeSniffer
@@ -73,20 +73,16 @@ phpcs: | $(wildcard $(PHPCS_STANDARD)) $(PHPCS_DEPENDENCY)
 	@$(PHPCS)$(if $(PHPCS_FLAGS), $(PHPCS_FLAGS)) $(PHPCS_DIRECTORIES_TO_CHECK)
 .PHONY: phpcs
 
-endif
-
 ifeq ($(wildcard $(filter-out $(PHP_DEPENDENCY),$(PHPCBF_DEPENDENCY))),)
 
 #. Install PHP_CodeSniffer as dev dependency in vendor
 vendor/bin/phpcbf: | $(COMPOSER_DEPENDENCY) vendor
 	@$(COMPOSER_EXECUTABLE) require --dev "$(PHPCBF_PACKAGE)"
 
-else
+endif
 
 # Run PHP Code Beautifier and Fixer #!
 # @see https://github.com/squizlabs/PHP_CodeSniffer
 phpcbf: | $(wildcard $(PHPCBF_STANDARD)) $(PHPCBF_DEPENDENCY)
 	@$(PHPCBF)$(if $(PHPCBF_FLAGS), $(PHPCBF_FLAGS)) $(PHPCBF_DIRECTORIES_TO_CHECK)
 .PHONY: phpcbf
-
-endif

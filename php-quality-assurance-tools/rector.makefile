@@ -56,7 +56,7 @@ ifeq ($(wildcard $(filter-out $(PHP_DEPENDENCY),$(RECTOR_DEPENDENCY))),)
 vendor/bin/rector: | $(COMPOSER_DEPENDENCY) vendor
 	@$(COMPOSER_EXECUTABLE) require --dev "$(RECTOR_PACKAGE)"
 
-else
+endif
 
 #. Initialize Rector
 rector.php: | $(RECTOR_DEPENDENCY)
@@ -72,5 +72,3 @@ rector: | $(RECTOR_DEPENDENCY) rector.php
 rector.dryrun: | $(RECTOR_DEPENDENCY) rector.php
 	@$(RECTOR)$(if $(RECTOR_FLAGS), $(RECTOR_FLAGS)) --dry-run process $(RECTOR_DIRECTORIES_TO_CHECK)
 .PHONY: rector.dryrun
-
-endif

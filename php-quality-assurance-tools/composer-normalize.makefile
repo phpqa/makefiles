@@ -33,7 +33,7 @@ vendor/ergebnis/composer-normalize: | $(COMPOSER_DEPENDENCY) vendor
 	@$(COMPOSER_EXECUTABLE) config allow-plugins.$(COMPOSER_NORMALIZE_PACKAGE) true
 	@$(COMPOSER_EXECUTABLE) require --dev "$(COMPOSER_NORMALIZE_PACKAGE)"
 
-else
+endif
 
 # Run composer-normalize #!
 # @see https://github.com/ergebnis/composer-normalize
@@ -43,5 +43,3 @@ composer-normalize: | $(COMPOSER_NORMALIZE_DEPENDENCY)
 # Dryrun composer-normalize
 composer-normalize.dryrun: | $(COMPOSER_NORMALIZE_DEPENDENCY)
 	@$(COMPOSER_NORMALIZE)$(if $(COMPOSER_NORMALIZE_FLAGS), $(COMPOSER_NORMALIZE_FLAGS)) --diff --dry-run$(if $(COMPOSER), $(COMPOSER))
-
-endif
