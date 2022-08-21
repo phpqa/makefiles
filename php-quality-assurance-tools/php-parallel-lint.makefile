@@ -22,10 +22,18 @@ PARALLEL_LINT_DEPENDENCY?=$(PHP_DEPENDENCY) vendor/bin/parallel-lint
 else
 PARALLEL_LINT_DEPENDENCY?=$(wildcard $(PARALLEL_LINT))
 endif
+
+#. Extra variables
 PARALLEL_LINT_DIRECTORIES_TO_CHECK?=.
 
 #. Building the flags
-PARALLEL_LINT_FLAGS?=$(if $(wildcard vendor),--exclude vendor)
+PARALLEL_LINT_FLAGS?=
+
+ifneq ($(wildcard vendor),)
+ifeq ($(findstring --exclude vendor,$(PARALLEL_LINT_FLAGS)),)
+PARALLEL_LINT_FLAGS+=--exclude vendor
+endif
+endif
 
 ifneq ($(GIT),)
 ifeq ($(findstring --blame,$(PARALLEL_LINT_FLAGS)),)
