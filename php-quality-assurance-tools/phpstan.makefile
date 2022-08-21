@@ -64,7 +64,7 @@ ifeq ($(wildcard $(filter-out $(PHP_DEPENDENCY),$(PHPSTAN_DEPENDENCY))),)
 
 # Install PHPStan as dev dependency in vendor
 vendor/bin/phpstan: | $(COMPOSER_DEPENDENCY) vendor
-	@$(COMPOSER_EXECUTABLE) require --dev "$(PHPSTAN_PACKAGE)"
+	@if test ! -f "$(@)"; then $(COMPOSER_EXECUTABLE) require --dev "$(PHPSTAN_PACKAGE)"; fi
 
 endif
 

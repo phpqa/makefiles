@@ -44,7 +44,7 @@ ifeq ($(wildcard $(filter-out $(PHP_DEPENDENCY),$(DEPTRAC_DEPENDENCY))),)
 
 # Install Deptrac as dev dependency in vendor
 vendor/bin/deptrac: | $(COMPOSER_DEPENDENCY) vendor
-	@$(COMPOSER_EXECUTABLE) require --dev "$(DEPTRAC_PACKAGE)"
+	@if test ! -f "$(@)"; then $(COMPOSER_EXECUTABLE) require --dev "$(DEPTRAC_PACKAGE)"; fi
 
 endif
 

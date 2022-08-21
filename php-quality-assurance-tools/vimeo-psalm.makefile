@@ -53,7 +53,7 @@ ifeq ($(wildcard $(filter-out $(PHP_DEPENDENCY),$(PSALM_DEPENDENCY))),)
 
 # Install Psalm as dev dependency in vendor
 vendor/bin/psalm: | $(COMPOSER_DEPENDENCY) vendor
-	@$(COMPOSER_EXECUTABLE) require --dev "$(PSALM_PACKAGE)"
+	@if test ! -f "$(@)"; then $(COMPOSER_EXECUTABLE) require --dev "$(PSALM_PACKAGE)"; fi
 
 endif
 
