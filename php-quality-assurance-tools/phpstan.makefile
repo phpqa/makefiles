@@ -28,21 +28,23 @@ PHPSTAN_POSSIBLE_CONFIGS?=phpstan.neon phpstan.neon.dist phpstan.dist.neon
 PHPSTAN_CONFIG?=$(firstword $(wildcard $(PHPSTAN_POSSIBLE_CONFIGS)))
 
 #. Extra variables
-PHPSTAN_BASELINE?=$(wildcard phpstan-baseline.neon)
+PHPSTAN_POSSIBLE_BASELINES?=phpstan-baseline.neon
+PHPSTAN_BASELINE?=$(firstword $(wildcard $(PHPSTAN_POSSIBLE_BASELINES)))
 PHPSTAN_DIRECTORIES_TO_CHECK?=$(if $(PHPSTAN_CONFIG),,.)
 PHPSTAN_MEMORY_LIMIT?=
 
 #. Building the flags
 PHPSTAN_FLAGS?=
+PHPSTAN_BASELINE_FLAGS?=
 PHPSTAN_CLEAR_CACHE_FLAGS?=
 
 ifneq ($(wildcard $(PHPSTAN_CONFIG)),)
 ifeq ($(findstring --configuration,$(PHPSTAN_FLAGS)),)
 PHPSTAN_FLAGS+=--configuration="$(PHPSTAN_CONFIG)"
 endif
+ifeq ($(findstring --configuration,$(PHPSTAN_BASELINE_FLAGS)),)
+PHPSTAN_BASELINE_FLAGS+=--configuration="$(PHPSTAN_CONFIG)"
 endif
-
-ifneq ($(wildcard $(PHPSTAN_CONFIG)),)
 ifeq ($(findstring --configuration,$(PHPSTAN_CLEAR_CACHE_FLAGS)),)
 PHPSTAN_CLEAR_CACHE_FLAGS+=--configuration="$(PHPSTAN_CONFIG)"
 endif
@@ -73,12 +75,12 @@ phpstan: $(wildcard $(PHPSTAN_CONFIG)) | $(PHPSTAN_DEPENDENCY)
 .PHONY: phpstan
 
 # Generate a baseline for PHPStan
-phpstan-baseline.neon: | $(PHPSTAN_DEPENDENCY)
-	@$(PHPSTAN)$(if $(PHPSTAN_FLAGS), $(PHPSTAN_FLAGS)) --generate-baseline$(if $(PHPSTAN_BASELINE),="$(PHPSTAN_BASELINE)")
+phpstan-baseline.neon: $(PHPSTAN_CONFIG) | $(PHPSTAN_DEPENDENCY)
+	@$(PHPSTAN)$(if $(PHPSTAN_BASELINE_FLAGS), $(PHPSTAN_BASELINE_FLAGS)) --generate-baseline="$(if $(PHPSTAN_BASELINE),$(PHPSTAN_BASELINE),$(firstword $(PHPSTAN_POSSIBLE_BASELINES)))"
 .PRECIOUS: phpstan-baseline.neon
 
 # Clear the PHPStan cache
-phpstan.clear-cache:: $(wildcard $(PHPSTAN_CONFIG)) | $(PHPSTAN_DEPENDENCY)
+phpstan.clear-cache:: $(PHPSTAN_CONFIG) | $(PHPSTAN_DEPENDENCY)
 	@$(PHPSTAN)$(if $(PHPSTAN_CLEAR_CACHE_FLAGS), $(PHPSTAN_CLEAR_CACHE_FLAGS)) clear-result-cache
 .PHONY: phpstan.clear-cache
 
