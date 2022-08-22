@@ -23,7 +23,7 @@ PHPUNIT_DEPENDENCY?=$(wildcard $(PHPUNIT))
 endif
 PHP_TESTING_TOOLS+=phpunit
 PHP_TESTING_TOOLS_DEPENDENCIES+=$(filter-out $(PHP_DEPENDENCY),$(PHPUNIT_DEPENDENCY))
-HELP_SKIP_TARGETS+=$(wildcard $(filter-out $(PHP_DEPENDENCY),$(PHPUNIT_DEPENDENCY)))
+HELP_TARGETS_TO_SKIP+=$(wildcard $(filter-out $(PHP_DEPENDENCY),$(PHPUNIT_DEPENDENCY)))
 
 #. Configuration variables
 PHPUNIT_POSSIBLE_CONFIGS?=phpunit.xml phpunit.xml.dist
