@@ -54,7 +54,7 @@ watchtower.start:%.start:
 .PHONY: watchtower.start
 
 #. Wait for the Watchtower container to be running
-watchtower.ensure:%.ensure: | %.start
+watchtower.ensure-running:%.ensure-running: | %.start
 	@until test -n "$$($(DOCKER) container ls --quiet --filter "status=running" --filter "name=^$(WATCHTOWER_SERVICE_NAME)$$" 2>/dev/null)"; do \
 		if test -z "$$($(DOCKER) container ls --quiet --filter "status=created" --filter "status=running" --filter "name=^$(WATCHTOWER_SERVICE_NAME)$$" 2>/dev/null)"; then \
 			printf "$(STYLE_ERROR)%s$(STYLE_RESET)\n" "The container \"$(WATCHTOWER_SERVICE_NAME)\" never started."; \
@@ -63,7 +63,7 @@ watchtower.ensure:%.ensure: | %.start
 		fi; \
 		sleep 1; \
 	done
-.PHONY: watchtower.ensure
+.PHONY: watchtower.ensure-running
 
 #. List the logs of the Watchtower container
 watchtower.log:%.log:

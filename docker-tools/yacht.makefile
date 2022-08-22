@@ -69,7 +69,7 @@ yacht.start:%.start:
 .PHONY: yacht.start
 
 #. Wait for the Yacht container to be running
-yacht.ensure:%.ensure: | %.start
+yacht.ensure-running:%.ensure-running: | %.start
 	@until test -n "$$($(DOCKER) container ls --quiet --filter "status=running" --filter "name=^$(YACHT_SERVICE_NAME)$$" 2>/dev/null)"; do \
 		if test -z "$$($(DOCKER) container ls --quiet --filter "status=created" --filter "status=running" --filter "name=^$(YACHT_SERVICE_NAME)$$" 2>/dev/null)"; then \
 			printf "$(STYLE_ERROR)%s$(STYLE_RESET)\n" "The container \"$(YACHT_SERVICE_NAME)\" never started."; \
@@ -86,10 +86,10 @@ yacht.ensure:%.ensure: | %.start
 		fi; \
 		sleep 1; \
 	done
-.PHONY: yacht.ensure
+.PHONY: yacht.ensure-running
 
 #. List the url to the Yacht container
-yacht.list:%.list: | %.ensure
+yacht.list:%.list: | %.ensure-running
 	@printf "Open Yacht: %s or %s\n" \
 		"http://$(YACHT_TRAEFIK_DOMAIN)$(if $(filter-out 80,$(TRAEFIK_HTTP_PORT)),:$(TRAEFIK_HTTP_PORT))" \
 		"http://$$($(DOCKER) container port "$(YACHT_SERVICE_NAME)" "8000" | grep "0.0.0.0")"

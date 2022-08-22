@@ -69,7 +69,7 @@ dozzle.start:%.start:
 .PHONY: dozzle.start
 
 #. Wait for the Dozzle container to be running
-dozzle.ensure:%.ensure: | %.start
+dozzle.ensure-running:%.ensure-running: | %.start
 	@until test -n "$$($(DOCKER) container ls --quiet --filter "status=running" --filter "name=^$(DOZZLE_SERVICE_NAME)$$" 2>/dev/null)"; do \
 		if test -z "$$($(DOCKER) container ls --quiet --filter "status=created" --filter "status=running" --filter "name=^$(DOZZLE_SERVICE_NAME)$$" 2>/dev/null)"; then \
 			printf "$(STYLE_ERROR)%s$(STYLE_RESET)\n" "The container \"$(DOZZLE_SERVICE_NAME)\" never started."; \
@@ -86,10 +86,10 @@ dozzle.ensure:%.ensure: | %.start
 		fi; \
 		sleep 1; \
 	done
-.PHONY: dozzle.ensure
+.PHONY: dozzle.ensure-running
 
 #. List the url to the Dozzle container
-dozzle.list:%.list: | %.ensure
+dozzle.list:%.list: | %.ensure-running
 	@printf "Open Dozzle: %s or %s\n" \
 		"http://$(DOZZLE_TRAEFIK_DOMAIN)$(if $(filter-out 80,$(TRAEFIK_HTTP_PORT)),:$(TRAEFIK_HTTP_PORT))" \
 		"http://$$($(DOCKER) container port "$(DOZZLE_SERVICE_NAME)" "8080" | grep "0.0.0.0")"
