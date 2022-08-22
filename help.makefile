@@ -5,14 +5,14 @@
 # TODO Undocumented dependencies: awk, sort
 
 .DEFAULT_GOAL:=help
-HELP_SKIP_TARGETS?=
+HELP_TARGETS_TO_SKIP+=
 HELP_FIRST_COLUMN_WIDTH?=34
 
 # Show this help
 help:
 	@awk \
 		-v show_pattern="$$($(MAKE) --file="$(firstword $(MAKEFILE_LIST))" list-make-targets-as-database | awk -F ";" '/^[a-zA-Z0-9_%\/\.-]+/{ if (skipped) printf "|"; printf "^%s:", $$3; skipped=1 }')" \
-		-v skip_pattern="$(subst $(subst ,, ),|,$(foreach target,$(HELP_SKIP_TARGETS),^$(target):))" \
+		-v skip_pattern="$(subst $(subst ,, ),|,$(foreach target,$(HELP_TARGETS_TO_SKIP),^$(target):))" \
 		-v style_title="$(STYLE_TITLE)" \
 		-v style_dim="$(STYLE_DIM)" \
 		-v style_warning="$(STYLE_WARNING)" \
