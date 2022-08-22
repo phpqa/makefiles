@@ -22,13 +22,18 @@ RECTOR_DEPENDENCY?=$(PHP_DEPENDENCY) vendor/bin/rector
 else
 RECTOR_DEPENDENCY?=$(wildcard $(RECTOR))
 endif
+PHP_QUALITY_ASSURANCE_CHECK_TOOLS+=rector.dryrun
+PHP_QUALITY_ASSURANCE_CHECK_TOOLS_DEPENDENCIES+=$(filter-out $(PHP_DEPENDENCY),$(RECTOR_DEPENDENCY))
+PHP_QUALITY_ASSURANCE_FIX_TOOLS+=rector
+PHP_QUALITY_ASSURANCE_FIX_TOOLS_DEPENDENCIES+=$(filter-out $(PHP_DEPENDENCY),$(RECTOR_DEPENDENCY))
+HELP_SKIP_TARGETS+=$(wildcard $(filter-out $(PHP_DEPENDENCY),$(RECTOR_DEPENDENCY)))
 
-#. Configuration variables
+#. Tool variables
 RECTOR_POSSIBLE_CONFIGS?=rector.php
 RECTOR_CONFIG?=$(wildcard $(RECTOR_POSSIBLE_CONFIGS))
 
-#. Extra variables
 RECTOR_DIRECTORIES_TO_CHECK?=$(if $(RECTOR_CONFIG),,.)
+
 RECTOR_MEMORY_LIMIT?=
 
 #. Building the flags
@@ -47,16 +52,12 @@ endif
 endif
 
 ###
-## PHP Quality Assurance Tools
+## Quality Assurance
 ###
-
-ifeq ($(wildcard $(filter-out $(PHP_DEPENDENCY),$(RECTOR_DEPENDENCY))),)
 
 # Install Rector as dev dependency in vendor
 vendor/bin/rector: | $(COMPOSER_DEPENDENCY) vendor
 	@if test ! -f "$(@)"; then $(COMPOSER_EXECUTABLE) require --dev "$(RECTOR_PACKAGE)"; fi
-
-endif
 
 #. Initialize Rector
 rector.php: | $(RECTOR_DEPENDENCY)

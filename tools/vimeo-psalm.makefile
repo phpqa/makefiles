@@ -22,14 +22,19 @@ PSALM_DEPENDENCY?=$(PHP_DEPENDENCY) vendor/bin/psalm
 else
 PSALM_DEPENDENCY?=$(wildcard $(PSALM))
 endif
+PHP_QUALITY_ASSURANCE_CHECK_TOOLS+=psalm psalter.dryrun
+PHP_QUALITY_ASSURANCE_CHECK_TOOLS_DEPENDENCIES+=$(filter-out $(PHP_DEPENDENCY),$(PSALM_DEPENDENCY))
+PHP_QUALITY_ASSURANCE_FIX_TOOLS+=psalter
+PHP_QUALITY_ASSURANCE_FIX_TOOLS_DEPENDENCIES+=$(filter-out $(PHP_DEPENDENCY),$(PSALM_DEPENDENCY))
+HELP_SKIP_TARGETS+=$(wildcard $(filter-out $(PHP_DEPENDENCY),$(PSALM_DEPENDENCY)))
 
-#. Configuration variables
+#. Tool variables
 PSALM_POSSIBLE_CONFIGS?=psalm.xml
 PSALM_CONFIG?=$(wildcard $(PSALM_POSSIBLE_CONFIGS))
 
-#. Extra variables
 PSALM_POSSIBLE_BASELINES?=psalm-baseline.xml
 PSALM_BASELINE?=$(wildcard $(PSALM_POSSIBLE_BASELINES))
+
 PSALTER_ISSUES?=
 
 #. Building the flags
@@ -46,16 +51,12 @@ endif
 endif
 
 ###
-## PHP Quality Assurance Tools
+## Quality Assurance
 ###
-
-ifeq ($(wildcard $(filter-out $(PHP_DEPENDENCY),$(PSALM_DEPENDENCY))),)
 
 # Install Psalm as dev dependency in vendor
 vendor/bin/psalm: | $(COMPOSER_DEPENDENCY) vendor
 	@if test ! -f "$(@)"; then $(COMPOSER_EXECUTABLE) require --dev "$(PSALM_PACKAGE)"; fi
-
-endif
 
 #. Initialize Psalm # TODO This needs a HOME environment variable to be overwritten https://github.com/vimeo/psalm/issues/4267
 psalm.xml: | $(PSALM_DEPENDENCY)

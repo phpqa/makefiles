@@ -22,8 +22,11 @@ DEPTRAC_DEPENDENCY?=$(PHP_DEPENDENCY) vendor/bin/deptrac
 else
 DEPTRAC_DEPENDENCY?=$(wildcard $(DEPTRAC))
 endif
+PHP_QUALITY_ASSURANCE_CHECK_TOOLS+=deptrac
+PHP_QUALITY_ASSURANCE_CHECK_TOOLS_DEPENDENCIES+=$(filter-out $(PHP_DEPENDENCY),$(DEPTRAC_DEPENDENCY))
+HELP_SKIP_TARGETS+=$(wildcard $(filter-out $(PHP_DEPENDENCY),$(DEPTRAC_DEPENDENCY)))
 
-#. Configuration variables
+#. Tool variables
 DEPTRAC_POSSIBLE_CONFIGS?=deptrac.yaml
 DEPTRAC_CONFIG?=$(wildcard $(DEPTRAC_POSSIBLE_CONFIGS))
 
@@ -37,16 +40,12 @@ endif
 endif
 
 ###
-## PHP Quality Assurance Tools
+## Quality Assurance
 ###
-
-ifeq ($(wildcard $(filter-out $(PHP_DEPENDENCY),$(DEPTRAC_DEPENDENCY))),)
 
 # Install Deptrac as dev dependency in vendor
 vendor/bin/deptrac: | $(COMPOSER_DEPENDENCY) vendor
 	@if test ! -f "$(@)"; then $(COMPOSER_EXECUTABLE) require --dev "$(DEPTRAC_PACKAGE)"; fi
-
-endif
 
 #. Initialize Deptrac
 $(if $(DEPTRAC_CONFIG),$(DEPTRAC_CONFIG),deptrac.yaml): | $(DEPTRAC_DEPENDENCY)

@@ -29,13 +29,17 @@ PHPCBF_DEPENDENCY?=$(PHP_DEPENDENCY) vendor/bin/phpcbf
 else
 PHPCBF_DEPENDENCY?=$(wildcard $(PHPCBF))
 endif
+PHP_QUALITY_ASSURANCE_CHECK_TOOLS+=phpcs
+PHP_QUALITY_ASSURANCE_CHECK_TOOLS_DEPENDENCIES+=$(filter-out $(PHP_DEPENDENCY),$(PHPCS_DEPENDENCY))
+PHP_QUALITY_ASSURANCE_FIX_TOOLS+=phpcbf
+PHP_QUALITY_ASSURANCE_FIX_TOOLS_DEPENDENCIES+=$(filter-out $(PHP_DEPENDENCY),$(PHPCBF_DEPENDENCY))
+HELP_SKIP_TARGETS+=$(wildcard $(filter-out $(PHP_DEPENDENCY),$(PHPCS_DEPENDENCY) $(PHPCBF_DEPENDENCY)))
 
-#. Configuration variables
+#. Tool variables
 PHPCS_POSSIBLE_STANDARDS?=.phpcs.xml phpcs.xml .phpcs.xml.dist phpcs.xml.dist
 PHPCS_STANDARD?=$(firstword $(wildcard $(PHPCS_POSSIBLE_STANDARDS)))
 PHPCBF_STANDARD?=$(PHPCS_STANDARD)
 
-#. Extra variables
 PHPCS_DIRECTORIES_TO_CHECK?=$(if $(wildcard $(PHPCS_POSSIBLE_STANDARDS)),,.)
 PHPCBF_DIRECTORIES_TO_CHECK?=$(PHPCS_DIRECTORIES_TO_CHECK)
 
@@ -56,16 +60,12 @@ endif
 endif
 
 ###
-## PHP Quality Assurance Tools
+## Quality Assurance
 ###
-
-ifeq ($(wildcard $(filter-out $(PHP_DEPENDENCY),$(PHPCS_DEPENDENCY))),)
 
 # Install PHP_CodeSniffer as dev dependency in vendor
 vendor/bin/phpcs: | $(COMPOSER_DEPENDENCY) vendor
 	@if test ! -f "$(@)"; then $(COMPOSER_EXECUTABLE) require --dev "$(PHPCS_PACKAGE)"; fi
-
-endif
 
 # Run PHP_CodeSniffer
 # @see https://github.com/squizlabs/PHP_CodeSniffer
@@ -73,13 +73,9 @@ phpcs: | $(wildcard $(PHPCS_STANDARD)) $(PHPCS_DEPENDENCY)
 	@$(PHPCS)$(if $(PHPCS_FLAGS), $(PHPCS_FLAGS)) $(PHPCS_DIRECTORIES_TO_CHECK)
 .PHONY: phpcs
 
-ifeq ($(wildcard $(filter-out $(PHP_DEPENDENCY),$(PHPCBF_DEPENDENCY))),)
-
 #. Install PHP_CodeSniffer as dev dependency in vendor
 vendor/bin/phpcbf: | $(COMPOSER_DEPENDENCY) vendor
 	@if test ! -f "$(@)"; then $(COMPOSER_EXECUTABLE) require --dev "$(PHPCBF_PACKAGE)"; fi
-
-endif
 
 # Run PHP Code Beautifier and Fixer #!
 # @see https://github.com/squizlabs/PHP_CodeSniffer

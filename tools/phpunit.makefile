@@ -21,6 +21,9 @@ PHPUNIT_DEPENDENCY?=$(PHP_DEPENDENCY) vendor/bin/phpunit
 else
 PHPUNIT_DEPENDENCY?=$(wildcard $(PHPUNIT))
 endif
+PHP_TESTING_TOOLS+=phpunit
+PHP_TESTING_TOOLS_DEPENDENCIES+=$(filter-out $(PHP_DEPENDENCY),$(PHPUNIT_DEPENDENCY))
+HELP_SKIP_TARGETS+=$(wildcard $(filter-out $(PHP_DEPENDENCY),$(PHPUNIT_DEPENDENCY)))
 
 #. Configuration variables
 PHPUNIT_POSSIBLE_CONFIGS?=phpunit.xml phpunit.xml.dist
@@ -52,16 +55,12 @@ endif
 endif
 
 ###
-## PHP Testing Tools
+## Testing
 ###
-
-ifeq ($(wildcard $(filter-out $(PHP_DEPENDENCY),$(PHPUNIT_DEPENDENCY))),)
 
 # Install PHPUnit as dev dependency in vendor
 vendor/bin/phpunit: | $(COMPOSER_DEPENDENCY) vendor
 	@if test ! -f "$(@)"; then $(COMPOSER_EXECUTABLE) require --dev phpunit/phpunit; fi
-
-else
 
 #. Initialize PHPUnit
 $(PHPUNIT_POSSIBLE_CONFIGS): | $(PHPUNIT_DEPENDENCY)
@@ -73,5 +72,3 @@ $(PHPUNIT_POSSIBLE_CONFIGS): | $(PHPUNIT_DEPENDENCY)
 phpunit: | $(PHPUNIT_DEPENDENCY) $(PHPUNIT_CONFIG)
 	@$(PHPUNIT)$(if $(PHPUNIT_FLAGS), $(PHPUNIT_FLAGS))
 .PHONY: phpunit
-
-endif

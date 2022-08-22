@@ -22,8 +22,11 @@ PARALLEL_LINT_DEPENDENCY?=$(PHP_DEPENDENCY) vendor/bin/parallel-lint
 else
 PARALLEL_LINT_DEPENDENCY?=$(wildcard $(PARALLEL_LINT))
 endif
+PHP_QUALITY_ASSURANCE_CHECK_TOOLS+=parallel-lint
+PHP_QUALITY_ASSURANCE_CHECK_TOOLS_DEPENDENCIES+=$(filter-out $(PHP_DEPENDENCY),$(PARALLEL_LINT_DEPENDENCY))
+HELP_SKIP_TARGETS+=$(wildcard $(filter-out $(PHP_DEPENDENCY),$(PARALLEL_LINT_DEPENDENCY)))
 
-#. Extra variables
+#. Tool variables
 PARALLEL_LINT_DIRECTORIES_TO_CHECK?=.
 
 #. Building the flags
@@ -42,18 +45,15 @@ endif
 endif
 
 ###
-## PHP Quality Assurance Tools
+## Quality Assurance
 ###
-
-ifeq ($(wildcard $(filter-out $(PHP_DEPENDENCY),$(PARALLEL_LINT_DEPENDENCY))),)
 
 # Install Parallel Lint as dev dependency in vendor
 vendor/bin/parallel-lint: | $(COMPOSER_DEPENDENCY) vendor
 	@if test ! -f "$(@)"; then $(COMPOSER_EXECUTABLE) require --dev "$(PARALLEL_LINT_PACKAGE)"; fi
 
-endif
-
 # Run Parallel Lint
+# Checks the syntax of PHP files in parallel
 # @see https://github.com/php-parallel-lint/PHP-Parallel-Lint
 parallel-lint: | $(PARALLEL_LINT_DEPENDENCY) $(if $(COMPOSER),$(patsubst %.json,%.lock,$(COMPOSER)),composer.lock)
 	@$(PARALLEL_LINT)$(if $(PARALLEL_LINT_FLAGS), $(PARALLEL_LINT_FLAGS)) $(PARALLEL_LINT_DIRECTORIES_TO_CHECK)

@@ -10,9 +10,7 @@ DOCKER_COMPOSE_SERVICE_NAME_FOR_PHP:=php
 
 include ../../bin-php.makefile
 include ../../bin-composer.makefile
-
-include ../../php-quality-assurance-tools/all.makefile
-include ../../php-testing-tools/all.makefile
+include ../../tools-for-php-project.makefile
 
 ###
 ## Composer Test Project
@@ -20,7 +18,7 @@ include ../../php-testing-tools/all.makefile
 
 # Install everything
 install: | compose.service.php.ensure-running
-	@$(MAKE) vendor $(PHP_CHECK_TOOLS_DEPENDENCIES) $(PHP_FIX_TOOLS_DEPENDENCIES) $(PHP_TESTING_TOOLS_DEPENDENCIES)
+	@$(MAKE) vendor $(PHP_QUALITY_ASSURANCE_CHECK_TOOLS_DEPENDENCIES) $(PHP_QUALITY_ASSURANCE_FIX_TOOLS_DEPENDENCIES) $(PHP_TESTING_TOOLS_DEPENDENCIES)
 	@$(MAKE) composer.configure-strict composer.check-platform-reqs composer-normalize composer.validate
 .PHONY: install
 

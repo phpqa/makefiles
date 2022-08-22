@@ -22,15 +22,19 @@ PHPSTAN_DEPENDENCY?=$(PHP_DEPENDENCY) vendor/bin/phpstan
 else
 PHPSTAN_DEPENDENCY?=$(wildcard $(PHPSTAN))
 endif
+PHP_QUALITY_ASSURANCE_CHECK_TOOLS+=phpstan
+PHP_QUALITY_ASSURANCE_CHECK_TOOLS_DEPENDENCIES+=$(filter-out $(PHP_DEPENDENCY),$(PHPSTAN_DEPENDENCY))
+HELP_SKIP_TARGETS+=$(wildcard $(filter-out $(PHP_DEPENDENCY),$(PHPSTAN_DEPENDENCY)))
 
-#. Configuration variables
+#. Tool variables
 PHPSTAN_POSSIBLE_CONFIGS?=phpstan.neon phpstan.neon.dist phpstan.dist.neon
 PHPSTAN_CONFIG?=$(firstword $(wildcard $(PHPSTAN_POSSIBLE_CONFIGS)))
 
-#. Extra variables
 PHPSTAN_POSSIBLE_BASELINES?=phpstan-baseline.neon
 PHPSTAN_BASELINE?=$(firstword $(wildcard $(PHPSTAN_POSSIBLE_BASELINES)))
+
 PHPSTAN_DIRECTORIES_TO_CHECK?=$(if $(PHPSTAN_CONFIG),,.)
+
 PHPSTAN_MEMORY_LIMIT?=
 
 #. Building the flags
@@ -57,16 +61,12 @@ endif
 endif
 
 ###
-## PHP Quality Assurance Tools
+## Quality Assurance
 ###
-
-ifeq ($(wildcard $(filter-out $(PHP_DEPENDENCY),$(PHPSTAN_DEPENDENCY))),)
 
 # Install PHPStan as dev dependency in vendor
 vendor/bin/phpstan: | $(COMPOSER_DEPENDENCY) vendor
 	@if test ! -f "$(@)"; then $(COMPOSER_EXECUTABLE) require --dev "$(PHPSTAN_PACKAGE)"; fi
-
-endif
 
 # Run PHPStan
 # @see https://phpstan.org/

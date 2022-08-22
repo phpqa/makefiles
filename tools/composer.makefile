@@ -10,10 +10,14 @@ endif
 ##. Configuration
 ###
 
+#. Package variables
+PHP_QUALITY_ASSURANCE_CHECK_TOOLS+=composer.check-platform-reqs composer.validate
+
+#. Tool variables
 COMPOSER_VALIDATE_STRICT?=
 
 ###
-## PHP Quality Assurance Tools
+## Quality Assurance
 ###
 
 # Configure Composer with some more strict flags
@@ -24,13 +28,13 @@ composer.configure-strict: | $(COMPOSER_DEPENDENCY)
 	@$(COMPOSER_EXECUTABLE) config platform-check true
 .PHONY: composer.configure-strict
 
-# Check PHP and extensions versions
+# Check the PHP and extensions versions
 # @see https://getcomposer.org/
 composer.check-platform-reqs: | $(COMPOSER_DEPENDENCY)
 	@$(COMPOSER_EXECUTABLE) check-platform-reqs
 .PHONY: composer.check-platform-reqs
 
-# Validate Composer configuration
+# Validate the Composer configuration
 # @see https://getcomposer.org/
 composer.validate: | $(COMPOSER_DEPENDENCY)
 	@$(COMPOSER_EXECUTABLE) validate$(if $(COMPOSER_VALIDATE_STRICT), --strict) --no-check-publish --no-interaction

@@ -14,26 +14,28 @@ endif
 COMPOSER_NORMALIZE_PACKAGE?=ergebnis/composer-normalize
 COMPOSER_NORMALIZE?=$(COMPOSER_EXECUTABLE) normalize
 ifeq ($(COMPOSER_NORMALIZE),$(COMPOSER_EXECUTABLE) normalize)
-COMPOSER_NORMALIZE_DEPENDENCY?=$(COMPOSER_DEPENDENCY) vendor/ergebnis/composer-normalize
+COMPOSER_NORMALIZE_DEPENDENCY?=vendor/ergebnis/composer-normalize
 else
 COMPOSER_NORMALIZE_DEPENDENCY?=$(wildcard $(COMPOSER_NORMALIZE))
 endif
+PHP_QUALITY_ASSURANCE_CHECK_TOOLS+=composer-normalize.dryrun
+PHP_QUALITY_ASSURANCE_CHECK_TOOLS_DEPENDENCIES+=$(filter-out $(PHP_DEPENDENCY),$(COMPOSER_NORMALIZE_DEPENDENCY))
+PHP_QUALITY_ASSURANCE_FIX_TOOLS+=composer-normalize
+PHP_QUALITY_ASSURANCE_FIX_TOOLS_DEPENDENCIES+=$(filter-out $(PHP_DEPENDENCY),$(COMPOSER_NORMALIZE_DEPENDENCY))
+HELP_SKIP_TARGETS+=$(wildcard $(filter-out $(PHP_DEPENDENCY),$(COMPOSER_NORMALIZE_DEPENDENCY)))
+
 
 #. Building the flags
 COMPOSER_NORMALIZE_FLAGS?=
 
 ###
-## PHP Quality Assurance Tools
+## Quality Assurance
 ###
-
-ifeq ($(wildcard $(filter-out $(COMPOSER_DEPENDENCY),$(COMPOSER_NORMALIZE_DEPENDENCY))),)
 
 # Install composer-normalize as dev dependency in vendor
 vendor/ergebnis/composer-normalize: | $(COMPOSER_DEPENDENCY) vendor
 	@$(COMPOSER_EXECUTABLE) config allow-plugins.$(COMPOSER_NORMALIZE_PACKAGE) true
 	@if test ! -f "$(@)"; then $(COMPOSER_EXECUTABLE) require --dev "$(COMPOSER_NORMALIZE_PACKAGE)"; fi
-
-endif
 
 # Run composer-normalize #!
 # @see https://github.com/ergebnis/composer-normalize
