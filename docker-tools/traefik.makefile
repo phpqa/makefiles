@@ -115,18 +115,15 @@ traefik.clear:%.clear: | $(DOCKER)
 #. Wait for the Traefik container to be cleared
 traefik.ensure-cleared:%.ensure-cleared: | $(DOCKER) %.clear
 	@until test -z "$$($(DOCKER) container ls --quiet --filter "status=running" --filter "name=^$(TRAEFIK_SERVICE_NAME)$$")"; do \
-		$(DOCKER) container ls --quiet --filter "status=running" --filter "name=^$(TRAEFIK_SERVICE_NAME)$$"; \
 		sleep 1; \
 	done
 .PHONY: traefik.ensure-cleared
 
 #. Reset the Traefik volume
-traefik.reset:%.reset: | %.ensure-cleared %.ensure-running
-	@true
+traefik.reset:%.reset: | %.ensure-cleared %.ensure-running; @true
 .PHONY: traefik.reset
 
 # Run Traefik in a container
 # @see https://doc.traefik.io/traefik/
-traefik:%: | %.start %.list
-	@true
+traefik:%: | %.start %.list; @true
 .PHONY: traefik

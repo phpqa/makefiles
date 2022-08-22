@@ -111,14 +111,18 @@ dozzle.clear:%.clear:
 	@$(DOCKER) container rm --force --volumes "$(DOZZLE_SERVICE_NAME)" &>/dev/null || true
 .PHONY: dozzle.clear
 
+#. Wait for the Dozzle container to be cleared
+dozzle.ensure-cleared:%.ensure-cleared: | $(DOCKER) %.clear
+	@until test -z "$$($(DOCKER) container ls --quiet --filter "status=running" --filter "name=^$(DOZZLE_SERVICE_NAME)$$")"; do \
+		sleep 1; \
+	done
+.PHONY: dozzle.ensure-cleared
+
 #. Reset the Dozzle volume
-dozzle.reset:%.reset:
-	-@$(MAKE) $(*).clear
-	@$(MAKE) $(*)
+dozzle.reset:%.reset: | %.ensure-cleared %.ensure-running; @true
 .PHONY: dozzle.reset
 
 # Run Dozzle in a container
 # @see https://github.com/amir20/dozzle
-dozzle:%: | %.start %.list
-	@true
+dozzle:%: | %.start %.list;           @true
 .PHONY: dozzle

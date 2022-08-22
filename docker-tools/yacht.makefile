@@ -112,14 +112,18 @@ yacht.clear:%.clear:
 	@$(DOCKER) volume rm --force "$(YACHT_DATA_VOLUME)" &>/dev/null || true
 .PHONY: yacht.clear
 
+#. Wait for the Yacht container to be cleared
+yacht.ensure-cleared:%.ensure-cleared: | $(DOCKER) %.clear
+	@until test -z "$$($(DOCKER) container ls --quiet --filter "status=running" --filter "name=^$(YACHT_SERVICE_NAME)$$")"; do \
+		sleep 1; \
+	done
+.PHONY: yacht.ensure-cleared
+
 #. Reset the Yacht volume
-yacht.reset:%.reset:
-	-@$(MAKE) $(*).clear
-	@$(MAKE) $(*)
+yacht.reset:%.reset: | %.ensure-cleared %.ensure-running; @true
 .PHONY: yacht.reset
 
 # Run Yacht in a container
 # @see https://yacht.sh/
-yacht:%: | %.start %.list
-	@true
+yacht:%: | %.start %.list; @true
 .PHONY: yacht

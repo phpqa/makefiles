@@ -146,14 +146,18 @@ portainer.clear:%.clear:
 	@$(DOCKER) volume rm --force "$(PORTAINER_DATA_VOLUME)" &>/dev/null || true
 .PHONY: portainer.clear
 
+#. Wait for the Portainer container to be cleared
+portainer.ensure-cleared:%.ensure-cleared: | $(DOCKER) %.clear
+	@until test -z "$$($(DOCKER) container ls --quiet --filter "status=running" --filter "name=^$(PORTAINER_SERVICE_NAME)$$")"; do \
+		sleep 1; \
+	done
+.PHONY: portainer.ensure-cleared
+
 #. Reset the Portainer volume
-portainer.reset:%.reset:
-	-@$(MAKE) $(*).clear
-	@$(MAKE) $(*)
+portainer.reset:%.reset: | %.ensure-cleared %.ensure-running; @true
 .PHONY: portainer.reset
 
 # Run Portainer in a container
 # @see https://docs.portainer.io/
-portainer:%: | %.start %.setup %.list
-	@true
+portainer:%: | %.start %.setup %.list; @true
 .PHONY: portainer

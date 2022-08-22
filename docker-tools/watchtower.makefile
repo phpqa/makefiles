@@ -81,14 +81,18 @@ watchtower.clear:%.clear:
 	@$(DOCKER) container rm --force --volumes "$(WATCHTOWER_SERVICE_NAME)" &>/dev/null || true
 .PHONY: watchtower.clear
 
+#. Wait for the Watchtower container to be cleared
+watchtower.ensure-cleared:%.ensure-cleared: | $(DOCKER) %.clear
+	@until test -z "$$($(DOCKER) container ls --quiet --filter "status=running" --filter "name=^$(WATCHTOWER_SERVICE_NAME)$$")"; do \
+		sleep 1; \
+	done
+.PHONY: watchtower.ensure-cleared
+
 #. Reset the Watchtower volume
-watchtower.reset:%.reset:
-	-@$(MAKE) $(*).clear
-	@$(MAKE) $(*)
+watchtower.reset:%.reset: | %.ensure-cleared %.ensure-running; @true
 .PHONY: watchtower.reset
 
 # Run Watchtower in a container
 # @see https://containrrr.dev/watchtower/
-watchtower:%: | %.start
-	@true
+watchtower:%: | %.start; @true
 .PHONY: watchtower
