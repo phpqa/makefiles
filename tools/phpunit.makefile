@@ -1,20 +1,9 @@
 ###
-##. Dependencies
-###
-
-ifeq ($(PHP),)
-$(error Please install PHP.)
-endif
-
-ifeq ($(COMPOSER_EXECUTABLE),)
-$(error Please install Composer.)
-endif
-
-###
 ##. Configuration
 ###
 
 #. Package variables
+PHPUNIT_PACKAGE?=phpunit/phpunit
 PHPUNIT?=$(PHP) vendor/bin/phpunit
 ifeq ($(PHPUNIT),$(PHP) vendor/bin/phpunit)
 PHPUNIT_DEPENDENCY?=$(PHP_DEPENDENCY) vendor/bin/phpunit
@@ -55,12 +44,38 @@ endif
 endif
 
 ###
+##. Requirements
+###
+
+ifeq ($(PHP),)
+$(error The variable PHP should never be empty.)
+endif
+ifeq ($(PHP_DEPENDENCY),)
+$(error The variable PHP_DEPENDENCY should never be empty.)
+endif
+ifeq ($(COMPOSER_EXECUTABLE),)
+$(error The variable COMPOSER_EXECUTABLE should never be empty.)
+endif
+ifeq ($(COMPOSER_DEPENDENCY),)
+$(error The variable COMPOSER_DEPENDENCY should never be empty.)
+endif
+ifeq ($(PHPUNIT_PACKAGE),)
+$(error The variable PHPUNIT_PACKAGE should never be empty.)
+endif
+ifeq ($(PHPUNIT),)
+$(error The variable PHPUNIT should never be empty.)
+endif
+ifeq ($(PHPUNIT_DEPENDENCY),)
+$(error The variable PHPUNIT_DEPENDENCY should never be empty.)
+endif
+
+###
 ## Testing
 ###
 
 # Install PHPUnit as dev dependency in vendor
 vendor/bin/phpunit: | $(COMPOSER_DEPENDENCY) vendor
-	@if test ! -f "$(@)"; then $(COMPOSER_EXECUTABLE) require --dev phpunit/phpunit; fi
+	@if test ! -f "$(@)"; then $(COMPOSER_EXECUTABLE) require --dev "$(PHPUNIT_PACKAGE)"; fi
 
 #. Initialize PHPUnit
 $(PHPUNIT_POSSIBLE_CONFIGS): | $(PHPUNIT_DEPENDENCY)

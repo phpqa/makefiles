@@ -51,7 +51,6 @@ endif
 ifeq ($(DOCKER_DEPENDENCY),)
 $(error The variable DOCKER_DEPENDENCY should never be empty.)
 endif
-
 ifeq ($(DOCKER_COMPOSE),)
 $(error The variable DOCKER_COMPOSE should never be empty.)
 endif

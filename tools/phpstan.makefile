@@ -1,16 +1,4 @@
 ###
-##. Dependencies
-###
-
-ifeq ($(PHP),)
-$(error Please install PHP.)
-endif
-
-ifeq ($(COMPOSER_EXECUTABLE),)
-$(error Please install Composer.)
-endif
-
-###
 ##. Configuration
 ###
 
@@ -58,6 +46,32 @@ ifneq ($(PHPSTAN_MEMORY_LIMIT),)
 ifeq ($(findstring --memory-limit,$(PHPSTAN_FLAGS)),)
 PHPSTAN_FLAGS+=--memory-limit="$(PHPSTAN_MEMORY_LIMIT)"
 endif
+endif
+
+###
+##. Requirements
+###
+
+ifeq ($(PHP),)
+$(error The variable PHP should never be empty.)
+endif
+ifeq ($(PHP_DEPENDENCY),)
+$(error The variable PHP_DEPENDENCY should never be empty.)
+endif
+ifeq ($(COMPOSER_EXECUTABLE),)
+$(error The variable COMPOSER_EXECUTABLE should never be empty.)
+endif
+ifeq ($(COMPOSER_DEPENDENCY),)
+$(error The variable COMPOSER_DEPENDENCY should never be empty.)
+endif
+ifeq ($(PHPSTAN_PACKAGE),)
+$(error The variable PHPSTAN_PACKAGE should never be empty.)
+endif
+ifeq ($(PHPSTAN),)
+$(error The variable PHPSTAN should never be empty.)
+endif
+ifeq ($(PHPSTAN_DEPENDENCY),)
+$(error The variable PHPSTAN_DEPENDENCY should never be empty.)
 endif
 
 ###

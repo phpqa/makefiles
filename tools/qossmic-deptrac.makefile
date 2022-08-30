@@ -1,16 +1,4 @@
 ###
-##. Dependencies
-###
-
-ifeq ($(PHP),)
-$(error Please install PHP.)
-endif
-
-ifeq ($(COMPOSER_EXECUTABLE),)
-$(error Please install Composer.)
-endif
-
-###
 ##. Configuration
 ###
 
@@ -37,6 +25,32 @@ ifneq ($(wildcard $(DEPTRAC_CONFIG)),)
 ifeq ($(findstring --config-file,$(DEPTRAC_FLAGS)),)
 DEPTRAC_FLAGS+=--config-file="$(DEPTRAC_CONFIG)"
 endif
+endif
+
+###
+##. Requirements
+###
+
+ifeq ($(PHP),)
+$(error The variable PHP should never be empty.)
+endif
+ifeq ($(PHP_DEPENDENCY),)
+$(error The variable PHP_DEPENDENCY should never be empty.)
+endif
+ifeq ($(COMPOSER_EXECUTABLE),)
+$(error The variable COMPOSER_EXECUTABLE should never be empty.)
+endif
+ifeq ($(COMPOSER_DEPENDENCY),)
+$(error The variable COMPOSER_DEPENDENCY should never be empty.)
+endif
+ifeq ($(DEPTRAC_PACKAGE),)
+$(error The variable DEPTRAC_PACKAGE should never be empty.)
+endif
+ifeq ($(DEPTRAC),)
+$(error The variable DEPTRAC should never be empty.)
+endif
+ifeq ($(DEPTRAC_DEPENDENCY),)
+$(error The variable DEPTRAC_DEPENDENCY should never be empty.)
 endif
 
 ###

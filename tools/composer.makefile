@@ -1,12 +1,4 @@
 ###
-##. Dependencies
-###
-
-ifeq ($(COMPOSER_EXECUTABLE),)
-$(error Please install Composer.)
-endif
-
-###
 ##. Configuration
 ###
 
@@ -15,6 +7,17 @@ PHP_QUALITY_ASSURANCE_CHECK_TOOLS+=composer.check-platform-reqs composer.validat
 
 #. Tool variables
 COMPOSER_VALIDATE_STRICT?=
+
+###
+##. Requirements
+###
+
+ifeq ($(COMPOSER_EXECUTABLE),)
+$(error The variable COMPOSER_EXECUTABLE should never be empty.)
+endif
+ifeq ($(COMPOSER_DEPENDENCY),)
+$(error The variable COMPOSER_DEPENDENCY should never be empty.)
+endif
 
 ###
 ## Quality Assurance

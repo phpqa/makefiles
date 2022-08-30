@@ -1,16 +1,4 @@
 ###
-##. Dependencies
-###
-
-ifeq ($(PHP),)
-$(error Please install PHP.)
-endif
-
-ifeq ($(COMPOSER_EXECUTABLE),)
-$(error Please install Composer.)
-endif
-
-###
 ##. Configuration
 ###
 
@@ -41,6 +29,32 @@ ifneq ($(wildcard $(PHPCSFIXER_CONFIG)),)
 ifeq ($(findstring --config,$(PHPCSFIXER_FLAGS)),)
 PHPCSFIXER_FLAGS+=--config="$(PHPCSFIXER_CONFIG)"
 endif
+endif
+
+###
+##. Requirements
+###
+
+ifeq ($(PHP),)
+$(error The variable PHP should never be empty.)
+endif
+ifeq ($(PHP_DEPENDENCY),)
+$(error The variable PHP_DEPENDENCY should never be empty.)
+endif
+ifeq ($(COMPOSER_EXECUTABLE),)
+$(error The variable COMPOSER_EXECUTABLE should never be empty.)
+endif
+ifeq ($(COMPOSER_DEPENDENCY),)
+$(error The variable COMPOSER_DEPENDENCY should never be empty.)
+endif
+ifeq ($(PHPCSFIXER_PACKAGE),)
+$(error The variable PHPCSFIXER_PACKAGE should never be empty.)
+endif
+ifeq ($(PHPCSFIXER),)
+$(error The variable PHPCSFIXER should never be empty.)
+endif
+ifeq ($(PHPCSFIXER_DEPENDENCY),)
+$(error The variable PHPCSFIXER_DEPENDENCY should never be empty.)
 endif
 
 ###

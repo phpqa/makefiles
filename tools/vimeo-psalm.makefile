@@ -1,16 +1,4 @@
 ###
-##. Dependencies
-###
-
-ifeq ($(PHP),)
-$(error Please install PHP.)
-endif
-
-ifeq ($(COMPOSER_EXECUTABLE),)
-$(error Please install Composer.)
-endif
-
-###
 ##. Configuration
 ###
 
@@ -48,6 +36,32 @@ endif
 ifeq ($(findstring --config,$(PSALM_BASELINE_FLAGS)),)
 PSALM_BASELINE_FLAGS+=--config="$(PSALM_CONFIG)"
 endif
+endif
+
+###
+##. Requirements
+###
+
+ifeq ($(PHP),)
+$(error The variable PHP should never be empty.)
+endif
+ifeq ($(PHP_DEPENDENCY),)
+$(error The variable PHP_DEPENDENCY should never be empty.)
+endif
+ifeq ($(COMPOSER_EXECUTABLE),)
+$(error The variable COMPOSER_EXECUTABLE should never be empty.)
+endif
+ifeq ($(COMPOSER_DEPENDENCY),)
+$(error The variable COMPOSER_DEPENDENCY should never be empty.)
+endif
+ifeq ($(PSALM_PACKAGE),)
+$(error The variable PSALM_PACKAGE should never be empty.)
+endif
+ifeq ($(PSALM),)
+$(error The variable PSALM should never be empty.)
+endif
+ifeq ($(PSALM_DEPENDENCY),)
+$(error The variable PSALM_DEPENDENCY should never be empty.)
 endif
 
 ###

@@ -1,12 +1,4 @@
 ###
-##. Dependencies
-###
-
-ifeq ($(COMPOSER_EXECUTABLE),)
-$(error Please install Composer.)
-endif
-
-###
 ##. Configuration
 ###
 
@@ -24,9 +16,28 @@ PHP_QUALITY_ASSURANCE_FIX_TOOLS+=composer-normalize
 PHP_QUALITY_ASSURANCE_FIX_TOOLS_DEPENDENCIES+=$(filter-out $(PHP_DEPENDENCY),$(COMPOSER_NORMALIZE_DEPENDENCY))
 HELP_TARGETS_TO_SKIP+=$(wildcard $(filter-out $(PHP_DEPENDENCY),$(COMPOSER_NORMALIZE_DEPENDENCY)))
 
-
 #. Building the flags
 COMPOSER_NORMALIZE_FLAGS?=
+
+###
+##. Requirements
+###
+
+ifeq ($(COMPOSER_EXECUTABLE),)
+$(error The variable COMPOSER_EXECUTABLE should never be empty.)
+endif
+ifeq ($(COMPOSER_DEPENDENCY),)
+$(error The variable COMPOSER_DEPENDENCY should never be empty.)
+endif
+ifeq ($(COMPOSER_NORMALIZE_PACKAGE),)
+$(error The variable COMPOSER_NORMALIZE_PACKAGE should never be empty.)
+endif
+ifeq ($(COMPOSER_NORMALIZE),)
+$(error The variable COMPOSER_NORMALIZE should never be empty.)
+endif
+ifeq ($(COMPOSER_NORMALIZE_DEPENDENCY),)
+$(error The variable COMPOSER_NORMALIZE_DEPENDENCY should never be empty.)
+endif
 
 ###
 ## Quality Assurance

@@ -27,6 +27,12 @@ endif
 ## Repositories
 ###
 
+#. Exit if git is not found
+git.not-found:
+	@printf "$(STYLE_ERROR)%s$(STYLE_RESET)\\n" "Please install git."
+	@exit 1
+.PHONY: git.not-found
+
 #. Assure that git is usable
 git.assure-usable:
 	@if test -z "$$($(GIT) --version 2>/dev/null || true)"; then \
@@ -34,12 +40,6 @@ git.assure-usable:
 		exit 1; \
 	fi
 .PHONY: git.assure-usable
-
-#. Exit if git is not found
-git.not-found:
-	@printf "$(STYLE_ERROR)%s$(STYLE_RESET)\\n" "Please install git."
-	@exit 1
-.PHONY: git.not-found
 
 # TODO make it optional to use stashes
 # $(1) is repository

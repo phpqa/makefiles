@@ -1,8 +1,13 @@
 ###
-##. Dependencies
+##. Configuration
 ###
 
 DOCKER_TOOLS_DIRECTORY?=$(wildcard $(dir $(filter %/tools-for-docker-project.makefile,$(MAKEFILE_LIST)))/docker-tools)
+
+###
+##. Requirements
+###
+
 ifeq ($(DOCKER_TOOLS_DIRECTORY),)
 $(error Please provide the variable DOCKER_TOOLS_DIRECTORY before including this file.)
 endif

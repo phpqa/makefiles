@@ -1,12 +1,4 @@
 ###
-##. Dependencies
-###
-
-ifeq ($(DOCKER),)
-$(error Please provide the variable DOCKER before including this file.)
-endif
-
-###
 ##. Configuration
 ###
 
@@ -32,6 +24,17 @@ DOTENV_LINTER_FIX_FLAGS?=--skip="UnorderedKey"
 
 DOTENV_LINTER_COMPARE_CONTAINER_RUN_FLAGS?=
 DOTENV_LINTER_COMPARE_FLAGS?=
+
+###
+##. Requirements
+###
+
+ifeq ($(DOCKER),)
+$(error The variable DOCKER should never be empty.)
+endif
+ifeq ($(DOCKER_DEPENDENCY),)
+$(error The variable DOCKER_DEPENDENCY should never be empty.)
+endif
 
 ###
 ## Quality Assurance
