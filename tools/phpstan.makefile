@@ -68,6 +68,9 @@ endif
 vendor/bin/phpstan: | $(COMPOSER_DEPENDENCY) vendor
 	@if test ! -f "$(@)"; then $(COMPOSER_EXECUTABLE) require --dev "$(PHPSTAN_PACKAGE)"; fi
 
+# composer require --dev phpstan/extension-installer
+# composer require --dev phpstan/phpstan-strict-rules phpstan/phpstan-phpunit phpstan/phpstan-doctrine phpstan/phpstan-symfony phpstan/phpstan-deprecation-rules
+
 # Run PHPStan
 # @see https://phpstan.org/
 phpstan: $(wildcard $(PHPSTAN_CONFIG)) | $(PHPSTAN_DEPENDENCY)

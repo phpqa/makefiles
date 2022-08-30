@@ -1,15 +1,10 @@
 ###
-##. Dependencies
-###
-
-GIT?=$(shell command -v git || which git 2>/dev/null)
-ifeq ($(GIT),)
-$(error Please install git.)
-endif
-
-###
 ##. Configuration
 ###
+
+GIT_DETECTED?=$(shell command -v git || which git 2>/dev/null)
+GIT_DEPENDENCY?=$(if $(GIT_DETECTED),git.assure-usable,git.not-found)
+GIT?=git
 
 GIT_SUBDIRECTORY?=.git
 
@@ -18,8 +13,33 @@ REPOSITORY_self?=$(if $(wildcard $(GIT_SUBDIRECTORY)),$(strip $(foreach variable
 REPOSITORY_DIRECTORY_self?=$(if $(wildcard $(GIT_SUBDIRECTORY)),.)
 
 ###
+##. Requirements
+###
+
+ifeq ($(GIT),)
+$(error The variable GIT should never be empty.)
+endif
+ifeq ($(GIT_DEPENDENCY),)
+$(error The variable GIT_DEPENDENCY should never be empty.)
+endif
+
+###
 ## Repositories
 ###
+
+#. Assure that git is usable
+git.assure-usable:
+	@if test -z "$$($(GIT) --version 2>/dev/null || true)"; then \
+		printf "$(STYLE_ERROR)%s$(STYLE_RESET)\n" 'Could not use GIT as "$(value GIT)".'; \
+		exit 1; \
+	fi
+.PHONY: git.assure-usable
+
+#. Exit if git is not found
+git.not-found:
+	@printf "$(STYLE_ERROR)%s$(STYLE_RESET)\\n" "Please install git."
+	@exit 1
+.PHONY: git.not-found
 
 # TODO make it optional to use stashes
 # $(1) is repository
@@ -100,15 +120,15 @@ git-stash-repository=\
 	fi
 
 #. Clone a repository
-$(foreach repository,$(REPOSITORIES),repository.$(repository).clone):repository.%.clone:
+$(foreach repository,$(REPOSITORIES),repository.$(repository).clone):repository.%.clone: | $(GIT_DEPENDENCY)
 	@$(call git-clone-repository,$(*))
 
 #. Pull a repository
-$(foreach repository,$(REPOSITORIES),repository.$(repository).pull):repository.%.pull:
+$(foreach repository,$(REPOSITORIES),repository.$(repository).pull):repository.%.pull: | $(GIT_DEPENDENCY)
 	@$(call git-pull-repository,$(*))
 
 #. Stash a repository
-$(foreach repository,$(REPOSITORIES),repository.$(repository).stash):repository.%.stash:
+$(foreach repository,$(REPOSITORIES),repository.$(repository).stash):repository.%.stash: | $(GIT_DEPENDENCY)
 	@$(call git-stash-repository,$(*))
 
 #. Case 1: No repositories to pull
