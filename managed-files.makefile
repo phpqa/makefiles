@@ -19,18 +19,16 @@ MANAGED_FILES_ORIGIN_DIRECTORY?=.
 MANAGED_FILES_BACKUP_DIRECTORY?=./.backups
 MANAGED_FILES_BACKUP_EXTENSION?=.bck
 
-ifeq ($(MANAGED_FILES),)
-$(error Please provide the variable MANAGED_FILES before including this file!)
-endif
+###
+##. Requirements
+###
 
 ifeq ($(MANAGED_FILES_ORIGIN_DIRECTORY),)
 $(error Please provide the variable MANAGED_FILES_ORIGIN_DIRECTORY before including this file!)
 endif
-
 ifeq ($(MANAGED_FILES_BACKUP_DIRECTORY),)
 $(error Please provide the variable MANAGED_FILES_BACKUP_DIRECTORY before including this file!)
 endif
-
 ifeq ($(MANAGED_FILES_BACKUP_EXTENSION),)
 $(error Please provide the variable MANAGED_FILES_BACKUP_EXTENSION before including this file!)
 endif
