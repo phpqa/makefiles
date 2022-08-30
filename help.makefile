@@ -65,6 +65,7 @@ list-makefiles:
 			{ if (/^[\t]/) { next } } \
 			\
 			{ if (/^# Not a target:/) { include="yes"; next } } \
+			{ if (/^.:/) { next } } \
 			{ if (/^([^#]+):/) { if (include=="yes") { match($$0,/:/); file=substr($$0,1,RSTART-1) } } } \
 			{ if (/^$$|^[\t]+$$/) { if (file) { search=replace=file; gsub(" ","\\ ",replace); gsub(" "search,"\n*"replace"*\n",MAKEFILE_LIST) }; original=""; file=""; include="no"; } } \
 			\
