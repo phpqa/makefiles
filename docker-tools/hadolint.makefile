@@ -1,12 +1,4 @@
 ###
-##. Dependencies
-###
-
-ifeq ($(DOCKER),)
-$(error Please provide the variable DOCKER before including this file.)
-endif
-
-###
 ##. Configuration
 ###
 
@@ -42,6 +34,17 @@ ifneq ($(HADOLINT_TARGET),)
 ifneq ($(wildcard $(HADOLINT_TARGET)),)
 HADOLINT_CONTAINER_RUN_FLAGS+=--volume "$(realpath $(HADOLINT_TARGET)):$(realpath $(HADOLINT_TARGET))"
 endif
+endif
+
+###
+##. Requirements
+###
+
+ifeq ($(DOCKER),)
+$(error The variable DOCKER should never be empty.)
+endif
+ifeq ($(DOCKER_DEPENDENCY),)
+$(error The variable DOCKER_DEPENDENCY should never be empty.)
 endif
 
 ###

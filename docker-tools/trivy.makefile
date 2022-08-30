@@ -1,12 +1,4 @@
 ###
-##. Dependencies
-###
-
-ifeq ($(DOCKER),)
-$(error Please provide the variable DOCKER before including this file.)
-endif
-
-###
 ##. Configuration
 ###
 
@@ -63,6 +55,17 @@ TRIVY_CONTAINER_RUN_FLAGS+=--env "TRIVY_CACHE_DIR=$(realpath $(TRIVY_CACHE_DIR))
 else
 TRIVY_CONTAINER_RUN_FLAGS+=--env "TRIVY_CACHE_DIR=$(TRIVY_CACHE_DIR)"
 endif
+endif
+
+###
+##. Requirements
+###
+
+ifeq ($(DOCKER),)
+$(error The variable DOCKER should never be empty.)
+endif
+ifeq ($(DOCKER_DEPENDENCY),)
+$(error The variable DOCKER_DEPENDENCY should never be empty.)
 endif
 
 ###

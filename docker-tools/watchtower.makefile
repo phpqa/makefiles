@@ -1,16 +1,4 @@
 ###
-##. Dependencies
-###
-
-ifeq ($(DOCKER_SOCKET),)
-$(error Please provide the variable DOCKER_SOCKET before including this file.)
-endif
-
-ifeq ($(DOCKER),)
-$(error Please provide the variable DOCKER before including this file.)
-endif
-
-###
 ##. Configuration
 ###
 
@@ -28,16 +16,30 @@ WATCHTOWER_VARIABLES_EXCLUDED?=IMAGE SERVICE_NAME VARIABLES_PREFIX VARIABLES_EXC
 WATCHTOWER_VARIABLES_UNPREFIXED?=TZ NO_COLOR DOCKER_HOST DOCKER_CONFIG DOCKER_API_VERSION DOCKER_TLS_VERIFY DOCKER_CERT_PATH
 
 ###
+##. Requirements
+###
+
+ifeq ($(DOCKER),)
+$(error The variable DOCKER should never be empty.)
+endif
+ifeq ($(DOCKER_DEPENDENCY),)
+$(error The variable DOCKER_DEPENDENCY should never be empty.)
+endif
+ifeq ($(DOCKER_SOCKET),)
+$(error Please provide the variable DOCKER_SOCKET before including this file.)
+endif
+
+###
 ## Docker Tools
 ###
 
 #. Pull the Watchtower container
-watchtower.pull:%.pull:
+watchtower.pull:%.pull: | $(DOCKER_DEPENDENCY)
 	@$(DOCKER) image pull "$(WATCHTOWER_IMAGE)"
 .PHONY: watchtower.pull
 
 #. Start the Watchtower container
-watchtower.start:%.start:
+watchtower.start:%.start: | $(DOCKER_DEPENDENCY) $(DOCKER_SOCKET)
 	@if test -z "$$($(DOCKER) container inspect --format "{{ .ID }}" "$(WATCHTOWER_SERVICE_NAME)" 2> /dev/null)"; then \
 		$(DOCKER) container run --detach --name "$(WATCHTOWER_SERVICE_NAME)" \
 			$(foreach variable,$(filter-out $(addprefix $(WATCHTOWER_VARIABLES_PREFIX),$(WATCHTOWER_VARIABLES_EXCLUDED)),$(filter $(WATCHTOWER_VARIABLES_PREFIX)%,$(.VARIABLES))),--env "$(if $(filter $(WATCHTOWER_VARIABLES_UNPREFIXED),$(patsubst $(WATCHTOWER_VARIABLES_PREFIX)%,%,$(variable))),$(patsubst $(WATCHTOWER_VARIABLES_PREFIX)%,%,$(variable)),$(variable))=$($(variable))") \
@@ -54,7 +56,7 @@ watchtower.start:%.start:
 .PHONY: watchtower.start
 
 #. Wait for the Watchtower container to be running
-watchtower.ensure-running:%.ensure-running: | %.start
+watchtower.ensure-running:%.ensure-running: | $(DOCKER_DEPENDENCY) %.start
 	@until test -n "$$($(DOCKER) container ls --quiet --filter "status=running" --filter "name=^$(WATCHTOWER_SERVICE_NAME)$$" 2>/dev/null)"; do \
 		if test -z "$$($(DOCKER) container ls --quiet --filter "status=created" --filter "status=running" --filter "name=^$(WATCHTOWER_SERVICE_NAME)$$" 2>/dev/null)"; then \
 			printf "$(STYLE_ERROR)%s$(STYLE_RESET)\n" "The container \"$(WATCHTOWER_SERVICE_NAME)\" never started."; \
@@ -66,23 +68,23 @@ watchtower.ensure-running:%.ensure-running: | %.start
 .PHONY: watchtower.ensure-running
 
 #. List the logs of the Watchtower container
-watchtower.log:%.log:
+watchtower.log:%.log: | $(DOCKER_DEPENDENCY)
 	@$(DOCKER) container logs --since "$$($(DOCKER) container inspect --format "{{ .State.StartedAt }}" "$(WATCHTOWER_SERVICE_NAME)")" "$(WATCHTOWER_SERVICE_NAME)"
 .PHONY: watchtower.log
 
 #. Stop the Watchtower container
-watchtower.stop:%.stop:
+watchtower.stop:%.stop: | $(DOCKER_DEPENDENCY)
 	@$(DOCKER) container stop "$(WATCHTOWER_SERVICE_NAME)"
 .PHONY: watchtower.stop
 
 #. Clear the Watchtower container
-watchtower.clear:%.clear:
+watchtower.clear:%.clear: | $(DOCKER_DEPENDENCY)
 	@$(DOCKER) container kill "$(WATCHTOWER_SERVICE_NAME)" &>/dev/null || true
 	@$(DOCKER) container rm --force --volumes "$(WATCHTOWER_SERVICE_NAME)" &>/dev/null || true
 .PHONY: watchtower.clear
 
 #. Wait for the Watchtower container to be cleared
-watchtower.ensure-cleared:%.ensure-cleared: | $(DOCKER) %.clear
+watchtower.ensure-cleared:%.ensure-cleared: | $(DOCKER_DEPENDENCY) %.clear
 	@until test -z "$$($(DOCKER) container ls --quiet --filter "status=running" --filter "name=^$(WATCHTOWER_SERVICE_NAME)$$")"; do \
 		sleep 1; \
 	done

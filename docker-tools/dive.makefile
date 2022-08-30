@@ -1,16 +1,4 @@
 ###
-##. Dependencies
-###
-
-ifeq ($(DOCKER_SOCKET),)
-$(error Please provide the variable DOCKER_SOCKET before including this file.)
-endif
-
-ifeq ($(DOCKER),)
-$(error Please provide the variable DOCKER before including this file.)
-endif
-
-###
 ##. Configuration
 ###
 
@@ -61,13 +49,27 @@ endif
 endif
 
 ###
+##. Requirements
+###
+
+ifeq ($(DOCKER),)
+$(error The variable DOCKER should never be empty.)
+endif
+ifeq ($(DOCKER_DEPENDENCY),)
+$(error The variable DOCKER_DEPENDENCY should never be empty.)
+endif
+ifeq ($(DOCKER_SOCKET),)
+$(error Please provide the variable DOCKER_SOCKET before including this file.)
+endif
+
+###
 ## Docker Tools
 ###
 
 # Run dive in a container to inspect $DIVE_TARGET
 # Exploring a docker image and its layer contents
 # @see https://github.com/wagoodman/dive
-dive: | $(DOCKER_DEPENDENCY)
+dive: | $(DOCKER_DEPENDENCY) $(DOCKER_SOCKET)
 ifeq ($(DIVE_TARGET),)
 	$(error Please provide the variable DIVE_TARGET before running dive.)
 endif

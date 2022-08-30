@@ -2,14 +2,6 @@
 ##. Dependencies
 ###
 
-ifeq ($(DOCKER_SOCKET),)
-$(error Please provide the variable DOCKER_SOCKET before including this file.)
-endif
-
-ifeq ($(DOCKER),)
-$(error Please provide the variable DOCKER before including this file.)
-endif
-
 JQ?=$(shell command -v jq || which jq 2>/dev/null)
 ifeq ($(JQ),)
 JQ?=$(DOCKER) run --rm --interactive stedolan/jq:latest
@@ -40,16 +32,30 @@ PORTAINER_TRAEFIK_DOMAIN?=$(PORTAINER_SERVICE_NAME).localhost
 PORTAINER_TRAEFIK_NETWORK?=$(TRAEFIK_PROVIDERS_DOCKER_NETWORK)
 
 ###
+##. Requirements
+###
+
+ifeq ($(DOCKER),)
+$(error The variable DOCKER should never be empty.)
+endif
+ifeq ($(DOCKER_DEPENDENCY),)
+$(error The variable DOCKER_DEPENDENCY should never be empty.)
+endif
+ifeq ($(DOCKER_SOCKET),)
+$(error Please provide the variable DOCKER_SOCKET before including this file.)
+endif
+
+###
 ## Docker Tools
 ###
 
 #. Pull the Portainer container
-portainer.pull:%.pull:
+portainer.pull:%.pull: | $(DOCKER_DEPENDENCY)
 	@$(DOCKER) image pull "$(PORTAINER_IMAGE)"
 .PHONY: portainer.pull
 
 #. Start the Portainer container
-portainer.start:%.start:
+portainer.start:%.start: | $(DOCKER_DEPENDENCY) $(DOCKER_SOCKET)
 	@if test -z "$$($(DOCKER) container inspect --format "{{ .ID }}" "$(PORTAINER_SERVICE_NAME)" 2> /dev/null)"; then \
 		if test -z "$$($(DOCKER) network ls --quiet --filter "name=^$(PORTAINER_TRAEFIK_NETWORK)$$")"; then \
 			$(DOCKER) network create "$(PORTAINER_TRAEFIK_NETWORK)" &>/dev/null; \
@@ -77,7 +83,7 @@ portainer.start:%.start:
 .PHONY: portainer.start
 
 #. Wait for the Portainer container to be running
-portainer.ensure-running:%.ensure-running: | %.start
+portainer.ensure-running:%.ensure-running: | $(DOCKER_DEPENDENCY) %.start
 	@until test -n "$$($(DOCKER) container ls --quiet --filter "status=running" --filter "name=^$(PORTAINER_SERVICE_NAME)$$" 2>/dev/null)"; do \
 		if test -z "$$($(DOCKER) container ls --quiet --filter "status=created" --filter "status=running" --filter "name=^$(PORTAINER_SERVICE_NAME)$$" 2>/dev/null)"; then \
 			printf "$(STYLE_ERROR)%s$(STYLE_RESET)\n" "The container \"$(PORTAINER_SERVICE_NAME)\" never started."; \
@@ -123,31 +129,31 @@ portainer.setup:%.setup: | %.ensure-running
 .PHONY: portainer.setup
 
 #. List the url to the Portainer container
-portainer.list:%.list: | %.ensure-running
+portainer.list:%.list: | $(DOCKER_DEPENDENCY) %.ensure-running
 	@printf "Open Portainer: %s or %s (admin/%s)\n" \
 		"http://$(PORTAINER_TRAEFIK_DOMAIN)$(if $(filter-out 80,$(TRAEFIK_HTTP_PORT)),:$(TRAEFIK_HTTP_PORT))" \
 		"http://$$($(DOCKER) container port "$(PORTAINER_SERVICE_NAME)" "9000" | grep "0.0.0.0")" "$(PORTAINER_ADMIN_PASSWORD)"
 .PHONY: portainer.list
 
 #. List the logs of the Portainer container
-portainer.log:%.log:
+portainer.log:%.log: | $(DOCKER_DEPENDENCY)
 	@$(DOCKER) container logs --since "$$($(DOCKER) container inspect --format "{{ .State.StartedAt }}" "$(PORTAINER_SERVICE_NAME)")" "$(PORTAINER_SERVICE_NAME)"
 .PHONY: portainer.log
 
 #. Stop the Portainer container
-portainer.stop:%.stop:
+portainer.stop:%.stop: | $(DOCKER_DEPENDENCY)
 	@$(DOCKER) container stop "$(PORTAINER_SERVICE_NAME)"
 .PHONY: portainer.stop
 
 #. Clear the Portainer container
-portainer.clear:%.clear:
+portainer.clear:%.clear: | $(DOCKER_DEPENDENCY)
 	@$(DOCKER) container kill "$(PORTAINER_SERVICE_NAME)" &>/dev/null || true
 	@$(DOCKER) container rm --force --volumes "$(PORTAINER_SERVICE_NAME)" &>/dev/null || true
 	@$(DOCKER) volume rm --force "$(PORTAINER_DATA_VOLUME)" &>/dev/null || true
 .PHONY: portainer.clear
 
 #. Wait for the Portainer container to be cleared
-portainer.ensure-cleared:%.ensure-cleared: | $(DOCKER) %.clear
+portainer.ensure-cleared:%.ensure-cleared: | $(DOCKER_DEPENDENCY) %.clear
 	@until test -z "$$($(DOCKER) container ls --quiet --filter "status=running" --filter "name=^$(PORTAINER_SERVICE_NAME)$$")"; do \
 		sleep 1; \
 	done

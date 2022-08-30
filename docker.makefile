@@ -70,7 +70,7 @@ docker.not-found:
 .PHONY: docker.not-found
 
 #. Assure that DOCKER is usable
-docker.assure-usable:
+docker.assure-usable: # Do not depend on $(DOCKER_DEPENDENCY), as this is often that target
 	@if test -z "$$($(DOCKER) --version 2>/dev/null || true)"; then \
 		printf "$(STYLE_ERROR)%s$(STYLE_RESET)\n" 'Could not use DOCKER as "$(value DOCKER)".'; \
 		exit 1; \

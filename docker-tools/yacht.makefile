@@ -2,14 +2,6 @@
 ##. Dependencies
 ###
 
-ifeq ($(DOCKER_SOCKET),)
-$(error Please provide the variable DOCKER_SOCKET before including this file.)
-endif
-
-ifeq ($(DOCKER),)
-$(error Please provide the variable DOCKER before including this file.)
-endif
-
 CURL?=$(shell command -v curl || which curl 2>/dev/null)
 ifeq ($(CURL),)
 CURL?=$(DOCKER) run --rm --network host curlimages/curl:latest
@@ -32,16 +24,30 @@ YACHT_TRAEFIK_DOMAIN?=$(YACHT_SERVICE_NAME).localhost
 YACHT_TRAEFIK_NETWORK?=$(TRAEFIK_PROVIDERS_DOCKER_NETWORK)
 
 ###
+##. Requirements
+###
+
+ifeq ($(DOCKER),)
+$(error The variable DOCKER should never be empty.)
+endif
+ifeq ($(DOCKER_DEPENDENCY),)
+$(error The variable DOCKER_DEPENDENCY should never be empty.)
+endif
+ifeq ($(DOCKER_SOCKET),)
+$(error Please provide the variable DOCKER_SOCKET before including this file.)
+endif
+
+###
 ## Docker Tools
 ###
 
 #. Pull the Yacht container
-yacht.pull:%.pull:
+yacht.pull:%.pull: | $(DOCKER_DEPENDENCY)
 	@$(DOCKER) image pull "$(YACHT_IMAGE)"
 .PHONY: yacht.pull
 
 #. Start the Yacht container
-yacht.start:%.start:
+yacht.start:%.start: | $(DOCKER_DEPENDENCY) $(DOCKER_SOCKET)
 	@if test -z "$$($(DOCKER) container inspect --format "{{ .ID }}" "$(YACHT_SERVICE_NAME)" 2> /dev/null)"; then \
 		if test -z "$$($(DOCKER) network ls --quiet --filter "name=^$(YACHT_TRAEFIK_NETWORK)$$")"; then \
 			$(DOCKER) network create "$(YACHT_TRAEFIK_NETWORK)" &>/dev/null; \
@@ -69,7 +75,7 @@ yacht.start:%.start:
 .PHONY: yacht.start
 
 #. Wait for the Yacht container to be running
-yacht.ensure-running:%.ensure-running: | %.start
+yacht.ensure-running:%.ensure-running: | $(DOCKER_DEPENDENCY) %.start
 	@until test -n "$$($(DOCKER) container ls --quiet --filter "status=running" --filter "name=^$(YACHT_SERVICE_NAME)$$" 2>/dev/null)"; do \
 		if test -z "$$($(DOCKER) container ls --quiet --filter "status=created" --filter "status=running" --filter "name=^$(YACHT_SERVICE_NAME)$$" 2>/dev/null)"; then \
 			printf "$(STYLE_ERROR)%s$(STYLE_RESET)\n" "The container \"$(YACHT_SERVICE_NAME)\" never started."; \
@@ -89,31 +95,31 @@ yacht.ensure-running:%.ensure-running: | %.start
 .PHONY: yacht.ensure-running
 
 #. List the url to the Yacht container
-yacht.list:%.list: | %.ensure-running
+yacht.list:%.list: | $(DOCKER_DEPENDENCY) %.ensure-running
 	@printf "Open Yacht: %s or %s\n" \
 		"http://$(YACHT_TRAEFIK_DOMAIN)$(if $(filter-out 80,$(TRAEFIK_HTTP_PORT)),:$(TRAEFIK_HTTP_PORT))" \
 		"http://$$($(DOCKER) container port "$(YACHT_SERVICE_NAME)" "8000" | grep "0.0.0.0")"
 .PHONY: yacht.list
 
 #. List the logs of the Yacht container
-yacht.log:%.log:
+yacht.log:%.log: | $(DOCKER_DEPENDENCY)
 	@$(DOCKER) container logs --since "$$($(DOCKER) container inspect --format "{{ .State.StartedAt }}" "$(YACHT_SERVICE_NAME)")" "$(YACHT_SERVICE_NAME)"
 .PHONY: yacht.log
 
 #. Stop the Yacht container
-yacht.stop:%.stop:
+yacht.stop:%.stop: | $(DOCKER_DEPENDENCY)
 	@$(DOCKER) container stop "$(YACHT_SERVICE_NAME)"
 .PHONY: yacht.stop
 
 #. Clear the Yacht container
-yacht.clear:%.clear:
+yacht.clear:%.clear: | $(DOCKER_DEPENDENCY)
 	@$(DOCKER) container kill "$(YACHT_SERVICE_NAME)" &>/dev/null || true
 	@$(DOCKER) container rm --force --volumes "$(YACHT_SERVICE_NAME)" &>/dev/null || true
 	@$(DOCKER) volume rm --force "$(YACHT_DATA_VOLUME)" &>/dev/null || true
 .PHONY: yacht.clear
 
 #. Wait for the Yacht container to be cleared
-yacht.ensure-cleared:%.ensure-cleared: | $(DOCKER) %.clear
+yacht.ensure-cleared:%.ensure-cleared: | $(DOCKER_DEPENDENCY) %.clear
 	@until test -z "$$($(DOCKER) container ls --quiet --filter "status=running" --filter "name=^$(YACHT_SERVICE_NAME)$$")"; do \
 		sleep 1; \
 	done
