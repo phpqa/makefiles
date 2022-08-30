@@ -71,7 +71,7 @@ composer.assure-usable:
 	fi
 .PHONY: composer.assure-usable
 
-ifneq ($(DOCKER),)
+ifneq ($(DOCKER_DETECTED),)
 #. Download Composer to bin/composer or bin/composer-COMPOSER_VERSION
 bin/composer$(if $(COMPOSER_VERSION),-$(COMPOSER_VERSION)): | $(DOCKER_DEPENDENCY)
 	@if test ! -d "$(dir $(@))"; then mkdir -p "$(dir $(@))"; fi
@@ -88,9 +88,6 @@ bin/composer$(if $(COMPOSER_VERSION),-$(COMPOSER_VERSION)): | $(DOCKER_DEPENDENC
 else
 #. Download Composer to bin/composer or bin/composer-COMPOSER_VERSION
 bin/composer$(if $(COMPOSER_VERSION),-$(COMPOSER_VERSION)): | $(PHP_DEPENDENCY)
-ifeq ($(PHP),)
-	$(error Please provide the variable PHP before running $(@).)
-endif
 	@if test ! -d "$(dir $(@))"; then mkdir -p "$(dir $(@))"; fi
 	@if test -f "$(@)"; then rm -f "$(@)"; fi
 	@$(if $(COMPOSER_VERSION),if test -L "bin/composer" || -f "bin/composer"; then rm -f "bin/composer"; fi)
