@@ -6,7 +6,7 @@ PARENT_MAKEFILE_DIRECTORY?=..
 PARENT_MAKEFILES?=$(realpath $(dir $(firstword $(MAKEFILE_LIST)))/$(PARENT_MAKEFILE_DIRECTORY))/makefile $(PARENT_MAKEFILE_DIRECTORY)/makefile
 
 #. Create a parent makefile to redirect commands to the current directory
-$(PARENT_MAKEFILES): force-recreate-makefile
+$(filter-out $(PARENT_MAKEFILE_DIRECTORY)/makefile,$(PARENT_MAKEFILES)) $(PARENT_MAKEFILE_DIRECTORY)/makefile: force-recreate-makefile
 	@printf "%s\n" "# Generated to redirect" > "$(@)"
 	@printf "%s\n" ".SUFFIXES:" >> "$(@)"
 	@printf "%s\n" "MAKEFLAGS+=--no-print-directory --no-builtin-rules --no-builtin-variables" >> "$(@)"
