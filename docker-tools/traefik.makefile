@@ -47,7 +47,7 @@ traefik.pull:%.pull: | $(DOCKER_DEPENDENCY)
 traefik.start:%.start: | $(DOCKER_DEPENDENCY) $(DOCKER_SOCKET)
 	@if test -z "$$($(DOCKER) container inspect --format "{{ .ID }}" "$(TRAEFIK_SERVICE_NAME)" 2> /dev/null)"; then \
 		if test -z "$$($(DOCKER) network ls --quiet --filter "name=^$(TRAEFIK_PROVIDERS_DOCKER_NETWORK)$$")"; then \
-			$(DOCKER) network create "$(TRAEFIK_PROVIDERS_DOCKER_NETWORK)" &>/dev/null; \
+			$(DOCKER) network create "$(TRAEFIK_PROVIDERS_DOCKER_NETWORK)" > /dev/null 2>&1; \
 		fi; \
 		$(DOCKER) container run --detach --name "$(TRAEFIK_SERVICE_NAME)" \
 			$(foreach variable,$(filter-out $(addprefix $(TRAEFIK_VARIABLES_PREFIX),$(TRAEFIK_VARIABLES_EXCLUDED)),$(filter $(TRAEFIK_VARIABLES_PREFIX)%,$(.VARIABLES))),--env "$(if $(filter $(TRAEFIK_VARIABLES_UNPREFIXED),$(patsubst $(TRAEFIK_VARIABLES_PREFIX)%,%,$(variable))),$(patsubst $(TRAEFIK_VARIABLES_PREFIX)%,%,$(variable)),$(variable))=$($(variable))") \
@@ -80,7 +80,7 @@ traefik.ensure-running:%.ensure-running: | $(DOCKER_DEPENDENCY) %.start
 		fi; \
 		sleep 1; \
 	done
-	@until $(DOCKER) container exec "$(TRAEFIK_SERVICE_NAME)" traefik healthcheck --ping &>/dev/null; do \
+	@until $(DOCKER) container exec "$(TRAEFIK_SERVICE_NAME)" traefik healthcheck --ping > /dev/null 2>&1; do \
 		if test -z "$$($(DOCKER) container ls --quiet --filter "status=running" --filter "name=^$(TRAEFIK_SERVICE_NAME)$$" 2>/dev/null)"; then \
 			printf "$(STYLE_ERROR)%s$(STYLE_RESET)\n" "The container \"$(TRAEFIK_SERVICE_NAME)\" stopped before being available."; \
 			$(DOCKER) container logs --since "$$($(DOCKER) container inspect --format "{{ .State.StartedAt }}" "$(TRAEFIK_SERVICE_NAME)")" "$(TRAEFIK_SERVICE_NAME)"; \
@@ -109,9 +109,9 @@ traefik.stop:%.stop: | $(DOCKER_DEPENDENCY)
 
 #. Clear the Traefik container
 traefik.clear:%.clear: | $(DOCKER_DEPENDENCY)
-	@$(DOCKER) container kill "$(TRAEFIK_SERVICE_NAME)" &>/dev/null || true
-	@$(DOCKER) container rm --force --volumes "$(TRAEFIK_SERVICE_NAME)" &>/dev/null || true
-	@$(DOCKER) network rm --force "$(TRAEFIK_PROVIDERS_DOCKER_NETWORK)" &>/dev/null || true
+	@$(DOCKER) container kill "$(TRAEFIK_SERVICE_NAME)" > /dev/null 2>&1 || true
+	@$(DOCKER) container rm --force --volumes "$(TRAEFIK_SERVICE_NAME)" > /dev/null 2>&1 || true
+	@$(DOCKER) network rm --force "$(TRAEFIK_PROVIDERS_DOCKER_NETWORK)" > /dev/null 2>&1 || true
 .PHONY: traefik.clear
 
 #. Wait for the Traefik container to be cleared

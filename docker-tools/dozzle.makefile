@@ -53,7 +53,7 @@ dozzle.pull:%.pull: | $(DOCKER_DEPENDENCY)
 dozzle.start:%.start: | $(DOCKER_DEPENDENCY) $(DOCKER_SOCKET)
 	@if test -z "$$($(DOCKER) container inspect --format "{{ .ID }}" "$(DOZZLE_SERVICE_NAME)" 2> /dev/null)"; then \
 		if test -z "$$($(DOCKER) network ls --quiet --filter "name=^$(DOZZLE_TRAEFIK_NETWORK)$$")"; then \
-			$(DOCKER) network create "$(DOZZLE_TRAEFIK_NETWORK)" &>/dev/null; \
+			$(DOCKER) network create "$(DOZZLE_TRAEFIK_NETWORK)" > /dev/null 2>&1; \
 		fi; \
 		$(DOCKER) container run --detach --name "$(DOZZLE_SERVICE_NAME)" \
 			$(foreach variable,$(filter-out $(addprefix $(DOZZLE_VARIABLES_PREFIX),$(DOZZLE_VARIABLES_EXCLUDED)),$(filter $(DOZZLE_VARIABLES_PREFIX)%,$(.VARIABLES))),--env "$(if $(filter $(DOZZLE_VARIABLES_UNPREFIXED),$(patsubst $(DOZZLE_VARIABLES_PREFIX)%,%,$(variable))),$(patsubst $(DOZZLE_VARIABLES_PREFIX)%,%,$(variable)),$(variable))=$($(variable))") \
@@ -113,8 +113,8 @@ dozzle.stop:%.stop: | $(DOCKER_DEPENDENCY)
 
 #. Clear the Dozzle container
 dozzle.clear:%.clear: | $(DOCKER_DEPENDENCY)
-	@$(DOCKER) container kill "$(DOZZLE_SERVICE_NAME)" &>/dev/null || true
-	@$(DOCKER) container rm --force --volumes "$(DOZZLE_SERVICE_NAME)" &>/dev/null || true
+	@$(DOCKER) container kill "$(DOZZLE_SERVICE_NAME)" > /dev/null 2>&1|| true
+	@$(DOCKER) container rm --force --volumes "$(DOZZLE_SERVICE_NAME)" > /dev/null 2>&1 || true
 .PHONY: dozzle.clear
 
 #. Wait for the Dozzle container to be cleared

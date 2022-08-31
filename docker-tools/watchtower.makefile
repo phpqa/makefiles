@@ -79,8 +79,8 @@ watchtower.stop:%.stop: | $(DOCKER_DEPENDENCY)
 
 #. Clear the Watchtower container
 watchtower.clear:%.clear: | $(DOCKER_DEPENDENCY)
-	@$(DOCKER) container kill "$(WATCHTOWER_SERVICE_NAME)" &>/dev/null || true
-	@$(DOCKER) container rm --force --volumes "$(WATCHTOWER_SERVICE_NAME)" &>/dev/null || true
+	@$(DOCKER) container kill "$(WATCHTOWER_SERVICE_NAME)" > /dev/null 2>&1 || true
+	@$(DOCKER) container rm --force --volumes "$(WATCHTOWER_SERVICE_NAME)" > /dev/null 2>&1 || true
 .PHONY: watchtower.clear
 
 #. Wait for the Watchtower container to be cleared

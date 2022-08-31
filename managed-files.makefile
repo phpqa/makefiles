@@ -45,7 +45,7 @@ back-up-managed-file=\
 	else \
 		mkdir -p "$(MANAGED_FILES_BACKUP_DIRECTORY)"; \
 		LATEST_BACKUP_FILE="$$(find "$(MANAGED_FILES_BACKUP_DIRECTORY)" -name "$${FILENAME}.*$(MANAGED_FILES_BACKUP_EXTENSION)" 2>/dev/null | sort | tail -1)"; \
-		if test -z "$${LATEST_BACKUP_FILE}" || ! diff -q "$(1)" "$${LATEST_BACKUP_FILE}" &>/dev/null; then \
+		if test -z "$${LATEST_BACKUP_FILE}" || ! diff -q "$(1)" "$${LATEST_BACKUP_FILE}" > /dev/null 2>&1; then \
 			NEW_BACKUP_FILE="$(MANAGED_FILES_BACKUP_DIRECTORY)/$${FILENAME}.$$(date +%s)$(MANAGED_FILES_BACKUP_EXTENSION)"; \
 			cp "$(MANAGED_FILES_ORIGIN_DIRECTORY)/$${FILENAME}" "$${NEW_BACKUP_FILE}"; \
 			printf "$(STYLE_SUCCESS)%s\033[0m\n" "The file \"$(MANAGED_FILES_ORIGIN_DIRECTORY)/$${FILENAME}\" was backed up to \"$${NEW_BACKUP_FILE}\"."; \
@@ -55,7 +55,7 @@ back-up-managed-file=\
 recover-managed-file=\
 	FILENAME="$(1)"; \
 	if test -f "$(MANAGED_FILES_BACKUP_DIRECTORY)/$${FILENAME}"; then \
-		if ! diff -q "$(MANAGED_FILES_ORIGIN_DIRECTORY)/$${FILENAME}" "$(MANAGED_FILES_BACKUP_DIRECTORY)/$${FILENAME}" &>/dev/null; then \
+		if ! diff -q "$(MANAGED_FILES_ORIGIN_DIRECTORY)/$${FILENAME}" "$(MANAGED_FILES_BACKUP_DIRECTORY)/$${FILENAME}" > /dev/null 2>&1; then \
 			if test -f "$(MANAGED_FILES_ORIGIN_DIRECTORY)/$${FILENAME}"; then \
 				$(call back-up-managed-file,$${FILENAME}); \
 			fi; \
@@ -65,7 +65,7 @@ recover-managed-file=\
 	else \
 		LATEST_BACKUP_FILE="$$(find "$(MANAGED_FILES_BACKUP_DIRECTORY)" -wholename "$(MANAGED_FILES_BACKUP_DIRECTORY)/$${FILENAME}.*$(MANAGED_FILES_BACKUP_EXTENSION)" 2>/dev/null | sort | tail -1)"; \
 		if test -f "$${LATEST_BACKUP_FILE}"; then \
-			if ! diff -q "$${LATEST_BACKUP_FILE}" "$(MANAGED_FILES_ORIGIN_DIRECTORY)/$${FILENAME}" &>/dev/null; then \
+			if ! diff -q "$${LATEST_BACKUP_FILE}" "$(MANAGED_FILES_ORIGIN_DIRECTORY)/$${FILENAME}" > /dev/null 2>&1; then \
 				if test -f "$(MANAGED_FILES_ORIGIN_DIRECTORY)/$${FILENAME}"; then \
 					$(call back-up-managed-file,$${FILENAME}); \
 				fi; \

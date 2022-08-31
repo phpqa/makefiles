@@ -58,7 +58,7 @@ portainer.pull:%.pull: | $(DOCKER_DEPENDENCY)
 portainer.start:%.start: | $(DOCKER_DEPENDENCY) $(DOCKER_SOCKET)
 	@if test -z "$$($(DOCKER) container inspect --format "{{ .ID }}" "$(PORTAINER_SERVICE_NAME)" 2> /dev/null)"; then \
 		if test -z "$$($(DOCKER) network ls --quiet --filter "name=^$(PORTAINER_TRAEFIK_NETWORK)$$")"; then \
-			$(DOCKER) network create "$(PORTAINER_TRAEFIK_NETWORK)" &>/dev/null; \
+			$(DOCKER) network create "$(PORTAINER_TRAEFIK_NETWORK)" > /dev/null 2>&1; \
 		fi; \
 		$(DOCKER) container run --detach --name "$(PORTAINER_SERVICE_NAME)" \
 			--volume "$(PORTAINER_DATA_VOLUME):/data" \
@@ -147,9 +147,9 @@ portainer.stop:%.stop: | $(DOCKER_DEPENDENCY)
 
 #. Clear the Portainer container
 portainer.clear:%.clear: | $(DOCKER_DEPENDENCY)
-	@$(DOCKER) container kill "$(PORTAINER_SERVICE_NAME)" &>/dev/null || true
-	@$(DOCKER) container rm --force --volumes "$(PORTAINER_SERVICE_NAME)" &>/dev/null || true
-	@$(DOCKER) volume rm --force "$(PORTAINER_DATA_VOLUME)" &>/dev/null || true
+	@$(DOCKER) container kill "$(PORTAINER_SERVICE_NAME)" > /dev/null 2>&1 || true
+	@$(DOCKER) container rm --force --volumes "$(PORTAINER_SERVICE_NAME)" > /dev/null 2>&1 || true
+	@$(DOCKER) volume rm --force "$(PORTAINER_DATA_VOLUME)" > /dev/null 2>&1 || true
 .PHONY: portainer.clear
 
 #. Wait for the Portainer container to be cleared

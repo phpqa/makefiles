@@ -50,7 +50,7 @@ yacht.pull:%.pull: | $(DOCKER_DEPENDENCY)
 yacht.start:%.start: | $(DOCKER_DEPENDENCY) $(DOCKER_SOCKET)
 	@if test -z "$$($(DOCKER) container inspect --format "{{ .ID }}" "$(YACHT_SERVICE_NAME)" 2> /dev/null)"; then \
 		if test -z "$$($(DOCKER) network ls --quiet --filter "name=^$(YACHT_TRAEFIK_NETWORK)$$")"; then \
-			$(DOCKER) network create "$(YACHT_TRAEFIK_NETWORK)" &>/dev/null; \
+			$(DOCKER) network create "$(YACHT_TRAEFIK_NETWORK)" > /dev/null 2>&1; \
 		fi; \
 		$(DOCKER) container run --detach --name "$(YACHT_SERVICE_NAME)" \
 			--env "DISABLE_AUTH=true" \
@@ -113,9 +113,9 @@ yacht.stop:%.stop: | $(DOCKER_DEPENDENCY)
 
 #. Clear the Yacht container
 yacht.clear:%.clear: | $(DOCKER_DEPENDENCY)
-	@$(DOCKER) container kill "$(YACHT_SERVICE_NAME)" &>/dev/null || true
-	@$(DOCKER) container rm --force --volumes "$(YACHT_SERVICE_NAME)" &>/dev/null || true
-	@$(DOCKER) volume rm --force "$(YACHT_DATA_VOLUME)" &>/dev/null || true
+	@$(DOCKER) container kill "$(YACHT_SERVICE_NAME)" > /dev/null 2>&1 || true
+	@$(DOCKER) container rm --force --volumes "$(YACHT_SERVICE_NAME)" > /dev/null 2>&1 || true
+	@$(DOCKER) volume rm --force "$(YACHT_DATA_VOLUME)" > /dev/null 2>&1 || true
 .PHONY: yacht.clear
 
 #. Wait for the Yacht container to be cleared
