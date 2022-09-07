@@ -5,6 +5,7 @@
 #. Package variables
 STUDIO_PACKAGE?=franzl/studio
 STUDIO_CACHE_DIRECTORY?=.cache/studio
+STUDIO_JSON_FILE?=studio.json
 STUDIO_PACKAGE_DIRECTORIES?=
 
 ifeq ($(findstring COMPOSER,$(DOCKER_COMPOSE_RUN_ENVIRONMENT_VARIABLES)),)
@@ -33,6 +34,9 @@ endif
 ifeq ($(COMPOSER),)
 $(error The variable COMPOSER should never be empty.)
 endif
+ifeq ($(STUDIO_CACHE_DIRECTORY),)
+$(error The variable STUDIO_CACHE_DIRECTORY should never be empty.)
+endif
 
 ###
 ## Studio
@@ -40,34 +44,42 @@ endif
 
 #.! Note: this package is not being installed in the main composer.json file on purpose.
 
+#. Create Studio cache directory
+$(STUDIO_CACHE_DIRECTORY):
+	@mkdir -p "$(STUDIO_CACHE_DIRECTORY)"
+
+#. Install Studio
+vendor/bin/studio:
+	@if test -f "$(STUDIO_JSON_FILE)"; then mv "$(STUDIO_JSON_FILE)" "$(STUDIO_JSON_FILE).disabled"; fi
+	@$(MAKE) vendor
+	@if ! $(COMPOSER_EXECUTABLE) show $(STUDIO_PACKAGE) >/dev/null 2>&1; then \
+		$(COMPOSER_EXECUTABLE) config --no-interaction --no-plugins --no-scripts allow-plugins.$(STUDIO_PACKAGE) true; \
+		$(COMPOSER_EXECUTABLE) require --dev --no-interaction --no-plugins --no-scripts --no-progress $(STUDIO_PACKAGE); \
+	fi
+	@if test -f "$(STUDIO_JSON_FILE).disabled"; then mv "$(STUDIO_JSON_FILE).disabled" "$(STUDIO_JSON_FILE)"; fi
+
 # Load the packages
-studio.load: | $(PHP_DEPENDENCY) $(COMPOSER_DEPENDENCY) vendor
+studio.load: | $(PHP_DEPENDENCY) $(COMPOSER_DEPENDENCY) vendor/bin/studio $(STUDIO_CACHE_DIRECTORY)
 ifeq ($(STUDIO_CACHE_DIRECTORY),)
 	$(error Please provide the variable STUDIO_CACHE_DIRECTORY before running $(@).)
 endif
 ifeq ($(STUDIO_PACKAGE_DIRECTORIES),)
 	$(error Please provide the variable STUDIO_PACKAGE_DIRECTORIES before running $(@).)
 endif
-	@$(if $(STUDIO_CACHE_DIRECTORY),mkdir -p "$(STUDIO_CACHE_DIRECTORY)")
 	@cp "$(COMPOSER)" "$(STUDIO_CACHE_DIRECTORY)/"
 	@cp "$(patsubst %.json,%.lock,$(COMPOSER))" "$(STUDIO_CACHE_DIRECTORY)/"
 	@if test -f "$(subst composer,symfony,$(patsubst %.json,%.lock,$(COMPOSER)))"; then \
 		cp "$(subst composer,symfony,$(patsubst %.json,%.lock,$(COMPOSER)))" "$(STUDIO_CACHE_DIRECTORY)/"; \
-	fi
-	@COMPOSER="$(STUDIO_CACHE_DIRECTORY)/$(COMPOSER)" $(COMPOSER_EXECUTABLE) config --no-interaction --no-plugins --no-scripts allow-plugins.$(STUDIO_PACKAGE) true
-	@if test "$(patsubst %.json,%.lock,$(COMPOSER))" -ot "$(COMPOSER)"; then \
-		printf "$(STYLE_ERROR)%s$(STYLE_RESET)\n" "Composer is not using the correct file to load Studio. Is the COMPOSER environment variable passed to the PHP container?"; \
-		COMPOSER="$(STUDIO_CACHE_DIRECTORY)/$(COMPOSER)" $(COMPOSER_EXECUTABLE) config --unset --no-interaction --no-plugins --no-scripts allow-plugins.$(STUDIO_PACKAGE); \
-		exit 1; \
-	fi
-	@if test ! -f "vendor/bin/studio"; then \
-		COMPOSER="$(STUDIO_CACHE_DIRECTORY)/$(COMPOSER)" $(COMPOSER_EXECUTABLE) require --dev --no-interaction --no-plugins --no-scripts --no-progress $(STUDIO_PACKAGE); \
 	fi
 	@$(foreach directory,$(STUDIO_PACKAGE_DIRECTORIES), \
 	COMPOSER="$(STUDIO_CACHE_DIRECTORY)/$(COMPOSER)" $(PHP) vendor/bin/studio load "$(directory)"; \
 	)
 	@COMPOSER="$(STUDIO_CACHE_DIRECTORY)/$(COMPOSER)" $(COMPOSER_EXECUTABLE) require --no-interaction --no-scripts --no-progress --optimize-autoloader \
 		$(foreach directory,$(STUDIO_PACKAGE_DIRECTORIES),"$$($(COMPOSER_EXECUTABLE) --working-dir="$(directory)" show --name-only --self):@dev")
+	@if test "$(STUDIO_CACHE_DIRECTORY)/$(COMPOSER)" -ot "$(COMPOSER)"; then \
+		printf "$(STYLE_ERROR)%s$(STYLE_RESET)\n" "Composer is not updating the correct file. Is the COMPOSER environment variable passed to the PHP container?"; \
+		exit 1; \
+	fi
 	@$(foreach directory,$(STUDIO_PACKAGE_DIRECTORIES), \
 	PACKAGE="$$($(COMPOSER_EXECUTABLE) --working-dir="$(directory)" show --name-only --self)"; \
 	PACKAGE_PATH="$$(COMPOSER="$(STUDIO_CACHE_DIRECTORY)/$(COMPOSER)" $(COMPOSER_EXECUTABLE) --no-interaction --no-scripts show --path "$${PACKAGE}")"; \
@@ -80,14 +92,13 @@ endif
 .PHONY: studio.load
 
 # Unload the packages
-studio.unload: | $(PHP_DEPENDENCY) $(COMPOSER_DEPENDENCY)
+studio.unload: | $(PHP_DEPENDENCY) $(COMPOSER_DEPENDENCY) vendor/bin/studio $(STUDIO_CACHE_DIRECTORY)
 ifeq ($(STUDIO_CACHE_DIRECTORY),)
 	$(error Please provide the variable STUDIO_CACHE_DIRECTORY before running $(@).)
 endif
 ifeq ($(STUDIO_PACKAGE_DIRECTORIES),)
 	$(error Could not find any local package directories to load.)
 endif
-	@$(if $(STUDIO_CACHE_DIRECTORY),mkdir -p "$(STUDIO_CACHE_DIRECTORY)")
 	@if test ! -f "$(STUDIO_CACHE_DIRECTORY)/$(COMPOSER)"; then \
 		cp "$(COMPOSER)" "$(STUDIO_CACHE_DIRECTORY)/"; \
 	fi
@@ -99,19 +110,17 @@ endif
 			cp "$(subst composer,symfony,$(patsubst %.json,%.lock,$(COMPOSER)))" "$(STUDIO_CACHE_DIRECTORY)/"; \
 		fi; \
 	fi
-	@if test -f "vendor/bin/studio"; then \
-		$(foreach directory,$(STUDIO_PACKAGE_DIRECTORIES), \
+	@$(foreach directory,$(STUDIO_PACKAGE_DIRECTORIES), \
+	if test -f "$(STUDIO_JSON_FILE)" && grep --quiet "$(directory)" "$(STUDIO_JSON_FILE)"; then \
 		COMPOSER="$(STUDIO_CACHE_DIRECTORY)/$(COMPOSER)" $(PHP) vendor/bin/studio unload "$(directory)"; \
-		) \
-		COMPOSER="$(STUDIO_CACHE_DIRECTORY)/$(COMPOSER)" $(COMPOSER_EXECUTABLE) remove --dev --no-interaction --no-plugins --no-scripts --no-progress $(STUDIO_PACKAGE); \
-	fi
-	@COMPOSER="$(STUDIO_CACHE_DIRECTORY)/$(COMPOSER)" $(COMPOSER_EXECUTABLE) config --unset --no-interaction --no-plugins --no-scripts allow-plugins.$(STUDIO_PACKAGE)
+	fi; \
+	)
 	@$(COMPOSER_EXECUTABLE) install --no-interaction --no-scripts --no-progress --optimize-autoloader
 	@if test -d "$(STUDIO_CACHE_DIRECTORY)/"; then \
 		rm -rf "$(STUDIO_CACHE_DIRECTORY)/"; \
 	fi
-	@if test -f "studio.json" && grep -q -F '"paths": []' "studio.json"; then \
-		rm -f "studio.json"; \
+	@if test -f "$(STUDIO_JSON_FILE)" && grep -q -F '"paths": []' "$(STUDIO_JSON_FILE)"; then \
+		rm -f "$(STUDIO_JSON_FILE)"; \
 	fi
 	@$(foreach directory,$(STUDIO_PACKAGE_DIRECTORIES), \
 	PACKAGE="$$($(COMPOSER_EXECUTABLE) --working-dir="$(directory)" show --name-only --self)"; \
