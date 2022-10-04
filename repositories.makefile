@@ -2,15 +2,9 @@
 ##. Configuration
 ###
 
-GIT_DETECTED?=$(shell command -v git || which git 2>/dev/null)
-GIT_DEPENDENCY?=$(if $(GIT_DETECTED),git.assure-usable,git.not-found)
-GIT?=git
-
-GIT_SUBDIRECTORY?=.git
-
-REPOSITORIES?=$(if $(wildcard $(GIT_SUBDIRECTORY)),self)
-REPOSITORY_self?=$(if $(wildcard $(GIT_SUBDIRECTORY)),$(strip $(foreach variable,$(filter REPOSITORY_DIRECTORY_%,$(.VARIABLES)),$(if $(findstring $(shell pwd),$(realpath $($(variable)))),$(if $(findstring $(realpath $($(variable))),$(shell pwd)),$(patsubst REPOSITORY_DIRECTORY_%,%,$(variable)))))))
-REPOSITORY_DIRECTORY_self?=$(if $(wildcard $(GIT_SUBDIRECTORY)),.)
+REPOSITORIES?=$(if $(wildcard $(GIT_DIRECTORY)),self)
+REPOSITORY_self?=$(if $(wildcard $(GIT_DIRECTORY)),$(strip $(foreach variable,$(filter REPOSITORY_DIRECTORY_%,$(.VARIABLES)),$(if $(findstring $(shell pwd),$(realpath $($(variable)))),$(if $(findstring $(realpath $($(variable))),$(shell pwd)),$(patsubst REPOSITORY_DIRECTORY_%,%,$(variable)))))))
+REPOSITORY_DIRECTORY_self?=$(if $(wildcard $(GIT_DIRECTORY)),.)
 
 ###
 ##. Requirements
@@ -19,29 +13,14 @@ REPOSITORY_DIRECTORY_self?=$(if $(wildcard $(GIT_SUBDIRECTORY)),.)
 ifeq ($(GIT),)
 $(error The variable GIT should never be empty.)
 endif
-ifeq ($(GIT_DEPENDENCY),)
-$(error The variable GIT_DEPENDENCY should never be empty.)
+ifeq ($(GIT_DIRECTORY),)
+$(error The variable GIT_DIRECTORY should never be empty.)
 endif
 
 ###
 ## Repositories
 ###
 
-#. Exit if git is not found
-git.not-found:
-	@printf "$(STYLE_ERROR)%s$(STYLE_RESET)\\n" "Please install git."
-	@exit 1
-.PHONY: git.not-found
-
-#. Assure that git is usable
-git.assure-usable:
-	@if test -z "$$($(GIT) --version 2>/dev/null || true)"; then \
-		printf "$(STYLE_ERROR)%s$(STYLE_RESET)\n" 'Could not use GIT as "$(value GIT)".'; \
-		exit 1; \
-	fi
-.PHONY: git.assure-usable
-
-# TODO make it optional to use stashes
 # $(1) is repository
 git-clone-repository=\
 	if test -z "$(REPOSITORY_DIRECTORY_$(1))"; then \
@@ -55,7 +34,7 @@ git-clone-repository=\
 		fi; \
 		$(GIT) clone "$(REPOSITORY_URL_$(1))" "$(REPOSITORY_DIRECTORY_$(1))"; \
 	else \
-		if test ! -d "$(REPOSITORY_DIRECTORY_$(1))/.git"; then \
+		if test ! -d "$(REPOSITORY_DIRECTORY_$(1))/$(GIT_DIRECTORY)"; then \
 			DEFAULT_BRANCH="$$($(GIT) ls-remote --symref "$(REPOSITORY_URL_$(1))" HEAD | awk -F'[/\t]' 'NR == 1 {print $$3}')"; \
 			( \
 				cd $(REPOSITORY_DIRECTORY_$(1)) \
@@ -136,8 +115,8 @@ git-remove-repository=\
 	fi; \
 	if test -d "$(REPOSITORY_DIRECTORY_$(1))"; then \
 		cd "$(REPOSITORY_DIRECTORY_$(1))"; \
-		if test -d "$(REPOSITORY_DIRECTORY_$(1))/.git"; then \
-			$(GIT) read-tree -u --reset "$$($(GIT) hash-object -t tree /dev/null)" && rm -rf .git; \
+		if test -d "$(REPOSITORY_DIRECTORY_$(1))/$(GIT_DIRECTORY)"; then \
+			$(GIT) read-tree -u --reset "$$($(GIT) hash-object -t tree /dev/null)" && rm -rf $(GIT_DIRECTORY); \
 		fi; \
 		rmdir "$(REPOSITORY_DIRECTORY_$(1))" 2>/dev/null || true; \
 	fi
