@@ -54,6 +54,16 @@ git-clone-repository=\
 			exit 1; \
 		fi; \
 		$(GIT) clone "$(REPOSITORY_URL_$(1))" "$(REPOSITORY_DIRECTORY_$(1))"; \
+	else \
+		if test ! -d "$(REPOSITORY_DIRECTORY_$(1))/.git"; then \
+			DEFAULT_BRANCH="$$($(GIT) ls-remote --symref "$(REPOSITORY_URL_$(1))" HEAD | awk -F'[/\t]' 'NR == 1 {print $$3}')"; \
+			( \
+				cd $(REPOSITORY_DIRECTORY_$(1)) \
+				&& $(GIT) init --initial-branch="$${DEFAULT_BRANCH}" \
+				&& $(GIT) remote add origin "$(REPOSITORY_URL_$(1))" \
+				&& $(call git-pull-repository,$(1)) \
+			); \
+		fi; \
 	fi
 # $(1) is repository
 git-pull-repository=\
@@ -72,7 +82,7 @@ git-pull-repository=\
 				$(MAKE) -f "$(REPOSITORY_MAKEFILE_$(1))" repositories.pull-everything; \
 			fi; \
 		else \
-			DEFAULT_BRANCH="$$($(GIT) remote show origin | sed -n '/HEAD branch/s/.*: //p')"; \
+			DEFAULT_BRANCH="$$($(GIT) ls-remote --symref "$(REPOSITORY_URL_$(1))" HEAD | awk -F'[/\t]' 'NR == 1 {print $$3}')"; \
 			if test -z "$${DEFAULT_BRANCH}" || test "$${DEFAULT_BRANCH}" = "(unknown)"; then \
 				printf "%s\\n" "Could not determine branch for \"$$(pwd)\"!"; \
 			else \
@@ -118,6 +128,18 @@ git-stash-repository=\
 			fi; \
 		fi; \
 	fi
+# $(1) is repository
+git-remove-repository=\
+	if test -z "$(REPOSITORY_DIRECTORY_$(1))"; then \
+		printf "$(STYLE_ERROR)%s$(STYLE_RESET)\\n" "Could not find variable \"REPOSITORY_DIRECTORY_$(1)\"!"; \
+		exit 1; \
+	fi; \
+	if test -d "$(REPOSITORY_DIRECTORY_$(1))"; then \
+		cd "$(REPOSITORY_DIRECTORY_$(1))"; \
+		if test -d "$(REPOSITORY_DIRECTORY_$(1))/.git"; then \
+			$(GIT) read-tree -u --reset "$$($(GIT) hash-object -t tree /dev/null)" && rm -rf .git; \
+		fi; \
+	fi
 
 #. Clone a repository
 $(foreach repository,$(REPOSITORIES),repository.$(repository).clone):repository.%.clone: | $(GIT_DEPENDENCY)
@@ -131,6 +153,10 @@ $(foreach repository,$(REPOSITORIES),repository.$(repository).pull):repository.%
 $(foreach repository,$(REPOSITORIES),repository.$(repository).stash):repository.%.stash: | $(GIT_DEPENDENCY)
 	@$(call git-stash-repository,$(*))
 
+#. Remove a repository
+$(foreach repository,$(REPOSITORIES),repository.$(repository).remove):repository.%.remove: | $(GIT_DEPENDENCY)
+	@$(call git-remove-repository,$(*))
+
 #. Case 1: No repositories to pull
 ifeq ($(REPOSITORIES),)
 #. Do nothing
@@ -140,6 +166,10 @@ repositories.pull-everything: ; @true
 #. Do nothing
 repositories.stash-everything: ; @true
 .PHONY: repositories.stash-everything
+
+#. Do nothing
+repositories.remove-everything: ; @true
+.PHONY: repositories.remove-everything
 else
 #. Case 2: Only this repository to pull
 ifeq ($(REPOSITORIES),$(REPOSITORY_self))
@@ -150,6 +180,10 @@ repositories.pull-everything: | repository.pull; @true
 #. Stash files in this repository
 repositories.stash-everything: | repository.stash; @true
 .PHONY: repositories.stash-everything
+
+#. Remove files in this repository
+repositories.remove-everything: | repository.remove; @true
+.PHONY: repositories.remove-everything
 #. Case 3: Multiple repositories to pull
 else
 # Clone all repositories
@@ -171,19 +205,29 @@ repositories.stash: | $(foreach repository,$(REPOSITORIES),repository.$(reposito
 #. Stash files in all repositories
 repositories.stash-everything: repositories.stash; @true
 .PHONY: repositories.stash-everything
+
+# Remove files in all repositories
+repositories.remove: | $(foreach repository,$(REPOSITORIES),repository.$(repository).remove); @true
+.PHONY: repositories.remove
+
+#. Remove files in all repositories
+repositories.remove-everything: repositories.remove; @true
+.PHONY: repositories.remove-everything
 endif
 endif
 
 ifneq ($(REPOSITORY_self),)
 # Pull this repository
-repository.pull: | repository.$(REPOSITORY_self).pull
-	@true
+repository.pull: | repository.$(REPOSITORY_self).pull; @true
 .PHONY: repository.pull
 
 # Stash files in this repository
-repository.stash: | repository.$(REPOSITORY_self).stash
-	@true
+repository.stash: | repository.$(REPOSITORY_self).stash; @true
 .PHONY: repository.stash
+
+# Remove files in this repository
+repository.remove: | repository.$(REPOSITORY_self).remove; @true
+.PHONY: repository.remove
 endif
 
 ifneq ($(REPOSITORIES),)
