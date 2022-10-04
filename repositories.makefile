@@ -139,6 +139,7 @@ git-remove-repository=\
 		if test -d "$(REPOSITORY_DIRECTORY_$(1))/.git"; then \
 			$(GIT) read-tree -u --reset "$$($(GIT) hash-object -t tree /dev/null)" && rm -rf .git; \
 		fi; \
+		rmdir "$(REPOSITORY_DIRECTORY_$(1))" 2>/dev/null || true; \
 	fi
 
 #. Clone a repository
