@@ -4,7 +4,6 @@
 
 #. Package variables
 STUDIO_PACKAGE?=franzl/studio
-STUDIO_CACHE_DIRECTORY?=.cache/studio
 STUDIO_JSON_FILE?=studio.json
 STUDIO_PACKAGE_DIRECTORIES?=
 
@@ -22,34 +21,22 @@ endif
 ifeq ($(PHP),)
 $(error The variable PHP should never be empty.)
 endif
-ifeq ($(PHP_DEPENDENCY),)
-$(error The variable PHP_DEPENDENCY should never be empty.)
-endif
 ifeq ($(COMPOSER_EXECUTABLE),)
 $(error The variable COMPOSER_EXECUTABLE should never be empty.)
 endif
-ifeq ($(COMPOSER_DEPENDENCY),)
-$(error The variable COMPOSER_DEPENDENCY should never be empty.)
+ifeq ($(GIT),)
+$(error The variable GIT should never be empty.)
 endif
-ifeq ($(COMPOSER),)
-$(error The variable COMPOSER should never be empty.)
-endif
-ifeq ($(STUDIO_CACHE_DIRECTORY),)
-$(error The variable STUDIO_CACHE_DIRECTORY should never be empty.)
+ifeq ($(JQ),)
+$(error The variable JQ should never be empty.)
 endif
 
 ###
 ## Studio
 ###
 
-#.! Note: this package is not being installed in the main composer.json file on purpose.
-
-#. Create Studio cache directory
-$(STUDIO_CACHE_DIRECTORY):
-	@mkdir -p "$(STUDIO_CACHE_DIRECTORY)"
-
 #. Install Studio
-vendor/bin/studio:
+vendor/bin/studio: | $(COMPOSER_DEPENDENCY)
 	@if test -f "$(STUDIO_JSON_FILE)"; then mv "$(STUDIO_JSON_FILE)" "$(STUDIO_JSON_FILE).disabled"; fi
 	@$(MAKE) vendor
 	@if ! $(COMPOSER_EXECUTABLE) show $(STUDIO_PACKAGE) >/dev/null 2>&1; then \
@@ -59,30 +46,18 @@ vendor/bin/studio:
 	@if test -f "$(STUDIO_JSON_FILE).disabled"; then mv "$(STUDIO_JSON_FILE).disabled" "$(STUDIO_JSON_FILE)"; fi
 
 # Load the packages
-studio.load: | $(PHP_DEPENDENCY) $(COMPOSER_DEPENDENCY) vendor/bin/studio $(STUDIO_CACHE_DIRECTORY)
-ifeq ($(STUDIO_CACHE_DIRECTORY),)
-	$(error Please provide the variable STUDIO_CACHE_DIRECTORY before running $(@).)
-endif
+studio.load: | $(PHP_DEPENDENCY) $(COMPOSER_DEPENDENCY) vendor/bin/studio
 ifeq ($(STUDIO_PACKAGE_DIRECTORIES),)
 	$(error Please provide the variable STUDIO_PACKAGE_DIRECTORIES before running $(@).)
 endif
-	@cp "$(COMPOSER)" "$(STUDIO_CACHE_DIRECTORY)/"
-	@cp "$(patsubst %.json,%.lock,$(COMPOSER))" "$(STUDIO_CACHE_DIRECTORY)/"
-	@if test -f "$(subst composer,symfony,$(patsubst %.json,%.lock,$(COMPOSER)))"; then \
-		cp "$(subst composer,symfony,$(patsubst %.json,%.lock,$(COMPOSER)))" "$(STUDIO_CACHE_DIRECTORY)/"; \
-	fi
 	@$(foreach directory,$(STUDIO_PACKAGE_DIRECTORIES), \
-	COMPOSER="$(STUDIO_CACHE_DIRECTORY)/$(COMPOSER)" $(PHP) vendor/bin/studio load "$(directory)"; \
+	$(PHP) vendor/bin/studio load "$(directory)"; \
 	)
-	@COMPOSER="$(STUDIO_CACHE_DIRECTORY)/$(COMPOSER)" $(COMPOSER_EXECUTABLE) require --no-interaction --no-scripts --no-progress --optimize-autoloader \
+	@$(COMPOSER_EXECUTABLE) require --no-interaction --no-scripts --no-progress --optimize-autoloader \
 		$(foreach directory,$(STUDIO_PACKAGE_DIRECTORIES),"$$($(COMPOSER_EXECUTABLE) --working-dir="$(directory)" show --name-only --self):@dev")
-	@if test "$(STUDIO_CACHE_DIRECTORY)/$(COMPOSER)" -ot "$(COMPOSER)"; then \
-		printf "$(STYLE_ERROR)%s$(STYLE_RESET)\n" "Composer is not updating the correct file. Is the COMPOSER environment variable passed to the PHP container?"; \
-		exit 1; \
-	fi
 	@$(foreach directory,$(STUDIO_PACKAGE_DIRECTORIES), \
 	PACKAGE="$$($(COMPOSER_EXECUTABLE) --working-dir="$(directory)" show --name-only --self)"; \
-	PACKAGE_PATH="$$(COMPOSER="$(STUDIO_CACHE_DIRECTORY)/$(COMPOSER)" $(COMPOSER_EXECUTABLE) --no-interaction --no-scripts show --path "$${PACKAGE}")"; \
+	PACKAGE_PATH="$$($(COMPOSER_EXECUTABLE) --no-interaction --no-scripts show --path "$${PACKAGE}")"; \
 	if printf "$${PACKAGE_PATH}" | grep -q -F "$(directory)"; then \
 		printf "$(STYLE_SUCCESS)%s$(STYLE_RESET)\n" "Package $${PACKAGE} is being loaded from $(directory)."; \
 	else \
@@ -92,33 +67,22 @@ endif
 .PHONY: studio.load
 
 # Unload the packages
-studio.unload: | $(PHP_DEPENDENCY) $(COMPOSER_DEPENDENCY) vendor/bin/studio $(STUDIO_CACHE_DIRECTORY)
-ifeq ($(STUDIO_CACHE_DIRECTORY),)
-	$(error Please provide the variable STUDIO_CACHE_DIRECTORY before running $(@).)
-endif
+studio.unload: | $(PHP_DEPENDENCY) $(COMPOSER_DEPENDENCY) $(GIT_DEPENDENCY) $(JQ_DEPENDENCY) vendor/bin/studio
 ifeq ($(STUDIO_PACKAGE_DIRECTORIES),)
 	$(error Could not find any local package directories to load.)
 endif
-	@if test ! -f "$(STUDIO_CACHE_DIRECTORY)/$(COMPOSER)"; then \
-		cp "$(COMPOSER)" "$(STUDIO_CACHE_DIRECTORY)/"; \
-	fi
-	@if test ! -f "$(patsubst %.json,%.lock,$(STUDIO_CACHE_DIRECTORY)/$(COMPOSER))"; then \
-		cp "$(patsubst %.json,%.lock,$(COMPOSER))" "$(STUDIO_CACHE_DIRECTORY)/"; \
-	fi
-	@if test ! -f "$(subst composer,symfony,$(patsubst %.json,%.lock,$(STUDIO_CACHE_DIRECTORY)/$(COMPOSER)))"; then \
-		if test -f "$(subst composer,symfony,$(patsubst %.json,%.lock,$(COMPOSER)))"; then \
-			cp "$(subst composer,symfony,$(patsubst %.json,%.lock,$(COMPOSER)))" "$(STUDIO_CACHE_DIRECTORY)/"; \
-		fi; \
-	fi
 	@$(foreach directory,$(STUDIO_PACKAGE_DIRECTORIES), \
 	if test -f "$(STUDIO_JSON_FILE)" && grep --quiet "$(directory)" "$(STUDIO_JSON_FILE)"; then \
-		COMPOSER="$(STUDIO_CACHE_DIRECTORY)/$(COMPOSER)" $(PHP) vendor/bin/studio unload "$(directory)"; \
+		$(PHP) vendor/bin/studio unload "$(directory)"; \
 	fi; \
 	)
-	@$(COMPOSER_EXECUTABLE) install --no-interaction --no-scripts --no-progress --optimize-autoloader
-	@if test -d "$(STUDIO_CACHE_DIRECTORY)/"; then \
-		rm -rf "$(STUDIO_CACHE_DIRECTORY)/"; \
-	fi
+	@JQ_REQUIRE_FILTER="$$($(foreach directory,$(STUDIO_PACKAGE_DIRECTORIES),PACKAGE="$$($(COMPOSER_EXECUTABLE) --working-dir="$(directory)" show --name-only --self)"; printf "%s" "\"$${PACKAGE}:\" + .require.\"$${PACKAGE}\" + \" \" + ";)) \"\""; \
+		REQUIRE_CONSTRAINTS="$$($(GIT) cat-file -p $$($(GIT) rev-parse HEAD):$(or $(COMPOSER),composer.json) | $(JQ) -r "$${JQ_REQUIRE_FILTER}")"; \
+		JQ_UPDATE_NAME_FILTER="$$($(foreach directory,$(STUDIO_PACKAGE_DIRECTORIES),PACKAGE="$$($(COMPOSER_EXECUTABLE) --working-dir="$(directory)" show --name-only --self)"; printf "%s" ".name==\"$${PACKAGE}\",";) printf "%s" "false")"; \
+		JQ_UPDATE_FILTER="(.packages|map(select($${JQ_UPDATE_NAME_FILTER})|.name + \" --with \" + .name + \":\" + .version)|join(\" \"))"; \
+		UPDATE_CONSTRAINTS="$$($(GIT) cat-file -p $$($(GIT) rev-parse HEAD):$(patsubst %.json,%.lock,$(or $(COMPOSER),composer.json)) | $(JQ) -r "$${JQ_UPDATE_FILTER}")"; \
+		$(COMPOSER_EXECUTABLE) require --no-interaction --no-scripts --no-progress --no-install --no-update $${REQUIRE_CONSTRAINTS}; \
+		$(COMPOSER_EXECUTABLE) update --no-interaction --no-scripts --no-progress --optimize-autoloader $${UPDATE_CONSTRAINTS}
 	@if test -f "$(STUDIO_JSON_FILE)" && grep -q -F '"paths": []' "$(STUDIO_JSON_FILE)"; then \
 		rm -f "$(STUDIO_JSON_FILE)"; \
 	fi
