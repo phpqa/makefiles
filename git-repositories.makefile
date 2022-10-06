@@ -1,4 +1,15 @@
 ###
+##. Dependencies
+###
+
+ifeq ($(GIT),)
+$(error Please provide the variable GIT)
+endif
+ifeq ($(GIT_DIRECTORY),)
+$(error Please provide the variable GIT_DIRECTORY)
+endif
+
+###
 ##. Configuration
 ###
 
@@ -7,18 +18,7 @@ REPOSITORY_self?=$(if $(wildcard $(GIT_DIRECTORY)),$(strip $(foreach variable,$(
 REPOSITORY_DIRECTORY_self?=$(if $(wildcard $(GIT_DIRECTORY)),.)
 
 ###
-##. Requirements
-###
-
-ifeq ($(GIT),)
-$(error The variable GIT should never be empty.)
-endif
-ifeq ($(GIT_DIRECTORY),)
-$(error The variable GIT_DIRECTORY should never be empty.)
-endif
-
-###
-## Repositories
+##. Repositories
 ###
 
 # $(1) is repository
