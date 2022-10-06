@@ -2,35 +2,60 @@
 ##. Configuration
 ###
 
-DOCKER_DETECTED?=$(shell command -v docker || which docker 2>/dev/null)
+DOCKER_COMMAND?=docker
+ifeq ($(DOCKER_COMMAND),)
+$(error The variable DOCKER_COMMAND should never be empty)
+endif
+
 DOCKER_DIRECTORY?=.
+ifeq ($(DOCKER_DIRECTORY),)
+$(error The variable DOCKER_DIRECTORY should never be empty)
+endif
+
+DOCKER_DETECTED?=$(shell command -v $(DOCKER_COMMAND) || which $(DOCKER_COMMAND) 2>/dev/null)
 DOCKER_DEPENDENCY?=$(or $(wildcard $(DOCKER_DIRECTORY))) $(if $(DOCKER_DETECTED),docker.assure-usable,docker.not-found)
-DOCKER?=$(if $(wildcard $(filter-out .,$(DOCKER_DIRECTORY))),cd "$(DOCKER_DIRECTORY)" && )docker
+ifeq ($(DOCKER_DEPENDENCY),)
+$(error The variable DOCKER_DEPENDENCY should never be empty)
+endif
+
+DOCKER?=$(if $(wildcard $(filter-out .,$(DOCKER_DIRECTORY))),cd "$(DOCKER_DIRECTORY)" && )$(DOCKER_COMMAND)
 DOCKER_SOCKET?=$(firstword $(wildcard /var/run/docker.sock /run/podman/podman.sock ${XDG_RUNTIME_DIR}/podman/podman.sock))
 DOCKER_CONFIG?=$(firstword $(wildcard ~/.docker/config.json ${HOME}/.docker/config.json))
 DOCKER_API_VERSION?=$(shell $(DOCKER) version --format "{{.Client.APIVersion}}")
 DOCKER_REGISTRIES?=
 
-USE_DOCKER_COMPOSE_1?=
+USE_DOCKER_COMPOSE_1?=$(if $(shell docker compose version 2>/dev/null || true),,yes)
+DOCKER_COMPOSE_COMMAND?=$(if $(USE_DOCKER_COMPOSE_1),docker-compose,$(DOCKER) compose)
+ifeq ($(DOCKER_COMPOSE_COMMAND),)
+$(error The variable DOCKER_COMPOSE_COMMAND should never be empty)
+endif
+
 DOCKER_COMPOSE_DIRECTORY?=$(if $(wildcard compose.yaml compose.yml docker-compose.yaml docker-compose.yml),.)
-ifneq ($(if $(USE_DOCKER_COMPOSE_1),,$(shell docker compose version 2>/dev/null || true)),)
-DOCKER_COMPOSE?=$(if $(wildcard $(filter-out .,$(DOCKER_COMPOSE_DIRECTORY))),cd "$(DOCKER_COMPOSE_DIRECTORY)" && )$(DOCKER) compose$(if $(DOCKER_COMPOSE_FLAGS), $(DOCKER_COMPOSE_FLAGS))
-DOCKER_COMPOSE_DEPENDENCY?=$(DOCKER_DEPENDENCY) docker-compose.assure-usable
+ifeq ($(DOCKER_COMPOSE_DIRECTORY),)
+$(error The variable DOCKER_COMPOSE_DIRECTORY should never be empty)
+endif
+
+ifneq ($(USE_DOCKER_COMPOSE_1),)
+DOCKER_COMPOSE_DEPENDENCY?=$(DOCKER_DEPENDENCY) compose.assure-usable
 else
 DOCKER_COMPOSE_DETECTED?=$(shell command -v docker-compose || which docker-compose 2>/dev/null)
-DOCKER_COMPOSE?=$(if $(wildcard $(filter-out .,$(DOCKER_COMPOSE_DIRECTORY))),cd "$(DOCKER_COMPOSE_DIRECTORY)" && )docker-compose$(if $(DOCKER_COMPOSE_FLAGS), $(DOCKER_COMPOSE_FLAGS))
-DOCKER_COMPOSE_DEPENDENCY?=$(DOCKER_DEPENDENCY) $(if $(DOCKER_DETECTED),docker-compose.assure-usable,docker-compose.not-found)
+DOCKER_COMPOSE_DEPENDENCY?=$(DOCKER_DEPENDENCY) $(if $(DOCKER_DETECTED),compose.assure-usable,compose.not-found)
 endif
+ifeq ($(DOCKER_COMPOSE_DEPENDENCY),)
+$(error The variable DOCKER_COMPOSE_DEPENDENCY should never be empty)
+endif
+
+DOCKER_COMPOSE?=$(if $(wildcard $(filter-out .,$(DOCKER_COMPOSE_DIRECTORY))),cd "$(DOCKER_COMPOSE_DIRECTORY)" && )$(DOCKER_COMPOSE_COMMAND)$(if $(DOCKER_COMPOSE_FLAGS), $(DOCKER_COMPOSE_FLAGS))
+ifeq ($(DOCKER_COMPOSE),)
+$(error The variable DOCKER_COMPOSE should never be empty)
+endif
+
 DOCKER_COMPOSE_FLAGS+=
 DOCKER_COMPOSE_BUILD_FLAGS+=
 DOCKER_COMPOSE_UP_FLAGS+=--detach
-ifneq ($(if $(USE_DOCKER_COMPOSE_1),,$(shell docker compose version 2>/dev/null || true)),)
-DOCKER_COMPOSE_RUN_FLAGS+=--interactive --rm --no-deps
-DOCKER_COMPOSE_EXEC_FLAGS+=--interactive
-else
 DOCKER_COMPOSE_RUN_FLAGS+=-T --rm --no-deps
 DOCKER_COMPOSE_EXEC_FLAGS+=-T
-endif
+
 # TODO rename to DOCKER_COMPOSE_ENVIRONMENT_VARIABLES_TO_PASS+=
 DOCKER_COMPOSE_RUN_ENVIRONMENT_VARIABLES+=
 DOCKER_COMPOSE_EXEC_ENVIRONMENT_VARIABLES+=
@@ -42,34 +67,19 @@ DOCKER_COMPOSE_EXEC_FLAGS+=$(foreach var,$(DOCKER_COMPOSE_EXEC_ENVIRONMENT_VARIA
 endif
 
 ###
-##. Requirements
+##. Docker
+##. An open platform for developing, shipping, and running applications
+##. @see https://docs.docker.com/
 ###
 
-ifeq ($(DOCKER),)
-$(error The variable DOCKER should never be empty.)
-endif
-ifeq ($(DOCKER_DEPENDENCY),)
-$(error The variable DOCKER_DEPENDENCY should never be empty.)
-endif
-ifeq ($(DOCKER_COMPOSE),)
-$(error The variable DOCKER_COMPOSE should never be empty.)
-endif
-ifeq ($(DOCKER_COMPOSE_DEPENDENCY),)
-$(error The variable DOCKER_COMPOSE_DEPENDENCY should never be empty.)
-endif
-
-###
-## Docker
-###
-
-#. Exit if Docker is not found
+#. Exit if DOCKER_COMMAND is not found
 docker.not-found:
 	@printf "$(STYLE_ERROR)%s$(STYLE_RESET)\\n" "Please install Docker."
 	@exit 1
 .PHONY: docker.not-found
 
 #. Assure that DOCKER is usable
-docker.assure-usable: # Do not depend on $(DOCKER_DEPENDENCY), as this is often that target
+docker.assure-usable: # Do not depend on $(DOCKER_DEPENDENCY), as DOCKER_DEPENDENCY can be this target
 	@if test -z "$$($(DOCKER) --version 2>/dev/null || true)"; then \
 		printf "$(STYLE_ERROR)%s$(STYLE_RESET)\n" 'Could not use DOCKER as "$(value DOCKER)".'; \
 		exit 1; \
@@ -85,22 +95,22 @@ docker.network.%.create: | $(DOCKER_DEPENDENCY)
 	@$(DOCKER) network create $(*) 2>/dev/null || true
 
 ###
-## Compose
+##. Compose
 ###
 
 #. Exit if Docker Compose is not found
-docker-compose.not-found:
+compose.not-found:
 	@printf "$(STYLE_ERROR)%s$(STYLE_RESET)\\n" "Please install Docker Compose."
 	@exit 1
-.PHONY: docker-compose.not-found
+.PHONY: compose.not-found
 
 #. Assure that DOCKER_COMPOSE is usable
-docker-compose.assure-usable:
+compose.assure-usable:
 	@if test -z "$$($(DOCKER_COMPOSE) --version 2>/dev/null || true)"; then \
 		printf "$(STYLE_ERROR)%s$(STYLE_RESET)\n" 'Could not use DOCKER_COMPOSE as "$(value DOCKER_COMPOSE)".'; \
 		exit 1; \
 	fi
-.PHONY: docker-compose.assure-usable
+.PHONY: compose.assure-usable
 
 ifneq ($(DOCKER_COMPOSE_DIRECTORY),)
 

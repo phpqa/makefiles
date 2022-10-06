@@ -5,10 +5,14 @@
 #. POSIX dependencies - @see https://pubs.opengroup.org/onlinepubs/9699919799/idx/utilities.html
 define check-bin-composer-command
 ifeq ($$(shell command -v $(1) || which $(1) 2>/dev/null),)
-$$(error Please provide the command "$(1)" before including the "managed-files.makefile" file)
+$$(error Please provide the command "$(1)")
 endif
 endef
 $(foreach command,touch ln chmod rm,$(eval $(call check-bin-composer-command,$(command))))
+
+ifeq ($(PHP),)
+$(warning Please provide the variable PHP)
+endif
 
 ###
 ##. Configuration
@@ -16,14 +20,25 @@ $(foreach command,touch ln chmod rm,$(eval $(call check-bin-composer-command,$(c
 
 #.! Note: the environment variable COMPOSER is already used by Composer to locate the composer.json file
 COMPOSER_DIRECTORY?=.
+
 COMPOSER_DEPENDENCY?=$(PHP_DEPENDENCY) bin/composer composer.assure-usable
+ifeq ($(COMPOSER_DEPENDENCY),)
+$(error The variable COMPOSER_DEPENDENCY should never be empty)
+endif
+
 COMPOSER_EXECUTABLE?=$(if $(findstring $(COMPOSER),composer.json),,COMPOSER="$(COMPOSER)" )$(PHP) $(if $(wildcard $(filter-out .,$(COMPOSER_DIRECTORY))),$(COMPOSER_DIRECTORY)/)bin/composer
-COMPOSER_VENDOR_DIRECTORY?=vendor
+ifeq ($(COMPOSER_EXECUTABLE),)
+$(error The variable COMPOSER_EXECUTABLE should never be empty)
+endif
 
 COMPOSER?=composer.json
+ifeq ($(COMPOSER),)
+$(error The variable COMPOSER should never be empty)
+endif
 
-COMPOSER_IMAGE?=composer
+COMPOSER_DOCKER_IMAGE?=composer
 COMPOSER_VERSION?=
+COMPOSER_VENDOR_DIRECTORY?=vendor
 
 #. Building the flags
 ifeq ($(findstring --name,$(COMPOSER_INIT_FLAGS)),)
@@ -40,30 +55,12 @@ COMPOSER_INSTALL_FLAGS+=
 COMPOSER_UPDATE_FLAGS+=
 
 ###
-##. Requirements
+##. Composer
+##. A Dependency Manager for PHP
+##. @see https://getcomposer.org/
 ###
 
-ifeq ($(PHP),)
-$(error The variable PHP should never be empty.)
-endif
-ifeq ($(PHP_DEPENDENCY),)
-$(error The variable PHP_DEPENDENCY should never be empty.)
-endif
-ifeq ($(COMPOSER_EXECUTABLE),)
-$(error The variable COMPOSER_EXECUTABLE should never be empty.)
-endif
-ifeq ($(COMPOSER_DEPENDENCY),)
-$(error The variable COMPOSER_DEPENDENCY should never be empty.)
-endif
-ifeq ($(COMPOSER),)
-$(error The variable COMPOSER should never be empty.)
-endif
-
-###
-## Composer
-###
-
-#. Assure that Composer is usable
+#. Assure that COMPOSER_EXECUTABLE is usable
 composer.assure-usable:
 	@if test -z "$$($(COMPOSER_EXECUTABLE) --version 2>/dev/null || true)"; then \
 		printf "$(STYLE_ERROR)%s$(STYLE_RESET)\n" 'Could not use COMPOSER_EXECUTABLE as "$(value COMPOSER_EXECUTABLE)".'; \
@@ -77,9 +74,9 @@ bin/composer$(if $(COMPOSER_VERSION),-$(COMPOSER_VERSION)): | $(DOCKER_DEPENDENC
 	@if test ! -d "$(dir $(@))"; then mkdir -p "$(dir $(@))"; fi
 	@if test -f "$(@)"; then rm -f "$(@)"; fi
 	@$(if $(COMPOSER_VERSION),if test -L "bin/composer" || test -f "bin/composer"; then rm -f "bin/composer"; fi)
-	@$(DOCKER) image pull $(COMPOSER_IMAGE)$(if $(COMPOSER_VERSION),:$(COMPOSER_VERSION))
-	@$(DOCKER) run --rm --init --pull=missing --volume "$(shell pwd)":"/app" --workdir "/app" $(COMPOSER_IMAGE)$(if $(COMPOSER_VERSION),:$(COMPOSER_VERSION)) cat /usr/bin/composer > "$(@)"
-	@$(DOCKER) image rm $(COMPOSER_IMAGE)$(if $(COMPOSER_VERSION),:$(COMPOSER_VERSION))
+	@$(DOCKER) image pull $(COMPOSER_DOCKER_IMAGE)$(if $(COMPOSER_VERSION),:$(COMPOSER_VERSION))
+	@$(DOCKER) run --rm --init --pull=missing --volume "$(shell pwd)":"/app" --workdir "/app" $(COMPOSER_DOCKER_IMAGE)$(if $(COMPOSER_VERSION),:$(COMPOSER_VERSION)) cat /usr/bin/composer > "$(@)"
+	@$(DOCKER) image rm $(COMPOSER_DOCKER_IMAGE)$(if $(COMPOSER_VERSION),:$(COMPOSER_VERSION))
 	@if test ! -f "$(@)"; then \
 		printf "$(STYLE_ERROR)%s$(STYLE_RESET)\n" "The \"$(@)\" file is not present. Something went wrong."; \
 	else \
@@ -88,6 +85,9 @@ bin/composer$(if $(COMPOSER_VERSION),-$(COMPOSER_VERSION)): | $(DOCKER_DEPENDENC
 else
 #. Download Composer to bin/composer or bin/composer-COMPOSER_VERSION
 bin/composer$(if $(COMPOSER_VERSION),-$(COMPOSER_VERSION)): | $(PHP_DEPENDENCY)
+ifeq ($(PHP),)
+	$(error Please provide the variable PHP before running $(@))
+endif
 	@if test ! -d "$(dir $(@))"; then mkdir -p "$(dir $(@))"; fi
 	@if test -f "$(@)"; then rm -f "$(@)"; fi
 	@$(if $(COMPOSER_VERSION),if test -L "bin/composer" || -f "bin/composer"; then rm -f "bin/composer"; fi)
@@ -122,18 +122,12 @@ endif
 
 #. Create a composer.json file
 $(COMPOSER): | $(COMPOSER_DEPENDENCY)
-ifeq ($(COMPOSER_EXECUTABLE),)
-	$(error Please provide the variable COMPOSER_EXECUTABLE before running $(@).)
-endif
 	@if test ! -f "$(@)"; then \
 		$(COMPOSER_EXECUTABLE) init $(or $(COMPOSER_INIT_FLAGS)); \
 	fi
 
 #. Build the composer.lock file
 $(patsubst %.json,%.lock,$(COMPOSER)): $(COMPOSER) | $(COMPOSER_DEPENDENCY)
-ifeq ($(COMPOSER_EXECUTABLE),)
-	$(error Please provide the variable COMPOSER_EXECUTABLE before running $(@).)
-endif
 	@if test ! -f "$(@)"; then \
 		$(COMPOSER_EXECUTABLE) install $(or $(COMPOSER_INSTALL_FLAGS)); \
 	else \
@@ -149,9 +143,6 @@ endif
 
 #. Build the dependencies directory
 $(COMPOSER_VENDOR_DIRECTORY): $(patsubst %.json,%.lock,$(COMPOSER)) | $(COMPOSER_DEPENDENCY)
-ifeq ($(COMPOSER_EXECUTABLE),)
-	$(error Please provide the variable COMPOSER_EXECUTABLE before running $(@).)
-endif
 	@if test ! -d "$(@)"; then \
 		$(COMPOSER_EXECUTABLE) install $(or $(COMPOSER_INSTALL_FLAGS)); \
 	else \
@@ -166,32 +157,37 @@ endif
 	fi
 
 # Install the project dependencies
+# @see https://getcomposer.org/doc/03-cli.md#install-i
 composer.install: $(patsubst %.json,%.lock,$(COMPOSER)) | $(COMPOSER_DEPENDENCY)
-ifeq ($(COMPOSER_EXECUTABLE),)
-	$(error Please provide the variable COMPOSER_EXECUTABLE before running $(@).)
-endif
 	@$(COMPOSER_EXECUTABLE) install $(or $(COMPOSER_INSTALL_FLAGS))
 .PHONY: composer.install
 
 # Update the project dependencies
+# @see https://getcomposer.org/doc/03-cli.md#update-u
 composer.update: $(patsubst %.json,%.lock,$(COMPOSER)) | $(COMPOSER_DEPENDENCY)
-ifeq ($(COMPOSER_EXECUTABLE),)
-	$(error Please provide the variable COMPOSER_EXECUTABLE before running $(@).)
-endif
 	@$(COMPOSER_EXECUTABLE) update $(or $(COMPOSER_UPDATE_FLAGS))
 .PHONY: composer.update
 
 # Update only the lock file
+# @see https://getcomposer.org/doc/03-cli.md#update-u
 composer.update-lock: $(patsubst %.json,%.lock,$(COMPOSER)) | $(COMPOSER_DEPENDENCY)
-ifeq ($(COMPOSER_EXECUTABLE),)
-	$(error Please provide the variable COMPOSER_EXECUTABLE before running $(@).)
-endif
 	@$(COMPOSER_EXECUTABLE) update $(or $(COMPOSER_UPDATE_FLAGS)) --lock
 .PHONY: composer.update-lock
 
 #. (internal) Untouch the Composer related files - set last modified date back to latest git commit
-composer.untouch:
+composer.untouch: | $(GIT_DEPENDENCY)
+ifeq ($(GIT),)
+	$(error Please provide the variable GIT before running $(@))
+endif
 	@$(foreach file,$(COMPOSER) $(patsubst %.json,%.lock,$(COMPOSER)), \
-	touch -d "$$(git log --pretty=format:%ci -1 "HEAD" -- "$(file)")" "$(file)"; \
+	touch -d "$$($(GIT) log --pretty=format:%ci -1 "HEAD" -- "$(file)")" "$(file)"; \
 	printf "%s: %s\n" "$(file)" "$$(date -r "$(file)" +"%Y-%m-%d %H:%M:%S")"; \
 	)
+
+# Configure Composer with some more strict flags
+# @see https://getcomposer.org/doc/06-config.md
+composer.configure-strict: | $(COMPOSER_DEPENDENCY)
+	@$(COMPOSER_EXECUTABLE) config optimize-autoloader true
+	@$(COMPOSER_EXECUTABLE) config sort-packages true
+	@$(COMPOSER_EXECUTABLE) config platform-check true
+.PHONY: composer.configure-strict

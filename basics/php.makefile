@@ -2,9 +2,21 @@
 ##. Configuration
 ###
 
-PHP_DIRECTORY?=.
 PHP_DEPENDENCY?=php.assure-usable
+ifeq ($(PHP_DEPENDENCY),)
+$(error The variable PHP_DEPENDENCY should never be empty)
+endif
+
+PHP_DIRECTORY?=.
+ifeq ($(PHP_DIRECTORY),)
+$(error The variable PHP_DIRECTORY should never be empty)
+endif
+
 PHP?=$(if $(wildcard $(filter-out .,$(PHP_DIRECTORY))),$(PHP_DIRECTORY)/)bin/php
+ifeq ($(PHP),)
+$(error The variable PHP should never be empty)
+endif
+
 PHP_FLAGS?=
 PHP_MEMORY_LIMIT?=
 ifneq ($(PHP_MEMORY_LIMIT),)
@@ -13,25 +25,19 @@ PHP_FLAGS+=-d memory_limit="$(PHP_MEMORY_LIMIT)"
 endif
 endif
 
+# TODO split bin/php between local php check, docker and docker-compose
+# TODO try to find the container name for php automagically based on docker-compose image
+# TODO Add some checks for DOCKER_COMPOSE_SERVICE_NAME_FOR_PHP
 DOCKER_COMPOSE_SERVICE_NAME_FOR_PHP?=
 
 ###
-##. Requirements
-###
-
-ifeq ($(PHP),)
-$(error The variable PHP should never be empty.)
-endif
-ifeq ($(PHP_DEPENDENCY),)
-$(error The variable PHP_DEPENDENCY should never be empty.)
-endif
-
-###
-## PHP
+##. PHP
+##. A popular general-purpose scripting language that is especially suited to web development
+##. @see https://www.php.net/
 ###
 
 #. Assure that PHP is usable
-php.assure-usable:
+php.assure-usable: | bin/php
 	@if test -z "$$($(PHP) --version 2>/dev/null || true)"; then \
 		printf "$(STYLE_ERROR)%s$(STYLE_RESET)\n" 'Could not use PHP as "$(value PHP)".'; \
 		exit 1; \
@@ -39,8 +45,7 @@ php.assure-usable:
 .PHONY: php.assure-usable
 
 # Create a bin/php file
-# TODO split bin/php between local php check, docker and docker-compose
-# TODO try to find the container name for php automagically based on docker-compose image
+# @see https://www.php.net/
 bin/php: $(MAKEFILE_LIST) $(if $(wildcard $(DEFAULT_ENV_FILE)),$(DEFAULT_ENV_FILE))
 	@if test ! -d "$(dir $(@))"; then mkdir -p "$(dir $(@))"; fi
 	@printf "%s\\n" "#!/usr/bin/env sh" > "$(@)"
@@ -59,7 +64,7 @@ ifneq ($(PHP),)
 	@printf "%s\\n" "fi" >> "$(@)"
 	@printf "%s\\n" "$(PHP)$(if $(PHP_FLAGS), $(PHP_FLAGS)) \"\$$@\"" >> "$(@)"
 else
-	$(error Could not find a way to run PHP.)
+	$(error Could not find a way to run PHP)
 endif
 endif
 	@chmod +x "$(@)"
