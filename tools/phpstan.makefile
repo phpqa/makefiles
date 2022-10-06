@@ -4,13 +4,25 @@
 
 #. Package variables
 PHPSTAN_PACKAGE?=phpstan/phpstan
-PHPSTAN?=$(PHP) vendor/bin/phpstan
-ifeq ($(PHPSTAN),$(PHP) vendor/bin/phpstan)
+ifeq ($(PHPSTAN_PACKAGE),)
+$(error The variable PHPSTAN_PACKAGE should never be empty)
+endif
+
+PHPSTAN?=$(or $(PHP),php) vendor/bin/phpstan
+ifeq ($(PHPSTAN),)
+$(error The variable PHPSTAN should never be empty)
+endif
+
+ifeq ($(PHPSTAN),$(or $(PHP),php) vendor/bin/phpstan)
 PHPSTAN_DEPENDENCY?=$(PHP_DEPENDENCY) vendor/bin/phpstan
 else
 PHPSTAN_DEPENDENCY?=$(wildcard $(PHPSTAN))
 endif
-PHP_QUALITY_ASSURANCE_CHECK_TOOLS+=phpstan
+ifeq ($(PHPSTAN_DEPENDENCY),)
+$(error The variable PHPSTAN_DEPENDENCY should never be empty)
+endif
+
+#. Register as a tool
 PHP_QUALITY_ASSURANCE_CHECK_TOOLS_DEPENDENCIES+=$(filter-out $(PHP_DEPENDENCY),$(PHPSTAN_DEPENDENCY))
 HELP_TARGETS_TO_SKIP+=$(wildcard $(filter-out $(PHP_DEPENDENCY),$(PHPSTAN_DEPENDENCY)))
 
@@ -49,38 +61,16 @@ endif
 endif
 
 ###
-##. Requirements
+##. PHPStan
+##. Find bugs in your code without writing tests
+##. @see https://phpstan.org/
 ###
 
-ifeq ($(PHP),)
-$(error The variable PHP should never be empty.)
-endif
-ifeq ($(PHP_DEPENDENCY),)
-$(error The variable PHP_DEPENDENCY should never be empty.)
-endif
-ifeq ($(COMPOSER_EXECUTABLE),)
-$(error The variable COMPOSER_EXECUTABLE should never be empty.)
-endif
-ifeq ($(COMPOSER_DEPENDENCY),)
-$(error The variable COMPOSER_DEPENDENCY should never be empty.)
-endif
-ifeq ($(PHPSTAN_PACKAGE),)
-$(error The variable PHPSTAN_PACKAGE should never be empty.)
-endif
-ifeq ($(PHPSTAN),)
-$(error The variable PHPSTAN should never be empty.)
-endif
-ifeq ($(PHPSTAN_DEPENDENCY),)
-$(error The variable PHPSTAN_DEPENDENCY should never be empty.)
-endif
-
-###
-## Quality Assurance
-###
-
+ifneq ($(COMPOSER_EXECUTABLE),)
 # Install PHPStan as dev dependency in vendor
 vendor/bin/phpstan: | $(COMPOSER_DEPENDENCY) vendor
 	@if test ! -f "$(@)"; then $(COMPOSER_EXECUTABLE) require --dev "$(PHPSTAN_PACKAGE)"; fi
+endif
 
 # composer require --dev phpstan/extension-installer
 # composer require --dev phpstan/phpstan-strict-rules phpstan/phpstan-phpunit phpstan/phpstan-doctrine phpstan/phpstan-symfony phpstan/phpstan-deprecation-rules
@@ -90,6 +80,7 @@ vendor/bin/phpstan: | $(COMPOSER_DEPENDENCY) vendor
 phpstan: $(wildcard $(PHPSTAN_CONFIG)) | $(PHPSTAN_DEPENDENCY)
 	@$(PHPSTAN)$(if $(PHPSTAN_FLAGS), $(PHPSTAN_FLAGS)) analyse$(if $(PHPSTAN_DIRECTORIES_TO_CHECK), $(PHPSTAN_DIRECTORIES_TO_CHECK))
 .PHONY: phpstan
+PHP_QUALITY_ASSURANCE_CHECK_TOOLS+=phpstan
 
 # Generate a baseline for PHPStan
 phpstan-baseline.neon: $(PHPSTAN_CONFIG) | $(PHPSTAN_DEPENDENCY)

@@ -1,9 +1,45 @@
 ###
+##. Dependencies
+###
+
+ifeq ($(PHP),)
+$(warning Please provide the variable PHP)
+endif
+ifeq ($(COMPOSER_EXECUTABLE),)
+$(warning Please provide the variable COMPOSER_EXECUTABLE)
+endif
+ifeq ($(GIT),)
+$(warning Please provide the variable GIT)
+endif
+ifeq ($(JQ),)
+$(warning Please provide the variable JQ)
+endif
+
+###
 ##. Configuration
 ###
 
 #. Package variables
 STUDIO_PACKAGE?=franzl/studio
+ifeq ($(STUDIO_PACKAGE),)
+$(error The variable STUDIO_PACKAGE should never be empty)
+endif
+
+STUDIO?=$(or $(PHP),php) vendor/bin/php-cs-fixer
+ifeq ($(STUDIO),)
+$(error The variable STUDIO should never be empty)
+endif
+
+ifeq ($(STUDIO),$(or $(PHP),php) vendor/bin/php-cs-fixer)
+STUDIO_DEPENDENCY?=$(PHP_DEPENDENCY) vendor/bin/php-cs-fixer
+else
+STUDIO_DEPENDENCY?=$(wildcard $(STUDIO))
+endif
+ifeq ($(STUDIO_DEPENDENCY),)
+$(error The variable STUDIO_DEPENDENCY should never be empty)
+endif
+
+#. Tool variables
 STUDIO_JSON_FILE?=studio.json
 STUDIO_PACKAGE_DIRECTORIES?=
 
@@ -15,28 +51,17 @@ DOCKER_COMPOSE_EXEC_ENVIRONMENT_VARIABLES+=COMPOSER
 endif
 
 ###
-##. Requirements
+##. Studio
+##. A workbench for developing Composer packages
+##. @see https://github.com/franzliedke/studio
 ###
 
-ifeq ($(PHP),)
-$(error The variable PHP should never be empty.)
-endif
-ifeq ($(COMPOSER_EXECUTABLE),)
-$(error The variable COMPOSER_EXECUTABLE should never be empty.)
-endif
-ifeq ($(GIT),)
-$(error The variable GIT should never be empty.)
-endif
-ifeq ($(JQ),)
-$(error The variable JQ should never be empty.)
-endif
-
-###
-## Studio
-###
-
+ifneq ($(COMPOSER_EXECUTABLE),)
 #. Install Studio
 vendor/bin/studio: | $(COMPOSER_DEPENDENCY)
+ifeq ($(COMPOSER_EXECUTABLE),)
+	$(error Please provide the variable COMPOSER_EXECUTABLE before running $(@))
+endif
 	@if test -f "$(STUDIO_JSON_FILE)"; then mv "$(STUDIO_JSON_FILE)" "$(STUDIO_JSON_FILE).disabled"; fi
 	@$(MAKE) vendor
 	@if ! $(COMPOSER_EXECUTABLE) show $(STUDIO_PACKAGE) >/dev/null 2>&1; then \
@@ -44,11 +69,18 @@ vendor/bin/studio: | $(COMPOSER_DEPENDENCY)
 		$(COMPOSER_EXECUTABLE) require --dev --no-interaction --no-plugins --no-scripts --no-progress $(STUDIO_PACKAGE); \
 	fi
 	@if test -f "$(STUDIO_JSON_FILE).disabled"; then mv "$(STUDIO_JSON_FILE).disabled" "$(STUDIO_JSON_FILE)"; fi
+endif
 
 # Load the packages
-studio.load: | $(PHP_DEPENDENCY) $(COMPOSER_DEPENDENCY) vendor/bin/studio
+studio.load: | $(PHP_DEPENDENCY) $(COMPOSER_DEPENDENCY) $(STUDIO_DEPENDENCY)
+ifeq ($(PHP),)
+	$(error Please provide the variable PHP)
+endif
+ifeq ($(COMPOSER_EXECUTABLE),)
+	$(error Please provide the variable COMPOSER_EXECUTABLE before running $(@))
+endif
 ifeq ($(STUDIO_PACKAGE_DIRECTORIES),)
-	$(error Please provide the variable STUDIO_PACKAGE_DIRECTORIES before running $(@).)
+	$(error Please provide the variable STUDIO_PACKAGE_DIRECTORIES before running $(@))
 endif
 	@$(foreach directory,$(STUDIO_PACKAGE_DIRECTORIES), \
 	$(PHP) vendor/bin/studio load "$(directory)"; \
@@ -67,9 +99,21 @@ endif
 .PHONY: studio.load
 
 # Unload the packages
-studio.unload: | $(PHP_DEPENDENCY) $(COMPOSER_DEPENDENCY) $(GIT_DEPENDENCY) $(JQ_DEPENDENCY) vendor/bin/studio
+studio.unload: | $(PHP_DEPENDENCY) $(COMPOSER_DEPENDENCY) $(GIT_DEPENDENCY) $(JQ_DEPENDENCY) $(STUDIO_DEPENDENCY)
+ifeq ($(PHP),)
+	$(error Please provide the variable PHP)
+endif
+ifeq ($(COMPOSER_EXECUTABLE),)
+	$(error Please provide the variable COMPOSER_EXECUTABLE before running $(@))
+endif
+ifeq ($(GIT),)
+	$(error Please provide the variable GIT)
+endif
+ifeq ($(JQ),)
+	$(error Please provide the variable JQ)
+endif
 ifeq ($(STUDIO_PACKAGE_DIRECTORIES),)
-	$(error Could not find any local package directories to load.)
+	$(error Please provide the variable STUDIO_PACKAGE_DIRECTORIES before running $(@))
 endif
 	@$(foreach directory,$(STUDIO_PACKAGE_DIRECTORIES), \
 	if test -f "$(STUDIO_JSON_FILE)" && grep --quiet "$(directory)" "$(STUDIO_JSON_FILE)"; then \
@@ -99,8 +143,11 @@ endif
 
 # List the packages
 studio.list: | $(COMPOSER_DEPENDENCY)
+ifeq ($(COMPOSER_EXECUTABLE),)
+	$(error Please provide the variable COMPOSER_EXECUTABLE before running $(@))
+endif
 ifeq ($(STUDIO_PACKAGE_DIRECTORIES),)
-	$(error Could not find any package directories to load.)
+	$(error Please provide the variable STUDIO_PACKAGE_DIRECTORIES before running $(@))
 endif
 	@$(foreach directory,$(STUDIO_PACKAGE_DIRECTORIES), \
 	PACKAGE="$$($(COMPOSER_EXECUTABLE) --working-dir="$(directory)" show --name-only --self)"; \

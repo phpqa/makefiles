@@ -4,15 +4,26 @@
 
 #. Package variables
 PSALM_PACKAGE?=vimeo/psalm
-PSALM?=$(PHP) vendor/bin/psalm
-ifeq ($(PSALM),$(PHP) vendor/bin/psalm)
+ifeq ($(PSALM_PACKAGE),)
+$(error The variable PSALM_PACKAGE should never be empty)
+endif
+
+PSALM?=$(or $(PHP),php) vendor/bin/psalm
+ifeq ($(PSALM),)
+$(error The variable PSALM should never be empty)
+endif
+
+ifeq ($(PSALM),$(or $(PHP),php) vendor/bin/psalm)
 PSALM_DEPENDENCY?=$(PHP_DEPENDENCY) vendor/bin/psalm
 else
 PSALM_DEPENDENCY?=$(wildcard $(PSALM))
 endif
-PHP_QUALITY_ASSURANCE_CHECK_TOOLS+=psalm psalter.dryrun
+ifeq ($(PSALM_DEPENDENCY),)
+$(error The variable PSALM_DEPENDENCY should never be empty)
+endif
+
+#. Register as a tool
 PHP_QUALITY_ASSURANCE_CHECK_TOOLS_DEPENDENCIES+=$(filter-out $(PHP_DEPENDENCY),$(PSALM_DEPENDENCY))
-PHP_QUALITY_ASSURANCE_FIX_TOOLS+=psalter
 PHP_QUALITY_ASSURANCE_FIX_TOOLS_DEPENDENCIES+=$(filter-out $(PHP_DEPENDENCY),$(PSALM_DEPENDENCY))
 HELP_TARGETS_TO_SKIP+=$(wildcard $(filter-out $(PHP_DEPENDENCY),$(PSALM_DEPENDENCY)))
 
@@ -39,38 +50,16 @@ endif
 endif
 
 ###
-##. Requirements
+##. Psalm
+##. A static analysis tool that attempts to dig into your program and find as many type-related bugs as possible
+##. @see https://psalm.dev/docs/
 ###
 
-ifeq ($(PHP),)
-$(error The variable PHP should never be empty.)
-endif
-ifeq ($(PHP_DEPENDENCY),)
-$(error The variable PHP_DEPENDENCY should never be empty.)
-endif
-ifeq ($(COMPOSER_EXECUTABLE),)
-$(error The variable COMPOSER_EXECUTABLE should never be empty.)
-endif
-ifeq ($(COMPOSER_DEPENDENCY),)
-$(error The variable COMPOSER_DEPENDENCY should never be empty.)
-endif
-ifeq ($(PSALM_PACKAGE),)
-$(error The variable PSALM_PACKAGE should never be empty.)
-endif
-ifeq ($(PSALM),)
-$(error The variable PSALM should never be empty.)
-endif
-ifeq ($(PSALM_DEPENDENCY),)
-$(error The variable PSALM_DEPENDENCY should never be empty.)
-endif
-
-###
-## Quality Assurance
-###
-
+ifneq ($(COMPOSER_EXECUTABLE),)
 # Install Psalm as dev dependency in vendor
 vendor/bin/psalm: | $(COMPOSER_DEPENDENCY) vendor
 	@if test ! -f "$(@)"; then $(COMPOSER_EXECUTABLE) require --dev "$(PSALM_PACKAGE)"; fi
+endif
 
 #. Initialize Psalm # TODO This needs a HOME environment variable to be overwritten https://github.com/vimeo/psalm/issues/4267
 psalm.xml: | $(PSALM_DEPENDENCY)
@@ -81,6 +70,7 @@ psalm.xml: | $(PSALM_DEPENDENCY)
 psalm: | $(PSALM_DEPENDENCY) $(PSALM_CONFIG)
 	@$(PSALM)$(if $(PSALM_FLAGS), $(PSALM_FLAGS))$(if $(PSALM_BASELINE), --use-baseline="$(PSALM_BASELINE)" --update-baseline)
 .PHONY: psalm
+PHP_QUALITY_ASSURANCE_CHECK_TOOLS+=psalm
 
 # Generate a baseline for Psalm
 psalm-baseline.xml: | $(PSALM_DEPENDENCY) $(PSALM_CONFIG)
@@ -97,8 +87,10 @@ psalm.clear-cache:
 psalter: | $(PSALM_DEPENDENCY) $(PSALM_CONFIG)
 	@$(PSALM) --alter$(if $(PSALM_FLAGS), $(PSALM_FLAGS)) --issues="$(if $(PSALTER_ISSUES),$(PSALTER_ISSUES),all)"
 .PHONY: psalter
+PHP_QUALITY_ASSURANCE_FIX_TOOLS+=psalter
 
 # Dryrun Psalter
 psalter.dryrun: | $(PSALM_DEPENDENCY) $(PSALM_CONFIG)
 	@$(PSALM) --alter --dry-run$(if $(PSALM_FLAGS), $(PSALM_FLAGS)) --issues="$(if $(PSALTER_ISSUES),$(PSALTER_ISSUES),all)"
 .PHONY: psalter.dryrun
+PHP_QUALITY_ASSURANCE_CHECK_TOOLS+=psalter.dryrun

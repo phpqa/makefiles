@@ -2,26 +2,29 @@
 ##. Dependencies
 ###
 
-JQ?=$(shell command -v jq || which jq 2>/dev/null)
-ifeq ($(JQ),)
-JQ?=$(DOCKER) run --rm --interactive stedolan/jq:latest
+ifeq ($(DOCKER),)
+$(warning Please provide the variable DOCKER)
 endif
-
-CURL?=$(shell command -v curl || which curl 2>/dev/null)
+ifeq ($(DOCKER_SOCKET),)
+$(warning Please provide the variable DOCKER_SOCKET)
+endif
 ifeq ($(CURL),)
-CURL?=$(DOCKER) run --rm --network host curlimages/curl:latest
+$(warning Please provide the variable CURL)
+endif
+ifeq ($(JQ),)
+$(warning Please provide the variable JQ)
 endif
 
 ###
 ##. Configuration
 ###
 
-#. Docker variables for Portainer
+#. Docker variables
 PORTAINER_IMAGE?=cr.portainer.io/portainer/portainer-ce:latest
 PORTAINER_SERVICE_NAME?=portainer
 PORTAINER_DATA_VOLUME?=portainer_data
 
-#. Extra variables for Portainer
+#. Adding our own variables
 PORTAINER_ADMIN_PASSWORD?=admin
 PORTAINER_ADMIN_PASSWORD_LENGTH?=5
 PORTAINER_LOGO_URL?=
@@ -32,30 +35,27 @@ PORTAINER_TRAEFIK_DOMAIN?=$(PORTAINER_SERVICE_NAME).localhost
 PORTAINER_TRAEFIK_NETWORK?=$(TRAEFIK_PROVIDERS_DOCKER_NETWORK)
 
 ###
-##. Requirements
-###
-
-ifeq ($(DOCKER),)
-$(error The variable DOCKER should never be empty.)
-endif
-ifeq ($(DOCKER_DEPENDENCY),)
-$(error The variable DOCKER_DEPENDENCY should never be empty.)
-endif
-ifeq ($(DOCKER_SOCKET),)
-$(error Please provide the variable DOCKER_SOCKET before including this file.)
-endif
-
-###
-## Docker Tools
+##. Portainer
+##. A powerful, open source toolset that allows you to easily build and manage containers
+##. @see https://docs.portainer.io/
 ###
 
 #. Pull the Portainer container
 portainer.pull:%.pull: | $(DOCKER_DEPENDENCY)
+ifeq ($(DOCKER),)
+	$(error Please provide the variable DOCKER before running $(@))
+endif
 	@$(DOCKER) image pull "$(PORTAINER_IMAGE)"
 .PHONY: portainer.pull
 
 #. Start the Portainer container
 portainer.start:%.start: | $(DOCKER_DEPENDENCY) $(DOCKER_SOCKET)
+ifeq ($(DOCKER),)
+	$(error Please provide the variable DOCKER before running $(@))
+endif
+ifeq ($(DOCKER_SOCKET),)
+	$(error Please provide the variable DOCKER_SOCKET before running $(@))
+endif
 	@if test -z "$$($(DOCKER) container inspect --format "{{ .ID }}" "$(PORTAINER_SERVICE_NAME)" 2> /dev/null)"; then \
 		if test -z "$$($(DOCKER) network ls --quiet --filter "name=^$(PORTAINER_TRAEFIK_NETWORK)$$")"; then \
 			$(DOCKER) network create "$(PORTAINER_TRAEFIK_NETWORK)" > /dev/null 2>&1; \
@@ -84,6 +84,12 @@ portainer.start:%.start: | $(DOCKER_DEPENDENCY) $(DOCKER_SOCKET)
 
 #. Wait for the Portainer container to be running
 portainer.ensure-running:%.ensure-running: | $(DOCKER_DEPENDENCY) %.start
+ifeq ($(DOCKER),)
+	$(error Please provide the variable DOCKER before running $(@))
+endif
+ifeq ($(CURL),)
+	$(error Please provide the variable CURL before running $(@))
+endif
 	@until test -n "$$($(DOCKER) container ls --quiet --filter "status=running" --filter "name=^$(PORTAINER_SERVICE_NAME)$$" 2>/dev/null)"; do \
 		if test -z "$$($(DOCKER) container ls --quiet --filter "status=created" --filter "status=running" --filter "name=^$(PORTAINER_SERVICE_NAME)$$" 2>/dev/null)"; then \
 			printf "$(STYLE_ERROR)%s$(STYLE_RESET)\n" "The container \"$(PORTAINER_SERVICE_NAME)\" never started."; \
@@ -104,6 +110,15 @@ portainer.ensure-running:%.ensure-running: | $(DOCKER_DEPENDENCY) %.start
 
 #. Setup the Portainer container
 portainer.setup:%.setup: | %.ensure-running
+ifeq ($(DOCKER),)
+	$(error Please provide the variable DOCKER before running $(@))
+endif
+ifeq ($(CURL),)
+	$(error Please provide the variable CURL before running $(@))
+endif
+ifeq ($(JQ),)
+	$(error Please provide the variable JQ before running $(@))
+endif
 	@AUTHORIZATION="$$( \
 		$(CURL) --location --silent --show-error "http://$$($(DOCKER) container port "$(PORTAINER_SERVICE_NAME)" "9000" | grep "0.0.0.0")/api/auth" \
 			-X POST \
@@ -130,6 +145,9 @@ portainer.setup:%.setup: | %.ensure-running
 
 #. List the url to the Portainer container
 portainer.list:%.list: | $(DOCKER_DEPENDENCY) %.ensure-running
+ifeq ($(DOCKER),)
+	$(error Please provide the variable DOCKER before running $(@))
+endif
 	@printf "Open Portainer: %s or %s (admin/%s)\n" \
 		"http://$(PORTAINER_TRAEFIK_DOMAIN)$(if $(filter-out 80,$(TRAEFIK_HTTP_PORT)),:$(TRAEFIK_HTTP_PORT))" \
 		"http://$$($(DOCKER) container port "$(PORTAINER_SERVICE_NAME)" "9000" | grep "0.0.0.0")" "$(PORTAINER_ADMIN_PASSWORD)"
@@ -137,16 +155,25 @@ portainer.list:%.list: | $(DOCKER_DEPENDENCY) %.ensure-running
 
 #. List the logs of the Portainer container
 portainer.log:%.log: | $(DOCKER_DEPENDENCY)
+ifeq ($(DOCKER),)
+	$(error Please provide the variable DOCKER before running $(@))
+endif
 	@$(DOCKER) container logs --since "$$($(DOCKER) container inspect --format "{{ .State.StartedAt }}" "$(PORTAINER_SERVICE_NAME)")" "$(PORTAINER_SERVICE_NAME)"
 .PHONY: portainer.log
 
 #. Stop the Portainer container
 portainer.stop:%.stop: | $(DOCKER_DEPENDENCY)
+ifeq ($(DOCKER),)
+	$(error Please provide the variable DOCKER before running $(@))
+endif
 	@$(DOCKER) container stop "$(PORTAINER_SERVICE_NAME)"
 .PHONY: portainer.stop
 
 #. Clear the Portainer container
 portainer.clear:%.clear: | $(DOCKER_DEPENDENCY)
+ifeq ($(DOCKER),)
+	$(error Please provide the variable DOCKER before running $(@))
+endif
 	@$(DOCKER) container kill "$(PORTAINER_SERVICE_NAME)" > /dev/null 2>&1 || true
 	@$(DOCKER) container rm --force --volumes "$(PORTAINER_SERVICE_NAME)" > /dev/null 2>&1 || true
 	@$(DOCKER) volume rm --force "$(PORTAINER_DATA_VOLUME)" > /dev/null 2>&1 || true
@@ -154,6 +181,9 @@ portainer.clear:%.clear: | $(DOCKER_DEPENDENCY)
 
 #. Wait for the Portainer container to be cleared
 portainer.ensure-cleared:%.ensure-cleared: | $(DOCKER_DEPENDENCY) %.clear
+ifeq ($(DOCKER),)
+	$(error Please provide the variable DOCKER before running $(@))
+endif
 	@until test -z "$$($(DOCKER) container ls --quiet --filter "status=running" --filter "name=^$(PORTAINER_SERVICE_NAME)$$")"; do \
 		sleep 1; \
 	done

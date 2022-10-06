@@ -5,7 +5,7 @@
 #. POSIX dependencies - @see https://pubs.opengroup.org/onlinepubs/9699919799/idx/utilities.html
 define check-managed-files-command
 ifeq ($$(shell command -v $(1) || which $(1) 2>/dev/null),)
-$$(error Please provide the command "$(1)" before including the "managed-files.makefile" file)
+$$(error Please provide the command "$(1)")
 endif
 endef
 $(foreach command,mkdir find sort tail diff cp,$(eval $(call check-managed-files-command,$(command))))
@@ -15,22 +15,20 @@ $(foreach command,mkdir find sort tail diff cp,$(eval $(call check-managed-files
 ###
 
 MANAGED_FILES?=$(if $(GIT),$(shell $(GIT) clean -nX 2>/dev/null | sed 's/Would remove //'))
+
 MANAGED_FILES_ORIGIN_DIRECTORY?=.
-MANAGED_FILES_BACKUP_DIRECTORY?=./.backups
-MANAGED_FILES_BACKUP_EXTENSION?=.bck
-
-###
-##. Requirements
-###
-
 ifeq ($(MANAGED_FILES_ORIGIN_DIRECTORY),)
-$(error Please provide the variable MANAGED_FILES_ORIGIN_DIRECTORY before including this file!)
+$(error The variable MANAGED_FILES_ORIGIN_DIRECTORY should never be empty)
 endif
+
+MANAGED_FILES_BACKUP_DIRECTORY?=./.backups
 ifeq ($(MANAGED_FILES_BACKUP_DIRECTORY),)
-$(error Please provide the variable MANAGED_FILES_BACKUP_DIRECTORY before including this file!)
+$(error The variable MANAGED_FILES_BACKUP_DIRECTORY should never be empty)
 endif
+
+MANAGED_FILES_BACKUP_EXTENSION?=.bck
 ifeq ($(MANAGED_FILES_BACKUP_EXTENSION),)
-$(error Please provide the variable MANAGED_FILES_BACKUP_EXTENSION before including this file!)
+$(error The variable MANAGED_FILES_BACKUP_EXTENSION should never be empty)
 endif
 
 ###
@@ -93,7 +91,7 @@ remove-managed-file=\
 	fi
 
 ###
-## Managed Files
+##. Managed Files
 ###
 
 ifneq ($(MANAGED_FILES),)

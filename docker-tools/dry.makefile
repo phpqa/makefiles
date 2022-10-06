@@ -1,33 +1,37 @@
 ###
+##. Dependencies
+###
+
+ifeq ($(DOCKER),)
+$(warning Please provide the variable DOCKER)
+endif
+ifeq ($(DOCKER_SOCKET),)
+$(warning Please provide the variable DOCKER_SOCKET)
+endif
+
+###
 ##. Configuration
 ###
 
-#. Docker variables for dry
+#. Docker variables
 DRY_IMAGE?=moncho/dry:latest
 DRY_SERVICE_NAME?=dry
 
 ###
-##. Requirements
-###
-
-ifeq ($(DOCKER),)
-$(error The variable DOCKER should never be empty.)
-endif
-ifeq ($(DOCKER_DEPENDENCY),)
-$(error The variable DOCKER_DEPENDENCY should never be empty.)
-endif
-ifeq ($(DOCKER_SOCKET),)
-$(error Please provide the variable DOCKER_SOCKET before including this file.)
-endif
-
-###
-## Docker Tools
+##. dry
+##. A terminal application to manage Docker and Docker Swarm
+##. @see https://github.com/moncho/dry
 ###
 
 # Run dry in a container
-# A terminal application to manage Docker and Docker Swarm
 # @see https://github.com/moncho/dry
 dry: | $(DOCKER_DEPENDENCY) $(DOCKER_SOCKET)
+ifeq ($(DOCKER),)
+	$(error Please provide the variable DOCKER before running $(@))
+endif
+ifeq ($(DOCKER_SOCKET),)
+	$(error Please provide the variable DOCKER_SOCKET before running $(@))
+endif
 	@if test -z "$$($(DOCKER) container inspect --format "{{ .ID }}" "$(DRY_SERVICE_NAME)" 2> /dev/null)"; then \
 		$(DOCKER) container run --rm --interactive --tty --name "$(DRY_SERVICE_NAME)" \
 			--volume "$(DOCKER_SOCKET):/var/run/docker.sock:ro" \

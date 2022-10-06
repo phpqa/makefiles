@@ -4,13 +4,25 @@
 
 #. Package variables
 PHPUNIT_PACKAGE?=phpunit/phpunit
-PHPUNIT?=$(PHP) vendor/bin/phpunit
-ifeq ($(PHPUNIT),$(PHP) vendor/bin/phpunit)
+ifeq ($(PHPUNIT_PACKAGE),)
+$(error The variable PHPUNIT_PACKAGE should never be empty)
+endif
+
+PHPUNIT?=$(or $(PHP),php) vendor/bin/phpunit
+ifeq ($(PHPUNIT),)
+$(error The variable PHPUNIT should never be empty)
+endif
+
+ifeq ($(PHPUNIT),$(or $(PHP),php) vendor/bin/phpunit)
 PHPUNIT_DEPENDENCY?=$(PHP_DEPENDENCY) vendor/bin/phpunit
 else
 PHPUNIT_DEPENDENCY?=$(wildcard $(PHPUNIT))
 endif
-PHP_TESTING_TOOLS+=phpunit
+ifeq ($(PHPUNIT_DEPENDENCY),)
+$(error The variable PHPUNIT_DEPENDENCY should never be empty)
+endif
+
+#. Register as a tool
 PHP_TESTING_TOOLS_DEPENDENCIES+=$(filter-out $(PHP_DEPENDENCY),$(PHPUNIT_DEPENDENCY))
 HELP_TARGETS_TO_SKIP+=$(wildcard $(filter-out $(PHP_DEPENDENCY),$(PHPUNIT_DEPENDENCY)))
 
@@ -44,38 +56,16 @@ endif
 endif
 
 ###
-##. Requirements
+##. PHPUnit
+##. A programmer-oriented testing framework for PHP
+##. @see https://phpunit.de/
 ###
 
-ifeq ($(PHP),)
-$(error The variable PHP should never be empty.)
-endif
-ifeq ($(PHP_DEPENDENCY),)
-$(error The variable PHP_DEPENDENCY should never be empty.)
-endif
-ifeq ($(COMPOSER_EXECUTABLE),)
-$(error The variable COMPOSER_EXECUTABLE should never be empty.)
-endif
-ifeq ($(COMPOSER_DEPENDENCY),)
-$(error The variable COMPOSER_DEPENDENCY should never be empty.)
-endif
-ifeq ($(PHPUNIT_PACKAGE),)
-$(error The variable PHPUNIT_PACKAGE should never be empty.)
-endif
-ifeq ($(PHPUNIT),)
-$(error The variable PHPUNIT should never be empty.)
-endif
-ifeq ($(PHPUNIT_DEPENDENCY),)
-$(error The variable PHPUNIT_DEPENDENCY should never be empty.)
-endif
-
-###
-## Testing
-###
-
+ifneq ($(COMPOSER_EXECUTABLE),)
 # Install PHPUnit as dev dependency in vendor
 vendor/bin/phpunit: | $(COMPOSER_DEPENDENCY) vendor
 	@if test ! -f "$(@)"; then $(COMPOSER_EXECUTABLE) require --dev "$(PHPUNIT_PACKAGE)"; fi
+endif
 
 #. Initialize PHPUnit
 $(PHPUNIT_POSSIBLE_CONFIGS): | $(PHPUNIT_DEPENDENCY)
@@ -87,3 +77,4 @@ $(PHPUNIT_POSSIBLE_CONFIGS): | $(PHPUNIT_DEPENDENCY)
 phpunit: | $(PHPUNIT_DEPENDENCY) $(PHPUNIT_CONFIG)
 	@$(PHPUNIT)$(if $(PHPUNIT_FLAGS), $(PHPUNIT_FLAGS))
 .PHONY: phpunit
+PHP_TESTING_TOOLS+=phpunit

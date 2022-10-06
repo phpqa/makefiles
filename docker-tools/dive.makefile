@@ -1,8 +1,19 @@
 ###
+##. Dependencies
+###
+
+ifeq ($(DOCKER),)
+$(warning Please provide the variable DOCKER)
+endif
+ifeq ($(DOCKER_SOCKET),)
+$(warning Please provide the variable DOCKER_SOCKET)
+endif
+
+###
 ##. Configuration
 ###
 
-#. Docker variables for dive
+#. Docker variables
 DIVE_IMAGE?=wagoodman/dive:latest
 DIVE_SERVICE_NAME?=dive-$(subst .,-,$(subst :,-,$(DIVE_TARGET)))
 
@@ -10,7 +21,7 @@ DIVE_SERVICE_NAME?=dive-$(subst .,-,$(subst :,-,$(DIVE_TARGET)))
 DIVE_POSSIBLE_CONFIGS?=.dive.yaml .dive.yml
 DIVE_CONFIG?=$(firstword $(wildcard $(DIVE_POSSIBLE_CONFIGS)))
 
-#. Adding our own dive variables
+#. Adding our own variables
 DIVE_SOURCE?=$(if $(wildcard $(DIVE_TARGET)),docker-archive)
 DIVE_TARGET?=$(TARGET)
 DIVE_CI?=$(CI)
@@ -49,29 +60,22 @@ endif
 endif
 
 ###
-##. Requirements
-###
-
-ifeq ($(DOCKER),)
-$(error The variable DOCKER should never be empty.)
-endif
-ifeq ($(DOCKER_DEPENDENCY),)
-$(error The variable DOCKER_DEPENDENCY should never be empty.)
-endif
-ifeq ($(DOCKER_SOCKET),)
-$(error Please provide the variable DOCKER_SOCKET before including this file.)
-endif
-
-###
-## Docker Tools
+##. Dive
+##. Exploring a docker image and its layer contents
+##. @see https://github.com/wagoodman/dive
 ###
 
 # Run dive in a container to inspect $DIVE_TARGET
-# Exploring a docker image and its layer contents
 # @see https://github.com/wagoodman/dive
 dive: | $(DOCKER_DEPENDENCY) $(DOCKER_SOCKET)
+ifeq ($(DOCKER),)
+	$(error Please provide the variable DOCKER before running $(@))
+endif
+ifeq ($(DOCKER_SOCKET),)
+	$(error Please provide the variable DOCKER_SOCKET before running $(@))
+endif
 ifeq ($(DIVE_TARGET),)
-	$(error Please provide the variable DIVE_TARGET before running dive.)
+	$(error Please provide the variable DIVE_TARGET before running $(@))
 endif
 	@if test -z "$$($(DOCKER) container inspect --format "{{ .ID }}" "$(DIVE_SERVICE_NAME)" 2> /dev/null)"; then \
 		$(DOCKER) container run --rm --interactive --tty --name "$(DIVE_SERVICE_NAME)" $(DIVE_CONTAINER_RUN_FLAGS) \

@@ -3,13 +3,8 @@
 ###
 
 TOOLS_DIRECTORY?=$(wildcard $(dir $(filter %/tools-for-php-project.makefile,$(MAKEFILE_LIST)))/tools)
-
-###
-##. Requirements
-###
-
 ifeq ($(TOOLS_DIRECTORY),)
-$(error Please provide the variable TOOLS_DIRECTORY before including this file.)
+$(error The variable TOOLS_DIRECTORY should never be empty)
 endif
 
 ###

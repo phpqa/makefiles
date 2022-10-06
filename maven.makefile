@@ -1,24 +1,27 @@
 ###
-##. Dependencies
+##. Configuration
 ###
 
-MVN_DETECTED?=$(shell command -v mvn || which mvn 2>/dev/null)
+MVN_COMMAND?=mvn
+ifeq ($(MVN_COMMAND),)
+$(error The variable MVN_COMMAND should never be empty)
+endif
+
+MVN_DETECTED?=$(shell command -v $(MVN_COMMAND) || which $(MVN_COMMAND) 2>/dev/null)
 MVN_DEPENDENCY?=$(if $(MVN_DETECTED),mvn.assure-usable,mvn.not-found)
-MVN?=mvn
-
-###
-##. Requirements
-###
-
-ifeq ($(MVN),)
-$(error The variable MVN should never be empty.)
-endif
 ifeq ($(MVN_DEPENDENCY),)
-$(error The variable MVN_DEPENDENCY should never be empty.)
+$(error The variable MVN_DEPENDENCY should never be empty)
+endif
+
+MVN?=$(MVN_COMMAND)
+ifeq ($(MVN),)
+$(error The variable MVN should never be empty)
 endif
 
 ###
-## Maven
+##. Maven
+##. A software project management and comprehension tool
+##. @see https://maven.apache.org/
 ###
 
 #. See https://maven.apache.org/guides/introduction/introduction-to-the-lifecycle.html#Lifecycle_Reference

@@ -1,5 +1,5 @@
 ###
-## Help
+##. Help
 ###
 
 # TODO Undocumented dependencies: awk, sort

@@ -1,14 +1,25 @@
 ###
+##. Dependencies
+###
+
+ifeq ($(DOCKER),)
+$(warning Please provide the variable DOCKER)
+endif
+ifeq ($(DOCKER_SOCKET),)
+$(warning Please provide the variable DOCKER_SOCKET)
+endif
+
+###
 ##. Configuration
 ###
 
-#. Docker variables for Traefik
+#. Docker variables
 TRAEFIK_IMAGE?=traefik:latest
 TRAEFIK_SERVICE_NAME?=traefik
 TRAEFIK_DOMAIN?=traefik.localhost
 TRAEFIK_HTTP_PORT?=$(if $(PROJECT_PORT),$(PROJECT_PORT),80)
 
-#. Overwrite the Traefik defaults
+#. Overwrite the defaults
 TRAEFIK_PROVIDERS_DOCKER?=true
 TRAEFIK_PROVIDERS_DOCKER_EXPOSEDBYDEFAULT?=false
 TRAEFIK_API_INSECURE?=true
@@ -21,30 +32,27 @@ TRAEFIK_VARIABLES_PREFIX?=TRAEFIK_
 TRAEFIK_VARIABLES_EXCLUDED?=IMAGE SERVICE_NAME DOMAIN HTTP_PORT VARIABLES_PREFIX VARIABLES_EXCLUDED VARIABLES_UNPREFIXED
 
 ###
-##. Requirements
-###
-
-ifeq ($(DOCKER),)
-$(error The variable DOCKER should never be empty.)
-endif
-ifeq ($(DOCKER_DEPENDENCY),)
-$(error The variable DOCKER_DEPENDENCY should never be empty.)
-endif
-ifeq ($(DOCKER_SOCKET),)
-$(error Please provide the variable DOCKER_SOCKET before including this file.)
-endif
-
-###
-## Docker Tools
+##. Traefik
+##. An open-source Edge Router
+##. @see https://doc.traefik.io/traefik/
 ###
 
 #. Pull the Traefik container
 traefik.pull:%.pull: | $(DOCKER_DEPENDENCY)
+ifeq ($(DOCKER),)
+	$(error Please provide the variable DOCKER before running $(@))
+endif
 	@$(DOCKER) image pull "$(TRAEFIK_IMAGE)"
 .PHONY: traefik.pull
 
 #. Start the Traefik container
 traefik.start:%.start: | $(DOCKER_DEPENDENCY) $(DOCKER_SOCKET)
+ifeq ($(DOCKER),)
+	$(error Please provide the variable DOCKER before running $(@))
+endif
+ifeq ($(DOCKER_SOCKET),)
+	$(error Please provide the variable DOCKER_SOCKET before running $(@))
+endif
 	@if test -z "$$($(DOCKER) container inspect --format "{{ .ID }}" "$(TRAEFIK_SERVICE_NAME)" 2> /dev/null)"; then \
 		if test -z "$$($(DOCKER) network ls --quiet --filter "name=^$(TRAEFIK_PROVIDERS_DOCKER_NETWORK)$$")"; then \
 			$(DOCKER) network create "$(TRAEFIK_PROVIDERS_DOCKER_NETWORK)" > /dev/null 2>&1; \
@@ -72,6 +80,9 @@ traefik.start:%.start: | $(DOCKER_DEPENDENCY) $(DOCKER_SOCKET)
 
 #. Wait for the Traefik container to be running
 traefik.ensure-running:%.ensure-running: | $(DOCKER_DEPENDENCY) %.start
+ifeq ($(DOCKER),)
+	$(error Please provide the variable DOCKER before running $(@))
+endif
 	@until test -n "$$($(DOCKER) container ls --quiet --filter "status=running" --filter "name=^$(TRAEFIK_SERVICE_NAME)$$" 2>/dev/null)"; do \
 		if test -z "$$($(DOCKER) container ls --quiet --filter "status=created" --filter "status=running" --filter "name=^$(TRAEFIK_SERVICE_NAME)$$" 2>/dev/null)"; then \
 			printf "$(STYLE_ERROR)%s$(STYLE_RESET)\n" "The container \"$(TRAEFIK_SERVICE_NAME)\" never started."; \
@@ -92,6 +103,9 @@ traefik.ensure-running:%.ensure-running: | $(DOCKER_DEPENDENCY) %.start
 
 #. List the url to the Traefik container
 traefik.list:%.list: | $(DOCKER_DEPENDENCY) %.ensure-running
+ifeq ($(DOCKER),)
+	$(error Please provide the variable DOCKER before running $(@))
+endif
 	@printf "Open Traefik: %s or %s\n" \
 		"http://$(TRAEFIK_DOMAIN)$(if $(filter-out 80,$(TRAEFIK_HTTP_PORT)),:$(TRAEFIK_HTTP_PORT))" \
 		"http://$$($(DOCKER) container port "$(*)" "8080" | grep "0.0.0.0")"
@@ -99,16 +113,25 @@ traefik.list:%.list: | $(DOCKER_DEPENDENCY) %.ensure-running
 
 #. List the logs of the Traefik container
 traefik.log:%.log: | $(DOCKER_DEPENDENCY)
+ifeq ($(DOCKER),)
+	$(error Please provide the variable DOCKER before running $(@))
+endif
 	@$(DOCKER) container logs --since "$$($(DOCKER) container inspect --format "{{ .State.StartedAt }}" "$(TRAEFIK_SERVICE_NAME)")" "$(TRAEFIK_SERVICE_NAME)"
 .PHONY: traefik.log
 
 #. Stop the Traefik container
 traefik.stop:%.stop: | $(DOCKER_DEPENDENCY)
+ifeq ($(DOCKER),)
+	$(error Please provide the variable DOCKER before running $(@))
+endif
 	@$(DOCKER) container stop "$(TRAEFIK_SERVICE_NAME)"
 .PHONY: traefik.stop
 
 #. Clear the Traefik container
 traefik.clear:%.clear: | $(DOCKER_DEPENDENCY)
+ifeq ($(DOCKER),)
+	$(error Please provide the variable DOCKER before running $(@))
+endif
 	@$(DOCKER) container kill "$(TRAEFIK_SERVICE_NAME)" > /dev/null 2>&1 || true
 	@$(DOCKER) container rm --force --volumes "$(TRAEFIK_SERVICE_NAME)" > /dev/null 2>&1 || true
 	@$(DOCKER) network rm --force "$(TRAEFIK_PROVIDERS_DOCKER_NETWORK)" > /dev/null 2>&1 || true
@@ -116,6 +139,9 @@ traefik.clear:%.clear: | $(DOCKER_DEPENDENCY)
 
 #. Wait for the Traefik container to be cleared
 traefik.ensure-cleared:%.ensure-cleared: | $(DOCKER_DEPENDENCY) %.clear
+ifeq ($(DOCKER),)
+	$(error Please provide the variable DOCKER before running $(@))
+endif
 	@until test -z "$$($(DOCKER) container ls --quiet --filter "status=running" --filter "name=^$(TRAEFIK_SERVICE_NAME)$$")"; do \
 		sleep 1; \
 	done

@@ -1,45 +1,53 @@
 ###
+##. Dependencies
+###
+
+ifeq ($(DOCKER),)
+$(warning Please provide the variable DOCKER)
+endif
+ifeq ($(DOCKER_SOCKET),)
+$(warning Please provide the variable DOCKER_SOCKET)
+endif
+
+###
 ##. Configuration
 ###
 
-#. Docker variables for Watchtower
+#. Docker variables
 WATCHTOWER_IMAGE?=containrrr/watchtower:latest
 WATCHTOWER_SERVICE_NAME?=watchtower
 
-#. Overwrite the Watchtower defaults
+#. Overwrite the defaults
 WATCHTOWER_TZ?=$(if $(wildcard /etc/timezone),$(shell cat /etc/timezone 2>/dev/null),$(if $(shell command -v timedatectl || which timedatectl 2>/dev/null),$(shell timedatectl show --property=Timezone --value 2>/dev/null)))
 WATCHTOWER_LABEL_ENABLE?=true
 
-#. Support for all Watchtower variables
+#. Support for all variables
 WATCHTOWER_VARIABLES_PREFIX?=WATCHTOWER_
 WATCHTOWER_VARIABLES_EXCLUDED?=IMAGE SERVICE_NAME VARIABLES_PREFIX VARIABLES_EXCLUDED VARIABLES_UNPREFIXED
 WATCHTOWER_VARIABLES_UNPREFIXED?=TZ NO_COLOR DOCKER_HOST DOCKER_CONFIG DOCKER_API_VERSION DOCKER_TLS_VERIFY DOCKER_CERT_PATH
 
 ###
-##. Requirements
-###
-
-ifeq ($(DOCKER),)
-$(error The variable DOCKER should never be empty.)
-endif
-ifeq ($(DOCKER_DEPENDENCY),)
-$(error The variable DOCKER_DEPENDENCY should never be empty.)
-endif
-ifeq ($(DOCKER_SOCKET),)
-$(error Please provide the variable DOCKER_SOCKET before including this file.)
-endif
-
-###
-## Docker Tools
+##. Watchtower
+##. A container-based solution for automating Docker container base image updates
+##. @see https://containrrr.dev/watchtower/
 ###
 
 #. Pull the Watchtower container
 watchtower.pull:%.pull: | $(DOCKER_DEPENDENCY)
+ifeq ($(DOCKER),)
+	$(error Please provide the variable DOCKER before running $(@))
+endif
 	@$(DOCKER) image pull "$(WATCHTOWER_IMAGE)"
 .PHONY: watchtower.pull
 
 #. Start the Watchtower container
 watchtower.start:%.start: | $(DOCKER_DEPENDENCY) $(DOCKER_SOCKET)
+ifeq ($(DOCKER),)
+	$(error Please provide the variable DOCKER before running $(@))
+endif
+ifeq ($(DOCKER_SOCKET),)
+	$(error Please provide the variable DOCKER_SOCKET before running $(@))
+endif
 	@if test -z "$$($(DOCKER) container inspect --format "{{ .ID }}" "$(WATCHTOWER_SERVICE_NAME)" 2> /dev/null)"; then \
 		$(DOCKER) container run --detach --name "$(WATCHTOWER_SERVICE_NAME)" \
 			$(foreach variable,$(filter-out $(addprefix $(WATCHTOWER_VARIABLES_PREFIX),$(WATCHTOWER_VARIABLES_EXCLUDED)),$(filter $(WATCHTOWER_VARIABLES_PREFIX)%,$(.VARIABLES))),--env "$(if $(filter $(WATCHTOWER_VARIABLES_UNPREFIXED),$(patsubst $(WATCHTOWER_VARIABLES_PREFIX)%,%,$(variable))),$(patsubst $(WATCHTOWER_VARIABLES_PREFIX)%,%,$(variable)),$(variable))=$($(variable))") \
@@ -57,6 +65,9 @@ watchtower.start:%.start: | $(DOCKER_DEPENDENCY) $(DOCKER_SOCKET)
 
 #. Wait for the Watchtower container to be running
 watchtower.ensure-running:%.ensure-running: | $(DOCKER_DEPENDENCY) %.start
+ifeq ($(DOCKER),)
+	$(error Please provide the variable DOCKER before running $(@))
+endif
 	@until test -n "$$($(DOCKER) container ls --quiet --filter "status=running" --filter "name=^$(WATCHTOWER_SERVICE_NAME)$$" 2>/dev/null)"; do \
 		if test -z "$$($(DOCKER) container ls --quiet --filter "status=created" --filter "status=running" --filter "name=^$(WATCHTOWER_SERVICE_NAME)$$" 2>/dev/null)"; then \
 			printf "$(STYLE_ERROR)%s$(STYLE_RESET)\n" "The container \"$(WATCHTOWER_SERVICE_NAME)\" never started."; \
@@ -69,22 +80,34 @@ watchtower.ensure-running:%.ensure-running: | $(DOCKER_DEPENDENCY) %.start
 
 #. List the logs of the Watchtower container
 watchtower.log:%.log: | $(DOCKER_DEPENDENCY)
+ifeq ($(DOCKER),)
+	$(error Please provide the variable DOCKER before running $(@))
+endif
 	@$(DOCKER) container logs --since "$$($(DOCKER) container inspect --format "{{ .State.StartedAt }}" "$(WATCHTOWER_SERVICE_NAME)")" "$(WATCHTOWER_SERVICE_NAME)"
 .PHONY: watchtower.log
 
 #. Stop the Watchtower container
 watchtower.stop:%.stop: | $(DOCKER_DEPENDENCY)
+ifeq ($(DOCKER),)
+	$(error Please provide the variable DOCKER before running $(@))
+endif
 	@$(DOCKER) container stop "$(WATCHTOWER_SERVICE_NAME)"
 .PHONY: watchtower.stop
 
 #. Clear the Watchtower container
 watchtower.clear:%.clear: | $(DOCKER_DEPENDENCY)
+ifeq ($(DOCKER),)
+	$(error Please provide the variable DOCKER before running $(@))
+endif
 	@$(DOCKER) container kill "$(WATCHTOWER_SERVICE_NAME)" > /dev/null 2>&1 || true
 	@$(DOCKER) container rm --force --volumes "$(WATCHTOWER_SERVICE_NAME)" > /dev/null 2>&1 || true
 .PHONY: watchtower.clear
 
 #. Wait for the Watchtower container to be cleared
 watchtower.ensure-cleared:%.ensure-cleared: | $(DOCKER_DEPENDENCY) %.clear
+ifeq ($(DOCKER),)
+	$(error Please provide the variable DOCKER before running $(@))
+endif
 	@until test -z "$$($(DOCKER) container ls --quiet --filter "status=running" --filter "name=^$(WATCHTOWER_SERVICE_NAME)$$")"; do \
 		sleep 1; \
 	done

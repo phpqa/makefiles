@@ -1,8 +1,19 @@
 ###
+##. Dependencies
+###
+
+ifeq ($(DOCKER),)
+$(warning Please provide the variable DOCKER)
+endif
+ifeq ($(DOCKER_SOCKET),)
+$(warning Please provide the variable DOCKER_SOCKET)
+endif
+
+###
 ##. Configuration
 ###
 
-#. Docker variables for Trivy
+#. Docker variables
 TRIVY_IMAGE?=aquasec/trivy:latest
 TRIVY_SERVICE_NAME?=trivy-$(subst .,-,$(subst :,-,$(TRIVY_TARGET)))
 
@@ -10,19 +21,19 @@ TRIVY_SERVICE_NAME?=trivy-$(subst .,-,$(subst :,-,$(TRIVY_TARGET)))
 TRIVY_POSSIBLE_CONFIGS?=trivy.yaml trivy.yml
 TRIVY_CONFIG?=$(firstword $(wildcard $(TRIVY_POSSIBLE_CONFIGS)))
 
-#. Adding our own Trivy variables
+#. Adding our own variables
 TRIVY_TARGET?=$(TARGET)
 
 #. Add repository tokens
 TRIVY_GITHUB_TOKEN?=$(GITHUB_TOKEN)
 TRIVY_GITLAB_TOKEN?=$(GITLAB_TOKEN)
 
-#. Support for all Trivy variables
+#. Support for all variables
 TRIVY_VARIABLES_PREFIX?=TRIVY_
 TRIVY_VARIABLES_EXCLUDED?=IMAGE SERVICE_NAME CONFIG CONTAINER_RUN_FLAGS FLAGS TARGET_COMMAND TARGET CACHE_DIR VARIABLES_PREFIX VARIABLES_EXCLUDED VARIABLES_UNPREFIXED
 TRIVY_VARIABLES_UNPREFIXED?=GITHUB_TOKEN GITLAB_TOKEN
 
-#. Overwrite Trivy variables
+#. Overwrite variables
 TRIVY_CACHE_DIR?=$(wildcard .cache/trivy)
 
 #. Building the flags
@@ -58,26 +69,19 @@ endif
 endif
 
 ###
-##. Requirements
-###
-
-ifeq ($(DOCKER),)
-$(error The variable DOCKER should never be empty.)
-endif
-ifeq ($(DOCKER_DEPENDENCY),)
-$(error The variable DOCKER_DEPENDENCY should never be empty.)
-endif
-
-###
-## Docker Tools
+##. Trivy
+##. Vulnerability/misconfiguration/secret scanner for containers and other artifacts
+##. @see https://aquasecurity.github.io/trivy/v0.30.2/docs/
 ###
 
 # Run Trivy in a container to inspect $TRIVY_TARGET
-# Vulnerability/misconfiguration/secret scanner for containers and other artifacts
 # @see https://aquasecurity.github.io/trivy/v0.30.2/docs/
 trivy: | $(DOCKER_DEPENDENCY)
+ifeq ($(DOCKER),)
+	$(error Please provide the variable DOCKER before running $(@))
+endif
 ifeq ($(TRIVY_TARGET),)
-	$(error Please provide the variable TRIVY_TARGET before running Trivy.)
+	$(error Please provide the variable TRIVY_TARGET before running $(@))
 endif
 	@if test -z "$$($(DOCKER) container inspect --format "{{ .ID }}" "$(TRIVY_SERVICE_NAME)" 2> /dev/null)"; then \
 		$(DOCKER) container run --rm --interactive --tty --name "$(TRIVY_SERVICE_NAME)" $(TRIVY_CONTAINER_RUN_FLAGS) \
