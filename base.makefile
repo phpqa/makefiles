@@ -25,6 +25,13 @@ SHELL?=/bin/sh
 MAKEFLAGS+=--no-print-directory --no-builtin-rules --environment-overrides
 
 ###
+##. Default variables
+###
+
+TARGET?=
+CI?=
+
+###
 ##. POSIX dependencies - @see https://pubs.opengroup.org/onlinepubs/9699919799/idx/utilities.html
 ###
 
