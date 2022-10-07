@@ -31,9 +31,8 @@ $(error The variable DOCKER_COMPOSE_COMMAND should never be empty)
 endif
 
 DOCKER_COMPOSE_DIRECTORY?=$(if $(wildcard compose.yaml compose.yml docker-compose.yaml docker-compose.yml),.)
-ifeq ($(DOCKER_COMPOSE_DIRECTORY),)
-$(error The variable DOCKER_COMPOSE_DIRECTORY should never be empty)
-endif
+
+ifneq ($(DOCKER_COMPOSE_DIRECTORY),)
 
 ifneq ($(USE_DOCKER_COMPOSE_1),)
 DOCKER_COMPOSE_DEPENDENCY?=$(DOCKER_DEPENDENCY) compose.assure-usable
@@ -64,6 +63,8 @@ DOCKER_COMPOSE_RUN_FLAGS+=$(foreach var,$(DOCKER_COMPOSE_RUN_ENVIRONMENT_VARIABL
 endif
 ifneq ($(DOCKER_COMPOSE_EXEC_ENVIRONMENT_VARIABLES),)
 DOCKER_COMPOSE_EXEC_FLAGS+=$(foreach var,$(DOCKER_COMPOSE_EXEC_ENVIRONMENT_VARIABLES), --env $(var)="$${$(var)}")
+endif
+
 endif
 
 ###
