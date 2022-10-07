@@ -1,8 +1,18 @@
 ###
-##. Help
+##. Dependencies
 ###
 
-# TODO Undocumented dependencies: awk, sort
+#. POSIX dependencies - @see https://pubs.opengroup.org/onlinepubs/9699919799/idx/utilities.html
+define check-help-dependency
+ifeq ($$(shell command -v $(1) || which $(1) 2>/dev/null),)
+$$(error Please provide the command "$(1)")
+endif
+endef
+$(foreach command,awk sort,$(eval $(call check-help-dependency,$(command))))
+
+###
+##. Help
+###
 
 .DEFAULT_GOAL:=help
 HELP_TARGETS_TO_SKIP+=

@@ -3,12 +3,12 @@
 ###
 
 #. POSIX dependencies - @see https://pubs.opengroup.org/onlinepubs/9699919799/idx/utilities.html
-define check-managed-files-command
+define check-managed-files-dependency
 ifeq ($$(shell command -v $(1) || which $(1) 2>/dev/null),)
 $$(error Please provide the command "$(1)")
 endif
 endef
-$(foreach command,mkdir find sort tail diff cp,$(eval $(call check-managed-files-command,$(command))))
+$(foreach command,mkdir find sort tail diff cp,$(eval $(call check-managed-files-dependency,$(command))))
 
 ###
 ##. Configuration

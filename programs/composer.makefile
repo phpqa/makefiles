@@ -3,12 +3,12 @@
 ###
 
 #. POSIX dependencies - @see https://pubs.opengroup.org/onlinepubs/9699919799/idx/utilities.html
-define check-bin-composer-command
+define check-composer-dependency
 ifeq ($$(shell command -v $(1) || which $(1) 2>/dev/null),)
 $$(error Please provide the command "$(1)")
 endif
 endef
-$(foreach command,touch ln chmod rm,$(eval $(call check-bin-composer-command,$(command))))
+$(foreach command,touch ln chmod rm,$(eval $(call check-composer-dependency,$(command))))
 
 ifeq ($(PHP),)
 $(warning Please provide the variable PHP)

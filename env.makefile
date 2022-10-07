@@ -1,8 +1,19 @@
 ###
+##. Dependencies
+###
+
+#. POSIX dependencies - @see https://pubs.opengroup.org/onlinepubs/9699919799/idx/utilities.html
+define check-env-dependency
+ifeq ($$(shell command -v $(1) || which $(1) 2>/dev/null),)
+$$(error Please provide the command "$(1)")
+endif
+endef
+$(foreach command,while grep sed echo,$(eval $(call check-env-dependency,$(command))))
+
+###
 ##. Environment variables lookup
 ###
 
-# TODO Undocumented dependencies: while, grep, sed, echo
 # TODO create a small image that can extract .env variables from files
 
 DEFAULT_ENV_FILE?=.env
