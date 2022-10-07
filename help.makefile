@@ -65,6 +65,8 @@ help:
 list-makefiles:
 	@$(MAKE) --file="$(firstword $(MAKEFILE_LIST))" --jobs=1 --always-make --print-data-base --no-builtin-rules --no-builtin-variables : 2>/dev/null \
 		| awk -v MAKEFILE_LIST="$(MAKEFILE_LIST)" ' \
+			BEGIN { MAKEFILE_LIST=" " MAKEFILE_LIST } \
+			\
 			{ if (/^# Variables/) { skip_segment=1 } } \
 			{ if (/^# Directories/) { skip_segment=1 } } \
 			{ if (/^# Implicit Rules/) { skip_segment=0 } } \
@@ -77,7 +79,7 @@ list-makefiles:
 			{ if (/^# Not a target:/) { include="yes"; next } } \
 			{ if (/^.:/) { next } } \
 			{ if (/^([^#]+):/) { if (include=="yes") { match($$0,/:/); file=substr($$0,1,RSTART-1) } } } \
-			{ if (/^$$|^[\t]+$$/) { if (file) { search=replace=file; gsub(" ","\\ ",replace); gsub(" "search,"\n*"replace"*\n",MAKEFILE_LIST) }; original=""; file=""; include="no"; } } \
+			{ if (/^$$|^[\t]+$$/) { if (file) { search=replace=file; gsub(" ","\\ ",replace); gsub(" "search,"*"replace"*\n",MAKEFILE_LIST) }; original=""; file=""; include="no"; } } \
 			\
 			END { print MAKEFILE_LIST } \
 		' \
