@@ -34,7 +34,7 @@ DOCKER_COMPOSE_DIRECTORY?=$(if $(wildcard compose.yaml compose.yml docker-compos
 
 ifneq ($(DOCKER_COMPOSE_DIRECTORY),)
 
-ifneq ($(USE_DOCKER_COMPOSE_1),)
+ifeq ($(USE_DOCKER_COMPOSE_1),)
 DOCKER_COMPOSE_DEPENDENCY?=$(DOCKER_DEPENDENCY) compose.assure-usable
 else
 DOCKER_COMPOSE_DETECTED?=$(shell command -v docker-compose || which docker-compose 2>/dev/null)
