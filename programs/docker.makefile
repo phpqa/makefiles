@@ -37,6 +37,7 @@ ifneq ($(DOCKER_COMPOSE_DIRECTORY),)
 ifeq ($(USE_DOCKER_COMPOSE_1),)
 DOCKER_COMPOSE_DEPENDENCY?=$(DOCKER_DEPENDENCY) compose.assure-usable
 else
+$(info Consider upgrading to the newest Docker Compose version)
 DOCKER_COMPOSE_DETECTED?=$(shell command -v docker-compose || which docker-compose 2>/dev/null)
 DOCKER_COMPOSE_DEPENDENCY?=$(DOCKER_DEPENDENCY) $(if $(DOCKER_DETECTED),compose.assure-usable,compose.not-found)
 endif
