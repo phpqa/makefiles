@@ -61,24 +61,32 @@ git-pull-repository=\
 				$(MAKE) -f "$(REPOSITORY_MAKEFILE_$(1))" repositories.pull-everything; \
 			fi; \
 		else \
-			DEFAULT_BRANCH="$$($(GIT) ls-remote --symref "$(REPOSITORY_URL_$(1))" HEAD | awk -F'[/\t]' 'NR == 1 {print $$3}')"; \
-			if test -z "$${DEFAULT_BRANCH}" || test "$${DEFAULT_BRANCH}" = "(unknown)"; then \
-				printf "%s\\n" "Could not determine branch for \"$$(pwd)\"!"; \
+			REPOSITORY_URL="$(REPOSITORY_URL_$(1))"; \
+			if test -z "$${REPOSITORY_URL}"; then \
+				REPOSITORY_URL="$$($(GIT) config --get remote.origin.url)"; \
+			fi; \
+			if test -z "$${REPOSITORY_URL}"; then \
+				printf "%s\\n" "Could not determine the url for \"$$(pwd)\"!"; \
 			else \
-				printf "%s\\n" "Pulling \"$${DEFAULT_BRANCH}\" branch into \"$$(pwd)\"..."; \
-				$(GIT) pull --rebase origin "$${DEFAULT_BRANCH}" || true; \
-				if test -n "$(REPOSITORY_TAG_$(1))"; then \
-					$(GIT) fetch --all --tags > /dev/null || true; \
-					ACTUAL_REPOSITORY_TAG="$$($(GIT) tag --list --ignore-case --sort=-version:refname "$(REPOSITORY_TAG_$(1))" | head -n 1)"; \
-					if test -z "$${ACTUAL_REPOSITORY_TAG}"; then \
-						printf "%s\\n" "Could not find tag \"$(REPOSITORY_TAG_$(1))\" for \"$$(pwd)\"!"; \
-					else \
-						printf "%s\\n" "Checking \"$${ACTUAL_REPOSITORY_TAG}\" tag into \"$$(pwd)\"..."; \
-						$(GIT) -c advice.detachedHead=false checkout "tags/$${ACTUAL_REPOSITORY_TAG}" || true; \
+				DEFAULT_BRANCH="$$($(GIT) ls-remote --symref "$${REPOSITORY_URL}" HEAD | awk -F'[/\t]' 'NR == 1 {print $$3}')"; \
+				if test -z "$${DEFAULT_BRANCH}" || test "$${DEFAULT_BRANCH}" = "(unknown)"; then \
+					printf "%s\\n" "Could not determine branch for \"$$(pwd)\"!"; \
+				else \
+					printf "%s\\n" "Pulling \"$${DEFAULT_BRANCH}\" branch into \"$$(pwd)\"..."; \
+					$(GIT) pull --rebase origin "$${DEFAULT_BRANCH}" || true; \
+					if test -n "$(REPOSITORY_TAG_$(1))"; then \
+						$(GIT) fetch --all --tags > /dev/null || true; \
+						ACTUAL_REPOSITORY_TAG="$$($(GIT) tag --list --ignore-case --sort=-version:refname "$(REPOSITORY_TAG_$(1))" | head -n 1)"; \
+						if test -z "$${ACTUAL_REPOSITORY_TAG}"; then \
+							printf "%s\\n" "Could not find tag \"$(REPOSITORY_TAG_$(1))\" for \"$$(pwd)\"!"; \
+						else \
+							printf "%s\\n" "Checking \"$${ACTUAL_REPOSITORY_TAG}\" tag into \"$$(pwd)\"..."; \
+							$(GIT) -c advice.detachedHead=false checkout "tags/$${ACTUAL_REPOSITORY_TAG}" || true; \
+						fi; \
 					fi; \
+					echo " "; \
+					sleep 1; \
 				fi; \
-				echo " "; \
-				sleep 1; \
 			fi; \
 		fi; \
 	fi
