@@ -8,12 +8,12 @@ ifeq ($(RECTOR_PACKAGE),)
 $(error The variable RECTOR_PACKAGE should never be empty)
 endif
 
-RECTOR?=$(or $(PHP),php)vendor/bin/rector
+RECTOR?=$(or $(PHP),php) vendor/bin/rector
 ifeq ($(RECTOR),)
 $(error The variable RECTOR should never be empty)
 endif
 
-ifeq ($(RECTOR),$(or $(PHP),php)vendor/bin/rector)
+ifeq ($(RECTOR),$(or $(PHP),php) vendor/bin/rector)
 RECTOR_DEPENDENCY?=$(PHP_DEPENDENCY) vendor/bin/rector
 else
 RECTOR_DEPENDENCY?=$(wildcard $(RECTOR))
