@@ -84,6 +84,7 @@ docker.not-found:
 docker.assure-usable: # Do not depend on $(DOCKER_DEPENDENCY), as DOCKER_DEPENDENCY can be this target
 	@if test -z "$$($(DOCKER) --version 2>/dev/null || true)"; then \
 		printf "$(STYLE_ERROR)%s$(STYLE_RESET)\n" 'Could not use DOCKER as "$(value DOCKER)".'; \
+		$(DOCKER) --version; \
 		exit 1; \
 	fi
 .PHONY: docker.assure-usable
@@ -110,6 +111,7 @@ compose.not-found:
 compose.assure-usable:
 	@if test -z "$$($(DOCKER_COMPOSE) --version 2>/dev/null || true)"; then \
 		printf "$(STYLE_ERROR)%s$(STYLE_RESET)\n" 'Could not use DOCKER_COMPOSE as "$(value DOCKER_COMPOSE)".'; \
+		$(DOCKER_COMPOSE) --version; \
 		exit 1; \
 	fi
 .PHONY: compose.assure-usable

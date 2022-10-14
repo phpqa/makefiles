@@ -40,6 +40,7 @@ DOCKER_COMPOSE_SERVICE_NAME_FOR_PHP?=
 php.assure-usable: | bin/php
 	@if test -z "$$($(PHP) --version 2>/dev/null || true)"; then \
 		printf "$(STYLE_ERROR)%s$(STYLE_RESET)\n" 'Could not use PHP as "$(value PHP)".'; \
+		$(PHP) --version; \
 		exit 1; \
 	fi
 .PHONY: php.assure-usable

@@ -64,6 +64,7 @@ COMPOSER_UPDATE_FLAGS+=
 composer.assure-usable:
 	@if test -z "$$($(COMPOSER_EXECUTABLE) --version 2>/dev/null || true)"; then \
 		printf "$(STYLE_ERROR)%s$(STYLE_RESET)\n" 'Could not use COMPOSER_EXECUTABLE as "$(value COMPOSER_EXECUTABLE)".'; \
+		$(COMPOSER_EXECUTABLE) --version; \
 		exit 1; \
 	fi
 .PHONY: composer.assure-usable

@@ -39,6 +39,7 @@ git.not-found:
 git.assure-usable:
 	@if test -z "$$($(GIT) --version 2>/dev/null || true)"; then \
 		printf "$(STYLE_ERROR)%s$(STYLE_RESET)\n" 'Could not use git as "$(value GIT)".'; \
+		$(GIT) --version; \
 		exit 1; \
 	fi
 .PHONY: git.assure-usable

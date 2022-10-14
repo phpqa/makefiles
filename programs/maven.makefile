@@ -36,6 +36,7 @@ mvn.not-found:
 mvn.assure-usable:
 	@if test -z "$$($(MAVEN) --version 2>/dev/null || true)"; then \
 		printf "$(STYLE_ERROR)%s$(STYLE_RESET)\n" 'Could not use MAVEN as "$(value MAVEN)".'; \
+		$(MAVEN) --version; \
 		exit 1; \
 	fi
 .PHONY: mvn.assure-usable
