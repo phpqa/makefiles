@@ -123,16 +123,22 @@ endif
 #. Create a composer.json file
 $(COMPOSER): | $(COMPOSER_DEPENDENCY)
 	@if test ! -f "$(@)"; then \
-		$(COMPOSER_EXECUTABLE) init $(or $(COMPOSER_INIT_FLAGS)); \
+		$(COMPOSER_EXECUTABLE) init $(COMPOSER_INIT_FLAGS); \
 	fi
 
 #. Build the composer.lock file
 $(patsubst %.json,%.lock,$(COMPOSER)): $(COMPOSER) | $(COMPOSER_DEPENDENCY)
+	$(eval $(@)_STUDIO_JSON_FILE:=$(or $(STUDIO_JSON_FILE),studio.json))
+	$(eval $(@)_STUDIO_JSON_BACKUP_FILE:=$(patsubst %.json,%-disabled.json,$($(@)_STUDIO_JSON_FILE)))
+	@if test -f "$($(@)_STUDIO_JSON_FILE)"; then \
+		mv "$($(@)_STUDIO_JSON_FILE)" "$($(@)_STUDIO_JSON_BACKUP_FILE)"; \
+		printf "$(STYLE_DIM)%s$(STYLE_RESET)\n" "Temporarily renamed $($(@)_STUDIO_JSON_FILE) to $($(@)_STUDIO_JSON_BACKUP_FILE)"; \
+	fi
 	@if test ! -f "$(@)"; then \
-		$(COMPOSER_EXECUTABLE) install $(or $(COMPOSER_INSTALL_FLAGS)); \
+		$(COMPOSER_EXECUTABLE) install $(COMPOSER_INSTALL_FLAGS); \
 	else \
 		if test "$(@)" -ot "$(<)"; then \
-			$(COMPOSER_EXECUTABLE) update $(or $(COMPOSER_UPDATE_FLAGS)) --lock; \
+			$(COMPOSER_EXECUTABLE) update $(COMPOSER_UPDATE_FLAGS) --lock; \
 		fi; \
 	fi
 	@if test ! -f "$(@)"; then \
@@ -140,14 +146,25 @@ $(patsubst %.json,%.lock,$(COMPOSER)): $(COMPOSER) | $(COMPOSER_DEPENDENCY)
 	else \
 		touch "$(@)"; \
 	fi
+	@if test -f "$($(@)_STUDIO_JSON_BACKUP_FILE)"; then \
+		mv "$($(@)_STUDIO_JSON_BACKUP_FILE)" "$($(@)_STUDIO_JSON_FILE)"; \
+		printf "$(STYLE_DIM)%s$(STYLE_RESET)\n" "Renamed $($(@)_STUDIO_JSON_BACKUP_FILE) back to $($(@)_STUDIO_JSON_FILE)"; \
+		printf "$(STYLE_WARNING)%s$(STYLE_RESET)\n" "Make sure to load the Studio packages again, if needed"; \
+	fi
 
 #. Build the dependencies directory
 $(COMPOSER_VENDOR_DIRECTORY): $(patsubst %.json,%.lock,$(COMPOSER)) | $(COMPOSER_DEPENDENCY)
+	$(eval $(@)_STUDIO_JSON_FILE:=$(or $(STUDIO_JSON_FILE),studio.json))
+	$(eval $(@)_STUDIO_JSON_BACKUP_FILE:=$(patsubst %.json,%-disabled.json,$($(@)_STUDIO_JSON_FILE)))
+	@if test -f "$($(@)_STUDIO_JSON_FILE)"; then \
+		mv "$($(@)_STUDIO_JSON_FILE)" "$($(@)_STUDIO_JSON_BACKUP_FILE)"; \
+		printf "$(STYLE_DIM)%s$(STYLE_RESET)\n" "Temporarily renamed $($(@)_STUDIO_JSON_FILE) to $($(@)_STUDIO_JSON_BACKUP_FILE)"; \
+	fi
 	@if test ! -d "$(@)"; then \
-		$(COMPOSER_EXECUTABLE) install $(or $(COMPOSER_INSTALL_FLAGS)); \
+		$(COMPOSER_EXECUTABLE) install $(COMPOSER_INSTALL_FLAGS); \
 	else \
 		if test ! -d "$(@)" || test "$(@)" -ot "$(<)"; then \
-			$(COMPOSER_EXECUTABLE) install $(or $(COMPOSER_INSTALL_FLAGS)); \
+			$(COMPOSER_EXECUTABLE) install $(COMPOSER_INSTALL_FLAGS); \
 		fi; \
 	fi
 	@if test ! -d "$(@)"; then \
@@ -155,23 +172,28 @@ $(COMPOSER_VENDOR_DIRECTORY): $(patsubst %.json,%.lock,$(COMPOSER)) | $(COMPOSER
 	else \
 		touch "$(@)"; \
 	fi
+	@if test -f "$($(@)_STUDIO_JSON_BACKUP_FILE)"; then \
+		mv "$($(@)_STUDIO_JSON_BACKUP_FILE)" "$($(@)_STUDIO_JSON_FILE)"; \
+		printf "$(STYLE_DIM)%s$(STYLE_RESET)\n" "Renamed $($(@)_STUDIO_JSON_BACKUP_FILE) back to $($(@)_STUDIO_JSON_FILE)"; \
+		printf "$(STYLE_WARNING)%s$(STYLE_RESET)\n" "Make sure to load the Studio packages again, if needed"; \
+	fi
 
 # Install the project dependencies
 # @see https://getcomposer.org/doc/03-cli.md#install-i
 composer.install: $(patsubst %.json,%.lock,$(COMPOSER)) | $(COMPOSER_DEPENDENCY)
-	@$(COMPOSER_EXECUTABLE) install $(or $(COMPOSER_INSTALL_FLAGS))
+	@$(COMPOSER_EXECUTABLE) install $(COMPOSER_INSTALL_FLAGS)
 .PHONY: composer.install
 
 # Update the project dependencies
 # @see https://getcomposer.org/doc/03-cli.md#update-u
 composer.update: $(patsubst %.json,%.lock,$(COMPOSER)) | $(COMPOSER_DEPENDENCY)
-	@$(COMPOSER_EXECUTABLE) update $(or $(COMPOSER_UPDATE_FLAGS))
+	@$(COMPOSER_EXECUTABLE) update $(COMPOSER_UPDATE_FLAGS)
 .PHONY: composer.update
 
 # Update only the lock file
 # @see https://getcomposer.org/doc/03-cli.md#update-u
 composer.update-lock: $(patsubst %.json,%.lock,$(COMPOSER)) | $(COMPOSER_DEPENDENCY)
-	@$(COMPOSER_EXECUTABLE) update $(or $(COMPOSER_UPDATE_FLAGS)) --lock
+	@$(COMPOSER_EXECUTABLE) update $(COMPOSER_UPDATE_FLAGS) --lock
 .PHONY: composer.update-lock
 
 #. (internal) Untouch the Composer related files - set last modified date back to latest git commit
