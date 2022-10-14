@@ -1,16 +1,50 @@
 ###
-##. Includes
+## About
 ###
 
 include ../../base.makefile
 include ../../help.makefile
-include ../../docker.makefile
+
+###
+## Dependencies
+###
+
+include ../../programs/git.makefile
+include ../../programs/jq.makefile
+
+###
+## Docker & Compose
+###
 
 DOCKER_COMPOSE_SERVICE_NAME_FOR_PHP:=php
 
-include ../../bin-php.makefile
-include ../../bin-composer.makefile
-include ../../tools-for-php-project.makefile
+include ../../programs/docker.makefile
+
+###
+## PHP & Composer
+###
+
+include ../../programs/php.makefile
+include ../../programs/composer.makefile
+
+###
+## Quality Assurance Tools
+###
+
+include ../../php/tools/composer.makefile
+include ../../php/tools/composer-normalize.makefile
+include ../../php/tools/franzl-studio.makefile
+include ../../php/tools/friendsofphp-php-cs-fixer.makefile
+include ../../php/tools/php-parallel-lint.makefile
+include ../../php/tools/phpstan.makefile
+include ../../php/tools/qossmic-deptrac.makefile
+include ../../php/tools/rector.makefile
+include ../../php/tools/squizlabs-php_codesniffer.makefile
+include ../../php/tools/vimeo-psalm.makefile
+include ../../php/combined/php-check.makefile
+include ../../php/combined/php-fix.makefile
+include ../../php/tools/phpunit.makefile
+include ../../php/combined/php-test.makefile
 
 ###
 ## Composer Test Project
