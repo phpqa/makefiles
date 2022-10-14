@@ -57,7 +57,7 @@ help:
 				} } \
 			} } \
 			{ if (/^include .+\/?(.+)$$/) { \
-				included_path_origin=substr($$0,9);  \
+				included_path_origin=substr($$0,9); \
 				match(included_path_origin,/(\/.*$$|^[^\/]+$$)/); \
 				included_path_partial=substr(included_path_origin,RSTART,RLENGTH+1); \
 				included_path_partial_escaped=included_path_partial; gsub(" ","\\ ",included_path_partial_escaped); \
@@ -75,7 +75,6 @@ help:
 					line=looper[file]; \
 					if (renders[file,line]) { \
 						content=renders[file,line]; \
-						# printf "%s:%s %s\n",file,line,content; \
 						{ if (content ~ /^include /) { render(substr(content,9)); continue } } \
 						{ if (content ~ /^title /) { \
 							# TODO add multiline titles \
