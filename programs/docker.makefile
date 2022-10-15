@@ -174,7 +174,7 @@ COMMAND?=
 
 # Execute a command $(COMMAND) in service %
 compose.service.%.exec: compose.service.%.ensure-running | $(DOCKER_COMPOSE_DEPENDENCY)
-	@$(DOCKER_COMPOSE) exec$(foreach var,$(DOCKER_COMPOSE_EXEC_ENVIRONMENT_VARIABLES), --env $(var)="$${$(var)}") "$(*)" $(COMMAND)
+	@$(DOCKER_COMPOSE) exec$(foreach var,$(DOCKER_COMPOSE_EXEC_ENVIRONMENT_VARIABLES), --env $(var)="$${$(var):-$($(var))}") "$(*)" $(COMMAND)
 
 # Open a shell in service %
 compose.service.%.shell: compose.service.%.exec | $(DOCKER_COMPOSE_DEPENDENCY); @true
