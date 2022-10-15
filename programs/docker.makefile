@@ -97,9 +97,13 @@ docker.login: | $(DOCKER_DEPENDENCY)
 docker.network.%.create: | $(DOCKER_DEPENDENCY)
 	@$(DOCKER) network create $(*) 2>/dev/null || true
 
+#. Follow the logs from container %
+docker.container.%.logs: | $(DOCKER_COMPOSE_DEPENDENCY)
+	@$(DOCKER) container logs --follow --since "$$($(DOCKER) container inspect --format "{{ .State.StartedAt }}" "$(*)")" "$(*)"
+
 #. Follow the latest logs from container %
 docker.container.%.latest-logs: | $(DOCKER_COMPOSE_DEPENDENCY)
-	@$(DOCKER) container logs --since "$$($(DOCKER) container inspect --format "{{ .State.StartedAt }}" "$(*)")" "$(*)"
+	@$(DOCKER) container logs --follow --since "$$($(DOCKER) container inspect --format "{{ .State.StartedAt }}" "$(*)")" "$(*)"
 
 ###
 ##. Compose
@@ -154,30 +158,46 @@ compose.clear: | $(DOCKER_COMPOSE_DEPENDENCY)
 .PHONY: compose.clear
 
 #. Ensure service % is running
-compose.service.%.ensure-running: | $(DOCKER_COMPOSE_DEPENDENCY)
+compose.service.%.ensure-running: | $(DOCKER_DEPENDENCY) $(DOCKER_COMPOSE_DEPENDENCY)
 	$(eval COMPOSE_RUNNING_CACHE=$(if $(COMPOSE_RUNNING_CACHE),$(COMPOSE_RUNNING_CACHE),$(shell $(DOCKER_COMPOSE) ps --services --filter "status=running")))
 	@if ! echo "$(COMPOSE_RUNNING_CACHE)" | grep -q "$(*)" 2> /dev/null; then \
-		$(DOCKER_COMPOSE) up -d --remove-orphans $(*); \
+		$(DOCKER_COMPOSE) up -d --remove-orphans "$(*)"; \
 		until $(DOCKER_COMPOSE) ps --services --filter "status=running" | grep -q "$(*)" 2> /dev/null; do \
 			if $(DOCKER_COMPOSE) ps --services --filter "status=stopped" | grep -q "$(*)" 2> /dev/null; then \
 				printf "$(STYLE_ERROR)%s$(STYLE_RESET)\n" "The service \"$(*)\" stopped unexpectedly."; \
+				CONTAINER_ID="$$($(DOCKER_COMPOSE) ps --quiet "$(*)")"; \
+				$(DOCKER) container logs --since "$$($(DOCKER) container inspect --format "{{ .State.StartedAt }}" "$${CONTAINER_ID}")" "$${CONTAINER_ID}"
 				exit 1; \
 			fi; \
 			sleep 1; \
 		done; \
 	fi
 
+#. Ensure service % is running at least once completely, and stops with exit code 0
+compose.service.%.ensure-running-until-exit: | $(DOCKER_COMPOSE_DEPENDENCY)
+	@CONTAINER_ID="$$($(DOCKER_COMPOSE) ps --quiet $(*))"; \
+		$(DOCKER) container logs --follow --since "$$($(DOCKER) container inspect --format "{{ .State.StartedAt }}" "$${CONTAINER_ID}")" "$${CONTAINER_ID}"; \
+		EXIT_CODE="$$($(DOCKER) container wait "$${CONTAINER_ID}")"; \
+		if test "$${EXIT_CODE}" != "0"; then exit $${EXIT_CODE}; fi
+
 #. Ensure service % is stopped
 compose.service.%.ensure-stopped: | $(DOCKER_COMPOSE_DEPENDENCY)
 	$(eval COMPOSE_RUNNING_CACHE=$(if $(COMPOSE_RUNNING_CACHE),$(COMPOSE_RUNNING_CACHE),$(shell $(DOCKER_COMPOSE) ps --services --filter "status=running")))
 	@if echo "$(COMPOSE_RUNNING_CACHE)" | grep -q "$(*)" 2> /dev/null; then \
-		$(DOCKER_COMPOSE) stop $(*); \
+		$(DOCKER_COMPOSE) stop "$(*)"; \
+		until $(DOCKER_COMPOSE) ps --services --filter "status=running" | grep -q -v "$(*)" 2> /dev/null; do \
+			sleep 1; \
+		done; \
 	fi
+
+#. Follow the logs from service %
+compose.service.%.logs: | $(DOCKER_COMPOSE_DEPENDENCY)
+	@$(DOCKER) container logs --follow "$$($(DOCKER_COMPOSE) ps --quiet $(*))"
 
 #. Follow the latest logs from service %
 compose.service.%.latest-logs: | $(DOCKER_COMPOSE_DEPENDENCY)
 	@CONTAINER_ID="$$($(DOCKER_COMPOSE) ps --quiet $(*))"; \
-		$(DOCKER) container logs --since "$$($(DOCKER) container inspect --format "{{ .State.StartedAt }}" "$${CONTAINER_ID}")" "$${CONTAINER_ID}"
+		$(DOCKER) container logs --follow --since "$$($(DOCKER) container inspect --format "{{ .State.StartedAt }}" "$${CONTAINER_ID}")" "$${CONTAINER_ID}"
 
 COMMAND?=
 
