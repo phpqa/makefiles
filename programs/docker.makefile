@@ -166,7 +166,7 @@ compose.service.%.ensure-running: | $(DOCKER_DEPENDENCY) $(DOCKER_COMPOSE_DEPEND
 			if $(DOCKER_COMPOSE) ps --services --filter "status=stopped" | grep -q "$(*)" 2> /dev/null; then \
 				printf "$(STYLE_ERROR)%s$(STYLE_RESET)\n" "The service \"$(*)\" stopped unexpectedly."; \
 				CONTAINER_ID="$$($(DOCKER_COMPOSE) ps --quiet "$(*)")"; \
-				$(DOCKER) container logs --since "$$($(DOCKER) container inspect --format "{{ .State.StartedAt }}" "$${CONTAINER_ID}")" "$${CONTAINER_ID}"
+				$(DOCKER) container logs --since "$$($(DOCKER) container inspect --format "{{ .State.StartedAt }}" "$${CONTAINER_ID}")" "$${CONTAINER_ID}"; \
 				exit 1; \
 			fi; \
 			sleep 1; \
