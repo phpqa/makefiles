@@ -91,7 +91,7 @@ ifeq ($(PHP),)
 endif
 	@if test ! -d "$(dir $(@))"; then mkdir -p "$(dir $(@))"; fi
 	@if test -f "$(@)"; then rm -f "$(@)"; fi
-	@$(if $(COMPOSER_VERSION),if test -L "bin/composer" || -f "bin/composer"; then rm -f "bin/composer"; fi)
+	@$(if $(COMPOSER_VERSION),if test -L "bin/composer" || test -f "bin/composer"; then rm -f "bin/composer"; fi)
 	@$(PHP) -r "file_put_contents('setup.php', fopen('https://getcomposer.org/installer', 'r'), LOCK_EX);"
 	@$(PHP) -r "file_put_contents('setup.sig', fopen('https://composer.github.io/installer.sig', 'r'), LOCK_EX);"
 	@$(PHP) -r " \
