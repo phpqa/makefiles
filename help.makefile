@@ -125,7 +125,7 @@ help:
 				} \
 			} \
 			END { render(first_file) } \
-		' $(shell $(MAKE) list-makefiles)
+		' $(shell $(MAKE) --file="$(firstword $(MAKEFILE_LIST))" list-makefiles)
 .PHONY: help
 
 ###

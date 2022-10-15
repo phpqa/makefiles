@@ -63,7 +63,7 @@ ifeq ($(COMPOSER_EXECUTABLE),)
 	$(error Please provide the variable COMPOSER_EXECUTABLE before running $(@))
 endif
 	@if test -f "$(STUDIO_JSON_FILE)"; then mv "$(STUDIO_JSON_FILE)" "$(STUDIO_JSON_FILE).disabled"; fi
-	@$(MAKE) vendor
+	@$(MAKE) --file="$(firstword $(MAKEFILE_LIST))" vendor
 	@if ! $(COMPOSER_EXECUTABLE) show $(STUDIO_PACKAGE) >/dev/null 2>&1; then \
 		$(COMPOSER_EXECUTABLE) config --no-interaction --no-plugins --no-scripts allow-plugins.$(STUDIO_PACKAGE) true; \
 		$(COMPOSER_EXECUTABLE) require --dev --no-interaction --no-plugins --no-scripts --no-progress $(STUDIO_PACKAGE); \
