@@ -93,6 +93,8 @@ help:
 						{ if (content ~ /^doc_link /) { doc_link=substr(content,10); continue } } \
 						{ if (content ~ /^target /) { \
 							target=substr(content,8); \
+							if (seen[target]) { continue } \
+							seen[target]="yes"; \
 							if (title != last_title) { \
 								if (doc_link) { \
 									printf "\n\033]8;;%s\033\\%s\033]8;;\033\\\n",title_link,title \
