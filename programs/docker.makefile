@@ -96,6 +96,10 @@ docker.login: | $(DOCKER_DEPENDENCY)
 docker.network.%.create: | $(DOCKER_DEPENDENCY)
 	@$(DOCKER) network create $(*) 2>/dev/null || true
 
+#. Follow the latest logs from Docker container %
+docker.container.%.latest-logs: | $(DOCKER_COMPOSE_DEPENDENCY)
+	@$(DOCKER) container logs --since "$$($(DOCKER) container inspect --format "{{ .State.StartedAt }}" "$(*)")" "$(*)"
+
 ###
 ##. Compose
 ###
