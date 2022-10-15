@@ -93,11 +93,11 @@ docker.login: | $(DOCKER_DEPENDENCY)
 	@$(foreach registry,$(DOCKER_REGISTRIES),$(DOCKER) login $(registry);)
 .PHONY: docker.login
 
-#. Create a Docker network %
+#. Create a network %
 docker.network.%.create: | $(DOCKER_DEPENDENCY)
 	@$(DOCKER) network create $(*) 2>/dev/null || true
 
-#. Follow the latest logs from Docker container %
+#. Follow the latest logs from container %
 docker.container.%.latest-logs: | $(DOCKER_COMPOSE_DEPENDENCY)
 	@$(DOCKER) container logs --since "$$($(DOCKER) container inspect --format "{{ .State.StartedAt }}" "$(*)")" "$(*)"
 
@@ -173,6 +173,11 @@ compose.service.%.ensure-stopped: | $(DOCKER_COMPOSE_DEPENDENCY)
 	@if echo "$(COMPOSE_RUNNING_CACHE)" | grep -q "$(*)" 2> /dev/null; then \
 		$(DOCKER_COMPOSE) stop $(*); \
 	fi
+
+#. Follow the latest logs from service %
+compose.service.%.latest-logs: | $(DOCKER_COMPOSE_DEPENDENCY)
+	@CONTAINER_ID="$$($(DOCKER_COMPOSE) ps --quiet $(*))"; \
+		$(DOCKER) container logs --since "$$($(DOCKER) container inspect --format "{{ .State.StartedAt }}" "$${CONTAINER_ID}")" "$${CONTAINER_ID}"
 
 COMMAND?=
 
