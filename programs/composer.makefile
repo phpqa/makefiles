@@ -21,7 +21,7 @@ endif
 #.! Note: the environment variable COMPOSER is already used by Composer to locate the composer.json file
 COMPOSER_DIRECTORY?=.
 
-COMPOSER_DEPENDENCY?=$(PHP_DEPENDENCY) bin/composer composer.assure-usable
+COMPOSER_DEPENDENCY?=$(strip $(if $(findstring bin/composer,$(COMPOSER_EXECUTABLE)),$(PHP_DEPENDENCY) bin/composer) composer.assure-usable)
 ifeq ($(COMPOSER_DEPENDENCY),)
 $(error The variable COMPOSER_DEPENDENCY should never be empty)
 endif
@@ -124,7 +124,7 @@ endif
 #. Create a composer.json file
 $(COMPOSER):
 	@if test ! -f "$(@)"; then \
-		$(MAKE) composer.init; \
+		$(MAKE) --file="$(firstword $(MAKEFILE_LIST))" composer.init; \
 	fi
 
 #. Build the composer.lock file
@@ -136,10 +136,10 @@ $(patsubst %.json,%.lock,$(COMPOSER)): $(COMPOSER)
 		printf "$(STYLE_DIM)%s$(STYLE_RESET)\n" "Temporarily renamed $($(@)_STUDIO_JSON_FILE) to $($(@)_STUDIO_JSON_BACKUP_FILE)"; \
 	fi
 	@if test ! -f "$(@)"; then \
-		$(MAKE) composer.install; \
+		$(MAKE) --file="$(firstword $(MAKEFILE_LIST))" composer.install; \
 	else \
 		if test "$(@)" -ot "$(<)"; then \
-			$(MAKE) composer.update-lock; \
+			$(MAKE) --file="$(firstword $(MAKEFILE_LIST))" composer.update-lock; \
 		fi; \
 	fi
 	@if test ! -f "$(@)"; then \
@@ -162,10 +162,10 @@ $(COMPOSER_VENDOR_DIRECTORY): $(patsubst %.json,%.lock,$(COMPOSER))
 		printf "$(STYLE_DIM)%s$(STYLE_RESET)\n" "Temporarily renamed $($(@)_STUDIO_JSON_FILE) to $($(@)_STUDIO_JSON_BACKUP_FILE)"; \
 	fi
 	@if test ! -d "$(@)"; then \
-		$(MAKE) composer.install; \
+		$(MAKE) --file="$(firstword $(MAKEFILE_LIST))" composer.install; \
 	else \
 		if test ! -d "$(@)" || test "$(@)" -ot "$(<)"; then \
-			$(MAKE) composer.install; \
+			$(MAKE) --file="$(firstword $(MAKEFILE_LIST))" composer.install; \
 		fi; \
 	fi
 	@if test ! -d "$(@)"; then \

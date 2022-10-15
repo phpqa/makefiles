@@ -2,7 +2,7 @@
 ##. Configuration
 ###
 
-PHP_DEPENDENCY?=php.assure-usable
+PHP_DEPENDENCY?=$(strip $(if $(findstring bin/php,$(PHP)),bin/php) php.assure-usable)
 ifeq ($(PHP_DEPENDENCY),)
 $(error The variable PHP_DEPENDENCY should never be empty)
 endif
@@ -37,7 +37,7 @@ DOCKER_COMPOSE_SERVICE_NAME_FOR_PHP?=
 ###
 
 #. Assure that PHP is usable
-php.assure-usable: | bin/php
+php.assure-usable:
 	@if test -z "$$($(PHP) --version 2>/dev/null || true)"; then \
 		printf "$(STYLE_ERROR)%s$(STYLE_RESET)\n" 'Could not use PHP as "$(value PHP)".'; \
 		$(PHP) --version; \
