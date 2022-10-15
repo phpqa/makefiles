@@ -52,7 +52,7 @@ endif
 
 ifneq ($(COMPOSER_EXECUTABLE),)
 # Install Parallel Lint as dev dependency in vendor
-vendor/bin/parallel-lint: | $(COMPOSER_DEPENDENCY) vendor
+vendor/bin/parallel-lint: | $(if $(wildcard vendor/bin/parallel-lint),,$(COMPOSER_DEPENDENCY) vendor)
 	@if test ! -f "$(@)"; then $(COMPOSER_EXECUTABLE) require --dev "$(PARALLEL_LINT_PACKAGE)"; fi
 endif
 

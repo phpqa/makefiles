@@ -78,7 +78,7 @@ endif
 
 ifneq ($(COMPOSER_EXECUTABLE),)
 # Install PHP_CodeSniffer as dev dependency in vendor
-vendor/bin/phpcs: | $(COMPOSER_DEPENDENCY) vendor
+vendor/bin/phpcs: | $(if $(wildcard vendor/bin/phpcs),,$(COMPOSER_DEPENDENCY) vendor)
 	@if test ! -f "$(@)"; then $(COMPOSER_EXECUTABLE) require --dev "$(PHPCS_PACKAGE)"; fi
 endif
 
@@ -91,7 +91,7 @@ PHP_QUALITY_ASSURANCE_CHECK_TOOLS+=phpcs
 
 ifneq ($(COMPOSER_EXECUTABLE),)
 #. Install PHP_CodeSniffer as dev dependency in vendor
-vendor/bin/phpcbf: | $(COMPOSER_DEPENDENCY) vendor
+vendor/bin/phpcbf: | $(if $(wildcard vendor/bin/phpcbf),,$(COMPOSER_DEPENDENCY) vendor)
 	@if test ! -f "$(@)"; then $(COMPOSER_EXECUTABLE) require --dev "$(PHPCBF_PACKAGE)"; fi
 endif
 

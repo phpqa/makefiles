@@ -68,7 +68,7 @@ endif
 
 ifneq ($(COMPOSER_EXECUTABLE),)
 # Install PHPStan as dev dependency in vendor
-vendor/bin/phpstan: | $(COMPOSER_DEPENDENCY) vendor
+vendor/bin/phpstan: | $(if $(wildcard vendor/bin/phpstan),,$(COMPOSER_DEPENDENCY) vendor)
 	@if test ! -f "$(@)"; then $(COMPOSER_EXECUTABLE) require --dev "$(PHPSTAN_PACKAGE)"; fi
 endif
 

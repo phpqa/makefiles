@@ -63,7 +63,7 @@ endif
 
 ifneq ($(COMPOSER_EXECUTABLE),)
 # Install PHPUnit as dev dependency in vendor
-vendor/bin/phpunit: | $(COMPOSER_DEPENDENCY) vendor
+vendor/bin/phpunit: | $(if $(wildcard vendor/bin/phpunit),,$(COMPOSER_DEPENDENCY) vendor)
 	@if test ! -f "$(@)"; then $(COMPOSER_EXECUTABLE) require --dev "$(PHPUNIT_PACKAGE)"; fi
 endif
 

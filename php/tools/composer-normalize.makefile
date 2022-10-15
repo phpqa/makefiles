@@ -38,7 +38,7 @@ COMPOSER_NORMALIZE_FLAGS?=
 
 ifneq ($(COMPOSER_EXECUTABLE),)
 # Install composer-normalize as dev dependency in vendor
-vendor/ergebnis/composer-normalize: | $(COMPOSER_DEPENDENCY) vendor
+vendor/ergebnis/composer-normalize: | $(if $(wildcard vendor/ergebnis/composer-normalize),,$(COMPOSER_DEPENDENCY) vendor)
 	@$(COMPOSER_EXECUTABLE) config allow-plugins.$(COMPOSER_NORMALIZE_PACKAGE) true
 	@if test ! -f "$(@)"; then $(COMPOSER_EXECUTABLE) require --dev "$(COMPOSER_NORMALIZE_PACKAGE)"; fi
 endif

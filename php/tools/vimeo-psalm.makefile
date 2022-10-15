@@ -57,7 +57,7 @@ endif
 
 ifneq ($(COMPOSER_EXECUTABLE),)
 # Install Psalm as dev dependency in vendor
-vendor/bin/psalm: | $(COMPOSER_DEPENDENCY) vendor
+vendor/bin/psalm: | $(if $(wildcard vendor/bin/psalm),,$(COMPOSER_DEPENDENCY) vendor)
 	@if test ! -f "$(@)"; then $(COMPOSER_EXECUTABLE) require --dev "$(PSALM_PACKAGE)"; fi
 endif
 

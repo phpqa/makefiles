@@ -47,7 +47,7 @@ endif
 
 ifneq ($(COMPOSER_EXECUTABLE),)
 # Install Deptrac as dev dependency in vendor
-vendor/bin/deptrac: | $(COMPOSER_DEPENDENCY) vendor
+vendor/bin/deptrac: | $(if $(wildcard vendor/bin/deptrac),,$(COMPOSER_DEPENDENCY) vendor)
 	@if test ! -f "$(@)"; then $(COMPOSER_EXECUTABLE) require --dev "$(DEPTRAC_PACKAGE)"; fi
 endif
 

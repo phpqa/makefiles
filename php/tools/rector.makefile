@@ -58,7 +58,7 @@ endif
 
 ifneq ($(COMPOSER_EXECUTABLE),)
 # Install Rector as dev dependency in vendor
-vendor/bin/rector: | $(COMPOSER_DEPENDENCY) vendor
+vendor/bin/rector: | $(if $(wildcard vendor/bin/rector),,$(COMPOSER_DEPENDENCY) vendor)
 	@if test ! -f "$(@)"; then $(COMPOSER_EXECUTABLE) require --dev "$(RECTOR_PACKAGE)"; fi
 endif
 

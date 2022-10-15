@@ -50,7 +50,7 @@ endif
 
 ifneq ($(COMPOSER_EXECUTABLE),)
 # Install PHP Coding Standards Fixer as dev dependency in vendor
-vendor/bin/php-cs-fixer: | $(COMPOSER_DEPENDENCY) vendor
+vendor/bin/php-cs-fixer: | $(if $(wildcard vendor/bin/php-cs-fixer),,$(COMPOSER_DEPENDENCY) vendor)
 	@if test ! -f "$(@)"; then $(COMPOSER_EXECUTABLE) require --dev "$(PHPCSFIXER_PACKAGE)"; fi
 endif
 
