@@ -122,13 +122,13 @@ bin/composer: bin/composer-$(COMPOSER_VERSION)
 endif
 
 #. Create a composer.json file
-$(COMPOSER): | $(COMPOSER_DEPENDENCY)
+$(COMPOSER):
 	@if test ! -f "$(@)"; then \
-		$(COMPOSER_EXECUTABLE) init $(COMPOSER_INIT_FLAGS); \
+		$(MAKE) composer.init; \
 	fi
 
 #. Build the composer.lock file
-$(patsubst %.json,%.lock,$(COMPOSER)): $(COMPOSER) | $(COMPOSER_DEPENDENCY)
+$(patsubst %.json,%.lock,$(COMPOSER)): $(COMPOSER)
 	$(eval $(@)_STUDIO_JSON_FILE:=$(or $(STUDIO_JSON_FILE),studio.json))
 	$(eval $(@)_STUDIO_JSON_BACKUP_FILE:=$(patsubst %.json,%-disabled.json,$($(@)_STUDIO_JSON_FILE)))
 	@if test -f "$($(@)_STUDIO_JSON_FILE)"; then \
@@ -136,10 +136,10 @@ $(patsubst %.json,%.lock,$(COMPOSER)): $(COMPOSER) | $(COMPOSER_DEPENDENCY)
 		printf "$(STYLE_DIM)%s$(STYLE_RESET)\n" "Temporarily renamed $($(@)_STUDIO_JSON_FILE) to $($(@)_STUDIO_JSON_BACKUP_FILE)"; \
 	fi
 	@if test ! -f "$(@)"; then \
-		$(COMPOSER_EXECUTABLE) install $(COMPOSER_INSTALL_FLAGS); \
+		$(MAKE) composer.install; \
 	else \
 		if test "$(@)" -ot "$(<)"; then \
-			$(COMPOSER_EXECUTABLE) update $(COMPOSER_UPDATE_FLAGS) --lock; \
+			$(MAKE) composer.update-lock; \
 		fi; \
 	fi
 	@if test ! -f "$(@)"; then \
@@ -154,7 +154,7 @@ $(patsubst %.json,%.lock,$(COMPOSER)): $(COMPOSER) | $(COMPOSER_DEPENDENCY)
 	fi
 
 #. Build the dependencies directory
-$(COMPOSER_VENDOR_DIRECTORY): $(patsubst %.json,%.lock,$(COMPOSER)) | $(COMPOSER_DEPENDENCY)
+$(COMPOSER_VENDOR_DIRECTORY): $(patsubst %.json,%.lock,$(COMPOSER))
 	$(eval $(@)_STUDIO_JSON_FILE:=$(or $(STUDIO_JSON_FILE),studio.json))
 	$(eval $(@)_STUDIO_JSON_BACKUP_FILE:=$(patsubst %.json,%-disabled.json,$($(@)_STUDIO_JSON_FILE)))
 	@if test -f "$($(@)_STUDIO_JSON_FILE)"; then \
@@ -162,10 +162,10 @@ $(COMPOSER_VENDOR_DIRECTORY): $(patsubst %.json,%.lock,$(COMPOSER)) | $(COMPOSER
 		printf "$(STYLE_DIM)%s$(STYLE_RESET)\n" "Temporarily renamed $($(@)_STUDIO_JSON_FILE) to $($(@)_STUDIO_JSON_BACKUP_FILE)"; \
 	fi
 	@if test ! -d "$(@)"; then \
-		$(COMPOSER_EXECUTABLE) install $(COMPOSER_INSTALL_FLAGS); \
+		$(MAKE) composer.install; \
 	else \
 		if test ! -d "$(@)" || test "$(@)" -ot "$(<)"; then \
-			$(COMPOSER_EXECUTABLE) install $(COMPOSER_INSTALL_FLAGS); \
+			$(MAKE) composer.install; \
 		fi; \
 	fi
 	@if test ! -d "$(@)"; then \
@@ -178,6 +178,12 @@ $(COMPOSER_VENDOR_DIRECTORY): $(patsubst %.json,%.lock,$(COMPOSER)) | $(COMPOSER
 		printf "$(STYLE_DIM)%s$(STYLE_RESET)\n" "Renamed $($(@)_STUDIO_JSON_BACKUP_FILE) back to $($(@)_STUDIO_JSON_FILE)"; \
 		printf "$(STYLE_WARNING)%s$(STYLE_RESET)\n" "Make sure to load the Studio packages again, if needed"; \
 	fi
+
+# Initialize the project dependencies
+# @see https://getcomposer.org/doc/03-cli.md#init
+composer.init: | $(COMPOSER_DEPENDENCY)
+	@$(COMPOSER_EXECUTABLE) init $(COMPOSER_INIT_FLAGS)
+.PHONY: composer.init
 
 # Install the project dependencies
 # @see https://getcomposer.org/doc/03-cli.md#install-i
