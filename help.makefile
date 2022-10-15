@@ -50,10 +50,12 @@ help:
 			{ if (/^# /) { skip_target="false"; renders[current_file,current_line]="doc " substr($$0,3); next } } \
 			{ if (/^#[^\.a-zA-Z0-9\s]+/) { skip_target="false"; renders[current_file,current_line]="doc " substr($$0,2); next } } \
 			{ if (/.*:/) { \
-				{ if (skip_target=="true") { skip_target="false"; next } } \
 				{ if ($$0 ~ show_pattern && $$0 !~ skip_pattern) { \
-					gsub(/:.*/,"",$$0); \
-					renders[current_file,current_line]="target " $$0; next \
+					target=$$0; \
+					gsub(/:.*/,"",target); \
+					if (seen[target]) { skip_target="true" } else { seen[target]="yes" } \
+					if (skip_target=="true") { skip_target="false"; next } \
+					renders[current_file,current_line]="target " target; next \
 				} } \
 			} } \
 			{ if (/^include .+\/?(.+)$$/) { \
@@ -93,8 +95,6 @@ help:
 						{ if (content ~ /^doc_link /) { doc_link=substr(content,10); continue } } \
 						{ if (content ~ /^target /) { \
 							target=substr(content,8); \
-							if (seen[target]) { continue } \
-							seen[target]="yes"; \
 							if (title != last_title) { \
 								if (doc_link) { \
 									printf "\n\033]8;;%s\033\\%s\033]8;;\033\\\n",title_link,title \
