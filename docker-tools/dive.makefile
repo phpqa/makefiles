@@ -86,11 +86,10 @@ endif
 .PHONY: dive
 
 #. Run dive in a container to inspect the image $DIVE_TARGET
-dive-image:
-	@DIVE_TARGET="$(DIVE_TARGET)" $(MAKE) dive
+dive-image: dive; @true
 .PHONY: dive-image
 
 #. Run dive in a container to inspect the image archive $DIVE_TARGET
-dive-archive:
-	@DIVE_TARGET="$(DIVE_TARGET)" DIVE_SOURCE="docker-archive" $(MAKE) dive
+dive-archive: DIVE_SOURCE="docker-archive"
+dive-archive: dive; @true
 .PHONY: dive-archive
