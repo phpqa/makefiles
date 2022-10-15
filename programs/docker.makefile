@@ -91,6 +91,7 @@ docker.assure-usable: # Do not depend on $(DOCKER_DEPENDENCY), as DOCKER_DEPENDE
 # Login to all $DOCKER_REGISTRIES
 docker.login: | $(DOCKER_DEPENDENCY)
 	@$(foreach registry,$(DOCKER_REGISTRIES),$(DOCKER) login $(registry);)
+.PHONY: docker.login
 
 #. Create a Docker network %
 docker.network.%.create: | $(DOCKER_DEPENDENCY)
