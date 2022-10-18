@@ -129,12 +129,6 @@ $(COMPOSER):
 
 #. Build the composer.lock file
 $(patsubst %.json,%.lock,$(COMPOSER)): $(COMPOSER)
-	$(eval $(@)_STUDIO_JSON_FILE:=$(or $(STUDIO_JSON_FILE),studio.json))
-	$(eval $(@)_STUDIO_JSON_BACKUP_FILE:=$(patsubst %.json,%-disabled.json,$($(@)_STUDIO_JSON_FILE)))
-	@if test -f "$($(@)_STUDIO_JSON_FILE)"; then \
-		mv "$($(@)_STUDIO_JSON_FILE)" "$($(@)_STUDIO_JSON_BACKUP_FILE)"; \
-		printf "$(STYLE_DIM)%s$(STYLE_RESET)\n" "Temporarily renamed $($(@)_STUDIO_JSON_FILE) to $($(@)_STUDIO_JSON_BACKUP_FILE)"; \
-	fi
 	@if test ! -f "$(@)"; then \
 		$(COMPOSER_EXECUTABLE) install $(COMPOSER_INSTALL_FLAGS); \
 	else \
@@ -147,20 +141,9 @@ $(patsubst %.json,%.lock,$(COMPOSER)): $(COMPOSER)
 	else \
 		touch "$(@)"; \
 	fi
-	@if test -f "$($(@)_STUDIO_JSON_BACKUP_FILE)"; then \
-		mv "$($(@)_STUDIO_JSON_BACKUP_FILE)" "$($(@)_STUDIO_JSON_FILE)"; \
-		printf "$(STYLE_DIM)%s$(STYLE_RESET)\n" "Renamed $($(@)_STUDIO_JSON_BACKUP_FILE) back to $($(@)_STUDIO_JSON_FILE)"; \
-		printf "$(STYLE_WARNING)%s$(STYLE_RESET)\n" "Make sure to load the Studio packages again, if needed"; \
-	fi
 
 #. Build the dependencies directory
 $(COMPOSER_VENDOR_DIRECTORY): $(patsubst %.json,%.lock,$(COMPOSER))
-	$(eval $(@)_STUDIO_JSON_FILE:=$(or $(STUDIO_JSON_FILE),studio.json))
-	$(eval $(@)_STUDIO_JSON_BACKUP_FILE:=$(patsubst %.json,%-disabled.json,$($(@)_STUDIO_JSON_FILE)))
-	@if test -f "$($(@)_STUDIO_JSON_FILE)"; then \
-		mv "$($(@)_STUDIO_JSON_FILE)" "$($(@)_STUDIO_JSON_BACKUP_FILE)"; \
-		printf "$(STYLE_DIM)%s$(STYLE_RESET)\n" "Temporarily renamed $($(@)_STUDIO_JSON_FILE) to $($(@)_STUDIO_JSON_BACKUP_FILE)"; \
-	fi
 	@if test ! -d "$(@)"; then \
 		$(COMPOSER_EXECUTABLE) install $(COMPOSER_INSTALL_FLAGS); \
 	else \
@@ -172,11 +155,6 @@ $(COMPOSER_VENDOR_DIRECTORY): $(patsubst %.json,%.lock,$(COMPOSER))
 		printf "$(STYLE_ERROR)%s$(STYLE_RESET)\n" "The \"$(@)\" directory is not present. Something went wrong."; \
 	else \
 		touch "$(@)"; \
-	fi
-	@if test -f "$($(@)_STUDIO_JSON_BACKUP_FILE)"; then \
-		mv "$($(@)_STUDIO_JSON_BACKUP_FILE)" "$($(@)_STUDIO_JSON_FILE)"; \
-		printf "$(STYLE_DIM)%s$(STYLE_RESET)\n" "Renamed $($(@)_STUDIO_JSON_BACKUP_FILE) back to $($(@)_STUDIO_JSON_FILE)"; \
-		printf "$(STYLE_WARNING)%s$(STYLE_RESET)\n" "Make sure to load the Studio packages again, if needed"; \
 	fi
 
 # Initialize the project dependencies
