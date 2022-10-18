@@ -97,6 +97,10 @@ docker.login: | $(DOCKER_DEPENDENCY)
 docker.network.%.create: | $(DOCKER_DEPENDENCY)
 	@$(DOCKER) network create $(*) 2>/dev/null || true
 
+#. Remove a network %
+docker.network.%.remove: | $(DOCKER_DEPENDENCY)
+	@$(DOCKER) network rm $(*) 2>/dev/null || true
+
 #. Follow the logs from container %
 docker.container.%.logs: | $(DOCKER_COMPOSE_DEPENDENCY)
 	@$(DOCKER) container logs --follow --since "$$($(DOCKER) container inspect --format "{{ .State.StartedAt }}" "$(*)")" "$(*)"
