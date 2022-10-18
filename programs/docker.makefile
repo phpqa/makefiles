@@ -210,16 +210,14 @@ compose.service.%.exec: compose.service.%.ensure-running | $(DOCKER_COMPOSE_DEPE
 	@$(DOCKER_COMPOSE) exec$(foreach var,$(DOCKER_COMPOSE_EXEC_ENVIRONMENT_VARIABLES), --env $(var)="$${$(var):-$($(var))}") "$(*)" $(COMMAND)
 
 # Open a shell in service %
-compose.service.%.shell: compose.service.%.exec | $(DOCKER_COMPOSE_DEPENDENCY); @true
-#. Pass the sh command
 compose.service.%.shell: COMMAND:=sh
+compose.service.%.shell: compose.service.%.exec | $(DOCKER_COMPOSE_DEPENDENCY); @true
 
 #. Open a shell in service % (alias)
 compose.service.%.sh: compose.service.%.shell | $(DOCKER_COMPOSE_DEPENDENCY); @true
 
 # Open a bash shell in service %
-compose.service.%.bash: compose.service.%.exec | $(DOCKER_COMPOSE_DEPENDENCY); @true
-#. Pass the bash command
 compose.service.%.bash: COMMAND:=bash
+compose.service.%.bash: compose.service.%.exec | $(DOCKER_COMPOSE_DEPENDENCY); @true
 
 endif
