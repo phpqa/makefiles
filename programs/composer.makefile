@@ -124,7 +124,7 @@ endif
 #. Create a composer.json file
 $(COMPOSER):
 	@if test ! -f "$(@)"; then \
-		$(MAKE) --file="$(firstword $(MAKEFILE_LIST))" composer.init; \
+		$(COMPOSER_EXECUTABLE) init $(COMPOSER_INIT_FLAGS); \
 	fi
 
 #. Build the composer.lock file
@@ -136,10 +136,10 @@ $(patsubst %.json,%.lock,$(COMPOSER)): $(COMPOSER)
 		printf "$(STYLE_DIM)%s$(STYLE_RESET)\n" "Temporarily renamed $($(@)_STUDIO_JSON_FILE) to $($(@)_STUDIO_JSON_BACKUP_FILE)"; \
 	fi
 	@if test ! -f "$(@)"; then \
-		$(MAKE) --file="$(firstword $(MAKEFILE_LIST))" composer.install; \
+		$(COMPOSER_EXECUTABLE) install $(COMPOSER_INSTALL_FLAGS); \
 	else \
 		if test "$(@)" -ot "$(<)"; then \
-			$(MAKE) --file="$(firstword $(MAKEFILE_LIST))" composer.update-lock; \
+			$(COMPOSER_EXECUTABLE) update $(COMPOSER_UPDATE_FLAGS) --lock; \
 		fi; \
 	fi
 	@if test ! -f "$(@)"; then \
@@ -162,10 +162,10 @@ $(COMPOSER_VENDOR_DIRECTORY): $(patsubst %.json,%.lock,$(COMPOSER))
 		printf "$(STYLE_DIM)%s$(STYLE_RESET)\n" "Temporarily renamed $($(@)_STUDIO_JSON_FILE) to $($(@)_STUDIO_JSON_BACKUP_FILE)"; \
 	fi
 	@if test ! -d "$(@)"; then \
-		$(MAKE) --file="$(firstword $(MAKEFILE_LIST))" composer.install; \
+		$(COMPOSER_EXECUTABLE) install $(COMPOSER_INSTALL_FLAGS); \
 	else \
 		if test ! -d "$(@)" || test "$(@)" -ot "$(<)"; then \
-			$(MAKE) --file="$(firstword $(MAKEFILE_LIST))" composer.install; \
+			$(COMPOSER_EXECUTABLE) install $(COMPOSER_INSTALL_FLAGS); \
 		fi; \
 	fi
 	@if test ! -d "$(@)"; then \
