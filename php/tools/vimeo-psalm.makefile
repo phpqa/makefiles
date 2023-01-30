@@ -40,6 +40,9 @@ PSALTER_ISSUES?=
 PSALM_FLAGS?=
 PSALM_BASELINE_FLAGS?=
 
+#. Bulding the environment variables
+PSALM_ENV?=
+
 ifneq ($(wildcard $(PSALM_CONFIG)),)
 ifeq ($(findstring --config,$(PSALM_FLAGS)),)
 PSALM_FLAGS+=--config="$(PSALM_CONFIG)"
@@ -68,7 +71,7 @@ psalm.xml: | $(PSALM_DEPENDENCY)
 # Run Psalm
 # @see https://psalm.dev/docs/
 psalm: | $(PSALM_DEPENDENCY) $(PSALM_CONFIG)
-	@$(PSALM)$(if $(PSALM_FLAGS), $(PSALM_FLAGS))$(if $(PSALM_BASELINE), --use-baseline="$(PSALM_BASELINE)" --update-baseline)
+	@$(if $(PSALM_ENV), $(PSALM_ENV) )$(PSALM)$(if $(PSALM_FLAGS), $(PSALM_FLAGS))$(if $(PSALM_BASELINE), --use-baseline="$(PSALM_BASELINE)" --update-baseline)
 .PHONY: psalm
 PHP_QUALITY_ASSURANCE_CHECK_TOOLS+=psalm
 
@@ -79,18 +82,18 @@ psalm-baseline.xml: | $(PSALM_DEPENDENCY) $(PSALM_CONFIG)
 
 # Clear the Psalm cache
 psalm.clear-cache:
-	@$(PSALM)$(if $(PSALM_FLAGS), $(PSALM_FLAGS)) --clear-cache
+	@$(if $(PSALM_ENV), $(PSALM_ENV) )$(PSALM)$(if $(PSALM_FLAGS), $(PSALM_FLAGS)) --clear-cache
 .PHONY: psalm.clear-cache
 
 # Run Psalter #!
 # @see https://psalm.dev/docs/manipulating_code/fixing/
 psalter: | $(PSALM_DEPENDENCY) $(PSALM_CONFIG)
-	@$(PSALM) --alter$(if $(PSALM_FLAGS), $(PSALM_FLAGS)) --issues="$(if $(PSALTER_ISSUES),$(PSALTER_ISSUES),all)"
+	@$(if $(PSALM_ENV), $(PSALM_ENV) )$(PSALM) --alter$(if $(PSALM_FLAGS), $(PSALM_FLAGS)) --issues="$(if $(PSALTER_ISSUES),$(PSALTER_ISSUES),all)"
 .PHONY: psalter
 PHP_QUALITY_ASSURANCE_FIX_TOOLS+=psalter
 
 # Dryrun Psalter
 psalter.dryrun: | $(PSALM_DEPENDENCY) $(PSALM_CONFIG)
-	@$(PSALM) --alter --dry-run$(if $(PSALM_FLAGS), $(PSALM_FLAGS)) --issues="$(if $(PSALTER_ISSUES),$(PSALTER_ISSUES),all)"
+	@$(if $(PSALM_ENV), $(PSALM_ENV) )$(PSALM) --alter --dry-run$(if $(PSALM_FLAGS), $(PSALM_FLAGS)) --issues="$(if $(PSALTER_ISSUES),$(PSALTER_ISSUES),all)"
 .PHONY: psalter.dryrun
 PHP_QUALITY_ASSURANCE_CHECK_TOOLS+=psalter.dryrun
