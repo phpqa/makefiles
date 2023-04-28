@@ -88,6 +88,6 @@ phpstan-baseline.neon: $(PHPSTAN_CONFIG) | $(PHPSTAN_DEPENDENCY)
 .PRECIOUS: phpstan-baseline.neon
 
 # Clear the PHPStan cache
-phpstan.clear-cache:: $(PHPSTAN_CONFIG) | $(PHPSTAN_DEPENDENCY)
+phpstan.clear-cache: $(PHPSTAN_CONFIG) | $(PHPSTAN_DEPENDENCY)
 	@$(PHPSTAN)$(if $(PHPSTAN_CLEAR_CACHE_FLAGS), $(PHPSTAN_CLEAR_CACHE_FLAGS)) clear-result-cache
 .PHONY: phpstan.clear-cache
