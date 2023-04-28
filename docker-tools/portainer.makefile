@@ -20,7 +20,7 @@ endif
 ###
 
 #. Docker variables
-PORTAINER_IMAGE?=cr.portainer.io/portainer/portainer-ce:latest
+PORTAINER_IMAGE?=cr.portainer.io/portainer/portainer-ce:alpin
 PORTAINER_SERVICE_NAME?=portainer
 PORTAINER_DATA_VOLUME?=portainer_data
 
@@ -64,6 +64,11 @@ endif
 			--volume "$(PORTAINER_DATA_VOLUME):/data" \
 			--volume "$(DOCKER_SOCKET):/var/run/docker.sock:ro" \
 			--publish "9000" \
+			--health-cmd='wget --no-verbose --tries=1 --spider http://localhost:9000 || exit 1' \
+			--health-interval=60s \
+			--health-retries=3 \
+			--health-timeout=5s \
+			--health-start-period=20s \
 			--label "traefik.enable=true" \
 			$(if $(PORTAINER_TRAEFIK_NETWORK),--label "traefik.docker.network=$(PORTAINER_TRAEFIK_NETWORK)") \
 			--label "traefik.http.routers.$(PORTAINER_SERVICE_NAME).entrypoints=web" \
