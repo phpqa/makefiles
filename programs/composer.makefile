@@ -185,7 +185,7 @@ composer.update-lock: $(patsubst %.json,%.lock,$(COMPOSER)) | $(COMPOSER_DEPENDE
 # Audit the packages you have installed for possible security issues
 # @see https://getcomposer.org/doc/03-cli.md#audit
 composer.audit: $(patsubst %.json,%.lock,$(COMPOSER)) | $(COMPOSER_DEPENDENCY)
-	@$(COMPOSER_EXECUTABLE) update $(COMPOSER_AUDIT_FLAGS)
+	@$(COMPOSER_EXECUTABLE) audit $(COMPOSER_AUDIT_FLAGS)
 .PHONY: composer.audit
 
 #. (internal) Untouch the Composer related files - set last modified date back to latest git commit
