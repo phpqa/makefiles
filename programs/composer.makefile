@@ -53,6 +53,7 @@ endif
 COMPOSER_INIT_FLAGS+=--no-interaction
 COMPOSER_INSTALL_FLAGS+=
 COMPOSER_UPDATE_FLAGS+=
+COMPOSER_AUDIT_FLAGS+=
 
 ###
 ##. Composer
@@ -180,6 +181,12 @@ composer.update: $(patsubst %.json,%.lock,$(COMPOSER)) | $(COMPOSER_DEPENDENCY)
 composer.update-lock: $(patsubst %.json,%.lock,$(COMPOSER)) | $(COMPOSER_DEPENDENCY)
 	@$(COMPOSER_EXECUTABLE) update $(COMPOSER_UPDATE_FLAGS) --lock
 .PHONY: composer.update-lock
+
+# Audit the packages you have installed for possible security issues
+# @see https://getcomposer.org/doc/03-cli.md#audit
+composer.audit: $(patsubst %.json,%.lock,$(COMPOSER)) | $(COMPOSER_DEPENDENCY)
+	@$(COMPOSER_EXECUTABLE) update $(COMPOSER_AUDIT_FLAGS)
+.PHONY: composer.audit
 
 #. (internal) Untouch the Composer related files - set last modified date back to latest git commit
 composer.untouch: | $(GIT_DEPENDENCY)
