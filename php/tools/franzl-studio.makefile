@@ -82,9 +82,7 @@ endif
 ifeq ($(STUDIO_PACKAGE_DIRECTORIES),)
 	$(error Please provide the variable STUDIO_PACKAGE_DIRECTORIES before running $(@))
 endif
-	@$(foreach directory,$(STUDIO_PACKAGE_DIRECTORIES), \
-	$(PHP) vendor/bin/studio load "$(directory)"; \
-	)
+	@$(PHP) vendor/bin/studio load $(STUDIO_PACKAGE_DIRECTORIES)
 	@$(COMPOSER_EXECUTABLE) require --no-interaction --no-scripts --no-progress --optimize-autoloader \
 		$(foreach directory,$(STUDIO_PACKAGE_DIRECTORIES),"$$($(COMPOSER_EXECUTABLE) --working-dir="$(directory)" show --name-only --self):@dev")
 	@$(foreach directory,$(STUDIO_PACKAGE_DIRECTORIES), \
@@ -115,11 +113,7 @@ endif
 ifeq ($(STUDIO_PACKAGE_DIRECTORIES),)
 	$(error Please provide the variable STUDIO_PACKAGE_DIRECTORIES before running $(@))
 endif
-	@$(foreach directory,$(STUDIO_PACKAGE_DIRECTORIES), \
-	if test -f "$(STUDIO_JSON_FILE)" && grep --quiet "$(directory)" "$(STUDIO_JSON_FILE)"; then \
-		$(PHP) vendor/bin/studio unload "$(directory)"; \
-	fi; \
-	)
+	@if test -f "$(STUDIO_JSON_FILE)"; then $(PHP) vendor/bin/studio unload $(STUDIO_PACKAGE_DIRECTORIES); fi
 	@JQ_REQUIRE_FILTER="$$($(foreach directory,$(STUDIO_PACKAGE_DIRECTORIES),PACKAGE="$$($(COMPOSER_EXECUTABLE) --working-dir="$(directory)" show --name-only --self)"; printf "%s" "\"$${PACKAGE}:\" + .require.\"$${PACKAGE}\" + \" \" + ";)) \"\""; \
 		REQUIRE_CONSTRAINTS="$$($(GIT) cat-file -p $$($(GIT) rev-parse HEAD):$(or $(COMPOSER),composer.json) | $(JQ) -r "$${JQ_REQUIRE_FILTER}")"; \
 		JQ_UPDATE_NAME_FILTER="$$($(foreach directory,$(STUDIO_PACKAGE_DIRECTORIES),PACKAGE="$$($(COMPOSER_EXECUTABLE) --working-dir="$(directory)" show --name-only --self)"; printf "%s" ".name==\"$${PACKAGE}\",";) printf "%s" "false")"; \
