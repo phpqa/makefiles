@@ -20,7 +20,7 @@ endif
 ###
 
 #. Docker variables
-PORTAINER_IMAGE?=cr.portainer.io/portainer/portainer-ce:alpin
+PORTAINER_IMAGE?=cr.portainer.io/portainer/portainer-ce:alpine
 PORTAINER_SERVICE_NAME?=portainer
 PORTAINER_DATA_VOLUME?=portainer_data
 
