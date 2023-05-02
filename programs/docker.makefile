@@ -178,9 +178,14 @@ compose.service.%.ensure-running: | $(DOCKER_DEPENDENCY) $(DOCKER_COMPOSE_DEPEND
 	fi
 
 #. Ensure service % is running at least once completely, and stops with exit code 0
-compose.service.%.ensure-running-until-exit: | $(DOCKER_COMPOSE_DEPENDENCY)
-	@CONTAINER_ID="$$($(DOCKER_COMPOSE) ps --quiet $(*))"; \
-		$(DOCKER) container logs --follow --since "$$($(DOCKER) container inspect --format "{{ .State.StartedAt }}" "$${CONTAINER_ID}")" "$${CONTAINER_ID}"; \
+compose.service.%.ensure-running-until-exit: | $(DOCKER_COMPOSE_DEPENDENCY) compose.service.%.ensure-running
+	@CONTAINER_ID="$$($(DOCKER_COMPOSE) ps --all --quiet $(*))"; \
+		if test -z "$${CONTAINER_ID}"; then \
+			printf "$(STYLE_ERROR)%s$(STYLE_RESET)\n" "Could not find service $(*)."; \
+			exit 1; \
+		fi; \
+		# May not give any logs, because of bug 45445: @see https://github.com/moby/moby/issues/45445 - hence we remove the microseconds from the timestamp \
+		$(DOCKER) container logs --follow --since "$$(date -d "$$($(DOCKER) container inspect --format "{{ .State.StartedAt }}" "$${CONTAINER_ID}")" -u +"%Y-%m-%dT%H:%M:%SZ")" "$${CONTAINER_ID}"; \
 		EXIT_CODE="$$($(DOCKER) container wait "$${CONTAINER_ID}")"; \
 		if test "$${EXIT_CODE}" != "0"; then exit $${EXIT_CODE}; fi
 
