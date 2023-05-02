@@ -35,6 +35,7 @@ COMPOSER?=composer.json
 ifeq ($(COMPOSER),)
 $(error The variable COMPOSER should never be empty)
 endif
+COMPOSER_LOCK?=$(patsubst %.json,%.lock,$(COMPOSER))
 
 COMPOSER_DOCKER_IMAGE?=composer
 COMPOSER_VERSION?=
@@ -129,7 +130,7 @@ $(COMPOSER): | $(COMPOSER_DEPENDENCY)
 	fi
 
 #. Build the composer.lock file
-$(patsubst %.json,%.lock,$(COMPOSER)): $(COMPOSER) | $(COMPOSER_DEPENDENCY)
+$(COMPOSER_LOCK): $(COMPOSER) | $(COMPOSER_DEPENDENCY)
 	@if test ! -f "$(@)"; then \
 		$(COMPOSER_EXECUTABLE) install $(COMPOSER_INSTALL_FLAGS); \
 	else \
@@ -144,7 +145,7 @@ $(patsubst %.json,%.lock,$(COMPOSER)): $(COMPOSER) | $(COMPOSER_DEPENDENCY)
 	fi
 
 #. Build the dependencies directory
-$(COMPOSER_VENDOR_DIRECTORY): $(patsubst %.json,%.lock,$(COMPOSER)) | $(COMPOSER_DEPENDENCY)
+$(COMPOSER_VENDOR_DIRECTORY): $(COMPOSER_LOCK) | $(COMPOSER_DEPENDENCY)
 	@if test ! -d "$(@)"; then \
 		$(COMPOSER_EXECUTABLE) install $(COMPOSER_INSTALL_FLAGS); \
 	else \
@@ -166,25 +167,25 @@ composer.init: | $(COMPOSER_DEPENDENCY)
 
 # Install the project dependencies
 # @see https://getcomposer.org/doc/03-cli.md#install-i
-composer.install: $(patsubst %.json,%.lock,$(COMPOSER)) | $(COMPOSER_DEPENDENCY)
+composer.install: $(COMPOSER_LOCK) | $(COMPOSER_DEPENDENCY)
 	@$(COMPOSER_EXECUTABLE) install $(COMPOSER_INSTALL_FLAGS)
 .PHONY: composer.install
 
 # Update the project dependencies
 # @see https://getcomposer.org/doc/03-cli.md#update-u
-composer.update: $(patsubst %.json,%.lock,$(COMPOSER)) | $(COMPOSER_DEPENDENCY)
+composer.update: $(COMPOSER_LOCK) | $(COMPOSER_DEPENDENCY)
 	@$(COMPOSER_EXECUTABLE) update $(COMPOSER_UPDATE_FLAGS)
 .PHONY: composer.update
 
 # Update only the lock file
 # @see https://getcomposer.org/doc/03-cli.md#update-u
-composer.update-lock: $(patsubst %.json,%.lock,$(COMPOSER)) | $(COMPOSER_DEPENDENCY)
+composer.update-lock: $(COMPOSER_LOCK) | $(COMPOSER_DEPENDENCY)
 	@$(COMPOSER_EXECUTABLE) update $(COMPOSER_UPDATE_FLAGS) --lock
 .PHONY: composer.update-lock
 
 # Audit the packages you have installed for possible security issues
 # @see https://getcomposer.org/doc/03-cli.md#audit
-composer.audit: $(patsubst %.json,%.lock,$(COMPOSER)) | $(COMPOSER_DEPENDENCY)
+composer.audit: $(COMPOSER_LOCK) | $(COMPOSER_DEPENDENCY)
 	@$(COMPOSER_EXECUTABLE) audit $(COMPOSER_AUDIT_FLAGS)
 .PHONY: composer.audit
 
@@ -193,7 +194,7 @@ composer.untouch: | $(GIT_DEPENDENCY)
 ifeq ($(GIT),)
 	$(error Please provide the variable GIT before running $(@))
 endif
-	@$(foreach file,$(COMPOSER) $(patsubst %.json,%.lock,$(COMPOSER)), \
+	@$(foreach file,$(COMPOSER) $(COMPOSER_LOCK), \
 	touch -d "$$($(GIT) log --pretty=format:%ci -1 "HEAD" -- "$(file)")" "$(file)"; \
 	printf "%s: %s\n" "$(file)" "$$(date -r "$(file)" +"%Y-%m-%d %H:%M:%S")"; \
 	)
