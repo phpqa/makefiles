@@ -1,0 +1,12 @@
+services:
+  first:
+    image: alpine
+    command: sh -c 'sleep 2; echo "first exited successfully"'
+
+  second:
+    image: alpine
+    command: sh -c 'echo "second exited successfully"'
+
+  second2:
+    image: alpine
+    command: sh -c "exit 235"

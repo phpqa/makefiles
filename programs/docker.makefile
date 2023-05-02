@@ -137,9 +137,9 @@ compose.build: | $(DOCKER_COMPOSE_DEPENDENCY)
 	@$(DOCKER_COMPOSE) build$(if $(DOCKER_COMPOSE_BUILD_FLAGS), $(DOCKER_COMPOSE_BUILD_FLAGS)) --pull
 .PHONY: compose.build
 
-# Up the service(s)
+# Up the service(s) # TODO Solve hidden date dependency
 compose.up: | $(DOCKER_COMPOSE_DEPENDENCY)
-	$(eval DOCKER_COMPOSE_UP_BEGIN_TIME=$(shell date -u +"%Y-%m-%dT%H:%M:%SZ")) # TODO Solve hidden date dependency
+	$(eval DOCKER_COMPOSE_UP_BEGIN_TIME=$(shell date -u +"%Y-%m-%dT%H:%M:%SZ"))
 	@$(DOCKER_COMPOSE) up$(if $(DOCKER_COMPOSE_UP_FLAGS), $(DOCKER_COMPOSE_UP_FLAGS))
 	@$(if $(DOCKER_COMPOSE_SERVICES_TO_LOG_DURING_UP_UNTIL_SUCCESSFUL_EXIT), \
 		$(DOCKER_COMPOSE) logs --follow --since="$(DOCKER_COMPOSE_UP_BEGIN_TIME)" $(DOCKER_COMPOSE_SERVICES_TO_LOG_DURING_UP_UNTIL_SUCCESSFUL_EXIT); \
