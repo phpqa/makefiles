@@ -46,9 +46,15 @@ make help
 
 ## Planned
 
+- bin/php should detect docker-compose vs docker compose on the fly, and it should fallback to the local php if none of the other options are available
+- bin/php should always be the same file, and it should save the builded image, if ever it cannot run directly on compose
+- define variables warned for with --warn-undefined-variables in the base.makefile
+- stop using the @ to silence commands, but use the .SILENT: target? does that work?
 - What happens if you use the makefile from another repo, that has not yet loaded the .makefiles subfolder?
 - Add DOCKER_CONFIG as a volume to any container that needs to pull images from remote registries
 - Use docker container names, instead of docker-compose service names to depend upon
+- create a simple phpqa image with some simple tools: make, git, curl...
 - Check the undocumented dependencies
+- Limit the dependencies on make and docker, by using a make image with docker daemon forwarding to the host
 - Add phars for the different tools
-- Add docker wait until the sidecars are exiting - and check on its exit code, return an error message
+- make it possible to run the phpqa tools from common, by setting the php directory
