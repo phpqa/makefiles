@@ -123,13 +123,13 @@ bin/composer: bin/composer-$(COMPOSER_VERSION)
 endif
 
 #. Create a composer.json file
-$(COMPOSER):
+$(COMPOSER): | $(COMPOSER_DEPENDENCY)
 	@if test ! -f "$(@)"; then \
 		$(COMPOSER_EXECUTABLE) init $(COMPOSER_INIT_FLAGS); \
 	fi
 
 #. Build the composer.lock file
-$(patsubst %.json,%.lock,$(COMPOSER)): $(COMPOSER)
+$(patsubst %.json,%.lock,$(COMPOSER)): $(COMPOSER) | $(COMPOSER_DEPENDENCY)
 	@if test ! -f "$(@)"; then \
 		$(COMPOSER_EXECUTABLE) install $(COMPOSER_INSTALL_FLAGS); \
 	else \
@@ -144,7 +144,7 @@ $(patsubst %.json,%.lock,$(COMPOSER)): $(COMPOSER)
 	fi
 
 #. Build the dependencies directory
-$(COMPOSER_VENDOR_DIRECTORY): $(patsubst %.json,%.lock,$(COMPOSER))
+$(COMPOSER_VENDOR_DIRECTORY): $(patsubst %.json,%.lock,$(COMPOSER)) | $(COMPOSER_DEPENDENCY)
 	@if test ! -d "$(@)"; then \
 		$(COMPOSER_EXECUTABLE) install $(COMPOSER_INSTALL_FLAGS); \
 	else \
