@@ -13,7 +13,7 @@ endif
 ##. Configuration
 ###
 
-REPOSITORIES?=$(if $(wildcard $(GIT_DIRECTORY)),self)
+REPOSITORY_NAMES?=$(if $(wildcard $(GIT_DIRECTORY)),self)
 REPOSITORY_self?=$(if $(wildcard $(GIT_DIRECTORY)),$(strip $(foreach variable,$(filter REPOSITORY_DIRECTORY_%,$(.VARIABLES)),$(if $(findstring $(shell pwd),$(realpath $($(variable)))),$(if $(findstring $(realpath $($(variable))),$(shell pwd)),$(patsubst REPOSITORY_DIRECTORY_%,%,$(variable)))))))
 REPOSITORY_DIRECTORY_self?=$(if $(wildcard $(GIT_DIRECTORY)),.)
 
@@ -130,23 +130,23 @@ git-remove-repository=\
 	fi
 
 #. Clone a repository
-$(foreach repository,$(REPOSITORIES),repository.$(repository).clone):repository.%.clone: | $(GIT_DEPENDENCY)
+$(foreach repository,$(REPOSITORY_NAMES),repository.$(repository).clone):repository.%.clone: | $(GIT_DEPENDENCY)
 	@$(call git-clone-repository,$(*))
 
 #. Pull a repository
-$(foreach repository,$(REPOSITORIES),repository.$(repository).pull):repository.%.pull: | $(GIT_DEPENDENCY)
+$(foreach repository,$(REPOSITORY_NAMES),repository.$(repository).pull):repository.%.pull: | $(GIT_DEPENDENCY)
 	@$(call git-pull-repository,$(*))
 
 #. Stash a repository
-$(foreach repository,$(REPOSITORIES),repository.$(repository).stash):repository.%.stash: | $(GIT_DEPENDENCY)
+$(foreach repository,$(REPOSITORY_NAMES),repository.$(repository).stash):repository.%.stash: | $(GIT_DEPENDENCY)
 	@$(call git-stash-repository,$(*))
 
 #. Remove a repository
-$(foreach repository,$(REPOSITORIES),repository.$(repository).remove):repository.%.remove: | $(GIT_DEPENDENCY)
+$(foreach repository,$(REPOSITORY_NAMES),repository.$(repository).remove):repository.%.remove: | $(GIT_DEPENDENCY)
 	@$(call git-remove-repository,$(*))
 
 #. Case 1: No repositories to pull
-ifeq ($(REPOSITORIES),)
+ifeq ($(REPOSITORY_NAMES),)
 #. Do nothing
 repositories.pull-everything: ; @true
 .PHONY: repositories.pull-everything
@@ -160,7 +160,7 @@ repositories.remove-everything: ; @true
 .PHONY: repositories.remove-everything
 else
 #. Case 2: Only this repository to pull
-ifeq ($(REPOSITORIES),$(REPOSITORY_self))
+ifeq ($(REPOSITORY_NAMES),$(REPOSITORY_self))
 #. Pull this repository
 repositories.pull-everything: | repository.pull; @true
 .PHONY: repositories.pull-everything
@@ -175,11 +175,11 @@ repositories.remove-everything: | repository.remove; @true
 #. Case 3: Multiple repositories to pull
 else
 # Clone all repositories
-repositories.clone: | $(foreach repository,$(REPOSITORIES),repository.$(repository).clone); @true
+repositories.clone: | $(foreach repository,$(REPOSITORY_NAMES),repository.$(repository).clone); @true
 .PHONY: repositories.clone
 
 # Pull all repositories
-repositories.pull: | repositories.clone $(foreach repository,$(REPOSITORIES),repository.$(repository).pull); @true
+repositories.pull: | repositories.clone $(foreach repository,$(REPOSITORY_NAMES),repository.$(repository).pull); @true
 .PHONY: repositories.pull
 
 #. Pull all repositories
@@ -187,7 +187,7 @@ repositories.pull-everything: repositories.pull; @true
 .PHONY: repositories.pull-everything
 
 # Stash files in all repositories
-repositories.stash: | $(foreach repository,$(REPOSITORIES),repository.$(repository).stash); @true
+repositories.stash: | $(foreach repository,$(REPOSITORY_NAMES),repository.$(repository).stash); @true
 .PHONY: repositories.stash
 
 #. Stash files in all repositories
@@ -195,7 +195,7 @@ repositories.stash-everything: repositories.stash; @true
 .PHONY: repositories.stash-everything
 
 # Remove files in all repositories
-repositories.remove: | $(foreach repository,$(REPOSITORIES),repository.$(repository).remove); @true
+repositories.remove: | $(foreach repository,$(REPOSITORY_NAMES),repository.$(repository).remove); @true
 .PHONY: repositories.remove
 
 #. Remove files in all repositories
