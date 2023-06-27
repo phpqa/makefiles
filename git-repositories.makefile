@@ -73,7 +73,13 @@ git-pull-repository=\
 					printf "$(STYLE_ERROR)%s$(STYLE_RESET)\\n" "Could not determine branch for \"$$(pwd)\"!"; \
 				else \
 					printf "%s\\n" "Pulling \"$${DEFAULT_BRANCH}\" branch into \"$$(pwd)\"..."; \
-					$(GIT) pull --rebase origin "$${DEFAULT_BRANCH}" || true; \
+					COMMIT_HASH_BEFORE="$$($(GIT) rev-parse --verify HEAD)"; \
+					$(GIT) fetch --quiet "origin" "$${DEFAULT_BRANCH}"; \
+					if test -n "$$($(GIT) log --oneline HEAD..origin/$${DEFAULT_BRANCH} 2>&1)"; then \
+						$(GIT) pull --quiet --rebase origin "$${DEFAULT_BRANCH}" || true; \
+						COMMIT_HASH_AFTER="$$($(GIT) rev-parse --verify HEAD)"; \
+						$(GIT) log --oneline --reverse --pretty=format:"%C(yellow)%h%Creset %ci %Cgreen(%cr)%Creset %s %C(bold blue)<%an>%Creset" $${COMMIT_HASH_BEFORE}..$${COMMIT_HASH_AFTER}; \
+					fi; \
 					if test -n "$(REPOSITORY_TAG_$(1))"; then \
 						$(GIT) fetch --all --tags > /dev/null || true; \
 						ACTUAL_REPOSITORY_TAG="$$($(GIT) tag --list --ignore-case --sort=-version:refname "$(REPOSITORY_TAG_$(1))" | head -n 1)"; \
