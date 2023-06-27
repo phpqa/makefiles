@@ -175,11 +175,21 @@ repositories.remove-everything: | repository.remove; @true
 #. Case 3: Multiple repositories to pull
 else
 # Clone all repositories
+ifeq ($(PARALLEL),)
 repositories.clone: | $(foreach repository,$(REPOSITORY_NAMES),repository.$(repository).clone); @true
+else
+repositories.clone:
+	@$(MAKE) --file="$(firstword $(MAKEFILE_LIST))" $(MAKE_PARALLELISM_OPTIONS) $(foreach repository,$(REPOSITORY_NAMES),repository.$(repository).clone)
+endif
 .PHONY: repositories.clone
 
 # Pull all repositories
-repositories.pull: | repositories.clone $(foreach repository,$(REPOSITORY_NAMES),repository.$(repository).pull); @true
+ifeq ($(PARALLEL),)
+repositories.pull: | $(foreach repository,$(REPOSITORY_NAMES),repository.$(repository).pull); true
+else
+repositories.pull:
+	@$(MAKE) --file="$(firstword $(MAKEFILE_LIST))" $(MAKE_PARALLELISM_OPTIONS) $(foreach repository,$(REPOSITORY_NAMES),repository.$(repository).pull)
+endif
 .PHONY: repositories.pull
 
 #. Pull all repositories
@@ -187,7 +197,12 @@ repositories.pull-everything: repositories.pull; @true
 .PHONY: repositories.pull-everything
 
 # Stash files in all repositories
+ifeq ($(PARALLEL),)
 repositories.stash: | $(foreach repository,$(REPOSITORY_NAMES),repository.$(repository).stash); @true
+else
+repositories.stash:
+	@$(MAKE) --file="$(firstword $(MAKEFILE_LIST))" $(MAKE_PARALLELISM_OPTIONS) $(foreach repository,$(REPOSITORY_NAMES),repository.$(repository).stash)
+endif
 .PHONY: repositories.stash
 
 #. Stash files in all repositories
