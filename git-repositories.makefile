@@ -179,7 +179,7 @@ repositories.clone: | $(foreach repository,$(REPOSITORIES),repository.$(reposito
 .PHONY: repositories.clone
 
 # Pull all repositories
-repositories.pull: | $(foreach repository,$(REPOSITORIES),repository.$(repository).pull); @true
+repositories.pull: | repositories.clone $(foreach repository,$(REPOSITORIES),repository.$(repository).pull); @true
 .PHONY: repositories.pull
 
 #. Pull all repositories
