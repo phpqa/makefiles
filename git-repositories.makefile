@@ -191,7 +191,7 @@ endif
 
 # Pull all repositories
 ifeq ($(PARALLEL),)
-repositories.pull: | $(foreach repository,$(REPOSITORY_NAMES),repository.$(repository).pull); true
+repositories.pull: | $(foreach repository,$(REPOSITORY_NAMES),repository.$(repository).pull); @true
 else
 repositories.pull:
 	@$(MAKE) --file="$(firstword $(MAKEFILE_LIST))" $(MAKE_PARALLELISM_OPTIONS) $(foreach repository,$(REPOSITORY_NAMES),repository.$(repository).pull)
