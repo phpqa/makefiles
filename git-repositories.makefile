@@ -217,21 +217,3 @@ repository.stash: | repository.$(REPOSITORY_self).stash; @true
 repository.remove: | repository.$(REPOSITORY_self).remove; @true
 .PHONY: repository.remove
 endif
-
-ifneq ($(REPOSITORIES),)
-#. Hand-off to the REPOSITORY_MAKEFILE of the repository
-$(foreach repository,$(filter-out self,$(REPOSITORIES)),$(if $(REPOSITORY_MAKEFILE_$(repository)),%-$(repository))):
-	@if test -z "$(REPOSITORY_DIRECTORY_$(patsubst $(*)-%,%,$(@)))"; then \
-		printf "$(STYLE_ERROR)%s$(STYLE_RESET)\\n" "Could not find variable \"REPOSITORY_DIRECTORY_$(patsubst $(*)-%,%,$(@))\"!"; \
-		exit 1; \
-	fi
-	@cd "$(REPOSITORY_DIRECTORY_$(patsubst $(*)-%,%,$(@)))" && $(MAKE) -f "$(REPOSITORY_MAKEFILE_$(patsubst $(*)-%,%,$(@)))" $(*)
-
-define make-repository-alias
-  $(1): | $(1)-$(2)
-  .PHONY: $(1)
-endef
-#. Hand-off to the REPOSITORY_MAKEFILE of the repository, but without the suffix for the repository
-$(foreach repository,$(filter-out self,$(REPOSITORIES)),$(if $(REPOSITORY_MAKEFILE_ALIASES_$(repository)), \
-$(foreach alias,$(REPOSITORY_MAKEFILE_ALIASES_$(repository)),$(eval $(call make-repository-alias,$(alias),$(repository))))))
-endif
