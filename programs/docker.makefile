@@ -176,6 +176,7 @@ compose.clear: | $(DOCKER_COMPOSE_DEPENDENCY)
 compose.service.%.ensure-running: | $(DOCKER_DEPENDENCY) $(DOCKER_COMPOSE_DEPENDENCY)
 	$(eval COMPOSE_RUNNING_CACHE=$(if $(COMPOSE_RUNNING_CACHE),$(COMPOSE_RUNNING_CACHE),$(shell $(DOCKER_COMPOSE) ps --services --filter "status=running")))
 	@if ! echo "$(COMPOSE_RUNNING_CACHE)" | grep -q -w "$(*)" 2> /dev/null; then \
+		printf "$(STYLE_INFO)%s$(STYLE_RESET)\n" "Waiting for the service \"$(*)\" to run..."; \
 		$(DOCKER_COMPOSE) up -d --remove-orphans "$(*)"; \
 		until $(DOCKER_COMPOSE) ps --services --filter "status=running" | grep -q -w "$(*)" 2> /dev/null; do \
 			if $(DOCKER_COMPOSE) ps --services --filter "status=stopped" | grep -q -w "$(*)" 2> /dev/null; then \
@@ -204,6 +205,7 @@ compose.service.%.ensure-running-until-exit: | $(DOCKER_COMPOSE_DEPENDENCY) comp
 compose.service.%.ensure-stopped: | $(DOCKER_COMPOSE_DEPENDENCY)
 	$(eval COMPOSE_RUNNING_CACHE=$(if $(COMPOSE_RUNNING_CACHE),$(COMPOSE_RUNNING_CACHE),$(shell $(DOCKER_COMPOSE) ps --services --filter "status=running")))
 	@if echo "$(COMPOSE_RUNNING_CACHE)" | grep -q -w "$(*)" 2> /dev/null; then \
+		printf "$(STYLE_INFO)%s$(STYLE_RESET)\n" "Waiting for the service \"$(*)\" to stop..."; \
 		$(DOCKER_COMPOSE) stop "$(*)"; \
 		until $(DOCKER_COMPOSE) ps --services --filter "status=running" | grep -q -w -v "$(*)" 2> /dev/null; do \
 			sleep 1; \
