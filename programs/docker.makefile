@@ -175,10 +175,10 @@ compose.clear: | $(DOCKER_COMPOSE_DEPENDENCY)
 #. Ensure service % is running
 compose.service.%.ensure-running: | $(DOCKER_DEPENDENCY) $(DOCKER_COMPOSE_DEPENDENCY)
 	$(eval COMPOSE_RUNNING_CACHE=$(if $(COMPOSE_RUNNING_CACHE),$(COMPOSE_RUNNING_CACHE),$(shell $(DOCKER_COMPOSE) ps --services --filter "status=running")))
-	@if ! echo "$(COMPOSE_RUNNING_CACHE)" | grep -q "$(*)" 2> /dev/null; then \
+	@if ! echo "$(COMPOSE_RUNNING_CACHE)" | grep -q -w "$(*)" 2> /dev/null; then \
 		$(DOCKER_COMPOSE) up -d --remove-orphans "$(*)"; \
-		until $(DOCKER_COMPOSE) ps --services --filter "status=running" | grep -q "$(*)" 2> /dev/null; do \
-			if $(DOCKER_COMPOSE) ps --services --filter "status=stopped" | grep -q "$(*)" 2> /dev/null; then \
+		until $(DOCKER_COMPOSE) ps --services --filter "status=running" | grep -q -w "$(*)" 2> /dev/null; do \
+			if $(DOCKER_COMPOSE) ps --services --filter "status=stopped" | grep -q -w "$(*)" 2> /dev/null; then \
 				printf "$(STYLE_ERROR)%s$(STYLE_RESET)\n" "The service \"$(*)\" stopped unexpectedly."; \
 				CONTAINER_ID="$$($(DOCKER_COMPOSE) ps --quiet "$(*)")"; \
 				$(DOCKER) container logs --since "$$($(DOCKER) container inspect --format "{{ .State.StartedAt }}" "$${CONTAINER_ID}")" "$${CONTAINER_ID}"; \
@@ -203,9 +203,9 @@ compose.service.%.ensure-running-until-exit: | $(DOCKER_COMPOSE_DEPENDENCY) comp
 #. Ensure service % is stopped
 compose.service.%.ensure-stopped: | $(DOCKER_COMPOSE_DEPENDENCY)
 	$(eval COMPOSE_RUNNING_CACHE=$(if $(COMPOSE_RUNNING_CACHE),$(COMPOSE_RUNNING_CACHE),$(shell $(DOCKER_COMPOSE) ps --services --filter "status=running")))
-	@if echo "$(COMPOSE_RUNNING_CACHE)" | grep -q "$(*)" 2> /dev/null; then \
+	@if echo "$(COMPOSE_RUNNING_CACHE)" | grep -q -w "$(*)" 2> /dev/null; then \
 		$(DOCKER_COMPOSE) stop "$(*)"; \
-		until $(DOCKER_COMPOSE) ps --services --filter "status=running" | grep -q -v "$(*)" 2> /dev/null; do \
+		until $(DOCKER_COMPOSE) ps --services --filter "status=running" | grep -q -w -v "$(*)" 2> /dev/null; do \
 			sleep 1; \
 		done; \
 	fi
