@@ -226,4 +226,12 @@ $(foreach repository,$(filter-out self,$(REPOSITORIES)),$(if $(REPOSITORY_MAKEFI
 		exit 1; \
 	fi
 	@cd "$(REPOSITORY_DIRECTORY_$(patsubst $(*)-%,%,$(@)))" && $(MAKE) -f "$(REPOSITORY_MAKEFILE_$(patsubst $(*)-%,%,$(@)))" $(*)
+
+define make-repository-alias
+  $(1): | $(1)-$(2)
+  .PHONY: $(1)
+endef
+#. Hand-off to the REPOSITORY_MAKEFILE of the repository, but without the suffix for the repository
+$(foreach repository,$(filter-out self,$(REPOSITORIES)),$(if $(REPOSITORY_MAKEFILE_ALIASES_$(repository)), \
+$(foreach alias,$(REPOSITORY_MAKEFILE_ALIASES_$(repository)),$(eval $(call make-repository-alias,$(alias),$(repository))))))
 endif
