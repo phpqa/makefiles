@@ -21,7 +21,7 @@ HELP_FIRST_COLUMN_WIDTH?=34
 # Show this help
 help:
 	@awk \
-		-v makefile_realpaths="$$($(MAKE) list-makefiles)" \
+		-v makefile_realpaths="$$($(MAKE) --file="$(firstword $(MAKEFILE_LIST))" list-makefiles)" \
 		-v show_pattern="$$($(MAKE) --file="$(firstword $(MAKEFILE_LIST))" list-make-targets-as-database | awk -F ";" '/^[a-zA-Z0-9_%\/\.-]+/{ if (skipped) printf "|"; printf "^%s:", $$3; skipped=1 }')" \
 		-v skip_pattern="$(subst $(subst ,, ),|,$(foreach target,$(HELP_TARGETS_TO_SKIP),^$(target):))" \
 		-v style_title="$(STYLE_TITLE)" \
