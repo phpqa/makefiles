@@ -13,6 +13,7 @@ endif
 ##. Configuration
 ###
 
+REPOSITORY_PROJECT_ROOT_DIRECTORY?=
 REPOSITORY_NAMES?=$(if $(wildcard $(GIT_DIRECTORY)),self)
 REPOSITORY_self?=$(if $(wildcard $(GIT_DIRECTORY)),$(strip $(foreach variable,$(filter REPOSITORY_DIRECTORY_%,$(.VARIABLES)),$(if $(findstring $(shell pwd),$(realpath $($(variable)))),$(if $(findstring $(realpath $($(variable))),$(shell pwd)),$(patsubst REPOSITORY_DIRECTORY_%,%,$(variable)))))))
 REPOSITORY_DIRECTORY_self?=$(if $(wildcard $(GIT_DIRECTORY)),.)
@@ -54,9 +55,10 @@ git-pull-repository=\
 		printf "$(STYLE_ERROR)%s$(STYLE_RESET)\\n" "Could not find directory \"$(REPOSITORY_DIRECTORY_$(1))\"."; \
 	else \
 		cd "$(REPOSITORY_DIRECTORY_$(1))"; \
+		PWD_TO_PRINT="$(subst $(patsubst %/,%,$(REPOSITORY_PROJECT_ROOT_DIRECTORY))/,,$(realpath $(REPOSITORY_DIRECTORY_$(1))))"; \
 		if test -n "$(REPOSITORY_MAKEFILE_$(1))"; then \
 			if test ! -f "$(REPOSITORY_MAKEFILE_$(1))"; then \
-				printf "$(STYLE_ERROR)%s$(STYLE_RESET)\\n" "Could not find file \"$(REPOSITORY_DIRECTORY_$(1))/$(REPOSITORY_MAKEFILE_$(1))\"."; \
+				printf "$(STYLE_ERROR)%s$(STYLE_RESET)\\n" "[$${PWD_TO_PRINT}] Could not find file \"$(REPOSITORY_DIRECTORY_$(1))/$(REPOSITORY_MAKEFILE_$(1))\"."; \
 			else \
 				$(MAKE) -f "$(REPOSITORY_MAKEFILE_$(1))" repositories.pull-everything; \
 			fi; \
@@ -66,32 +68,37 @@ git-pull-repository=\
 				REPOSITORY_URL="$$($(GIT) config --get remote.origin.url)"; \
 			fi; \
 			if test -z "$${REPOSITORY_URL}"; then \
-				printf "$(STYLE_ERROR)%s$(STYLE_RESET)\\n" "Could not determine the url for \"$$(pwd)\"!"; \
+				printf "$(STYLE_ERROR)%s$(STYLE_RESET)\\n" "[$${PWD_TO_PRINT}] Could not determine the remote url!"; \
 			else \
 				DEFAULT_BRANCH="$$($(GIT) ls-remote --symref "$${REPOSITORY_URL}" HEAD | awk -F'[/\t]' 'NR == 1 {print $$3}')"; \
-				if test -z "$${DEFAULT_BRANCH}" || test "$${DEFAULT_BRANCH}" = "(unknown)"; then \
-					printf "$(STYLE_ERROR)%s$(STYLE_RESET)\\n" "Could not determine branch for \"$$(pwd)\"!"; \
+				CURRENT_BRANCH="$$($(GIT) rev-parse --abbrev-ref HEAD)"; \
+				if test -z "$${CURRENT_BRANCH}" || test "$${CURRENT_BRANCH}" = "(unknown)" || test "$${CURRENT_BRANCH}" = "HEAD"; then \
+					printf "$(STYLE_ERROR)%s$(STYLE_RESET)\\n" "[$${PWD_TO_PRINT}] Could not determine the current branch!"; \
 				else \
-					printf "%s\\n" "Pulling \"$${DEFAULT_BRANCH}\" branch into \"$$(pwd)\"..."; \
-					COMMIT_HASH_BEFORE="$$($(GIT) rev-parse --verify HEAD)"; \
-					$(GIT) fetch --quiet "origin" "$${DEFAULT_BRANCH}"; \
-					if test -n "$$($(GIT) log --oneline HEAD..origin/$${DEFAULT_BRANCH} 2>&1)"; then \
-						$(GIT) pull --quiet --rebase origin "$${DEFAULT_BRANCH}" || true; \
+					printf "%s\\n" "[$${PWD_TO_PRINT}] Fetching all branches..."; \
+					$(GIT) fetch --quiet --all; \
+					if test -z "$$($(GIT) log --oneline HEAD..origin/$${CURRENT_BRANCH} 2>&1)"; then \
+						printf "$(STYLE_WARNING)%s$(STYLE_RESET)\\n" "[$${PWD_TO_PRINT}] Nothing to pull."; \
+					else \
+						COMMIT_HASH_BEFORE="$$($(GIT) rev-parse --verify HEAD)"; \
+						printf "%s\\n" "[$${PWD_TO_PRINT}] Pulling the \"$${CURRENT_BRANCH}\" branch..."; \
+						$(GIT) pull --quiet --rebase origin "$${CURRENT_BRANCH}" || true; \
 						COMMIT_HASH_AFTER="$$($(GIT) rev-parse --verify HEAD)"; \
 						$(GIT) log --oneline --reverse --pretty=format:"%C(yellow)%h%Creset %ci %Cgreen(%cr)%Creset %s %C(bold blue)<%an>%Creset" $${COMMIT_HASH_BEFORE}..$${COMMIT_HASH_AFTER}; \
+						printf "%s\\n" ""; \
+						printf "$(STYLE_SUCCESS)%s$(STYLE_RESET)\\n" "[$${PWD_TO_PRINT}] Pulled the \"$${CURRENT_BRANCH}\" branch."; \
 					fi; \
 					if test -n "$(REPOSITORY_TAG_$(1))"; then \
 						$(GIT) fetch --all --tags > /dev/null || true; \
 						ACTUAL_REPOSITORY_TAG="$$($(GIT) tag --list --ignore-case --sort=-version:refname "$(REPOSITORY_TAG_$(1))" | head -n 1)"; \
 						if test -z "$${ACTUAL_REPOSITORY_TAG}"; then \
-							printf "$(STYLE_ERROR)%s$(STYLE_RESET)\\n" "Could not find tag \"$(REPOSITORY_TAG_$(1))\" for \"$$(pwd)\"!"; \
+							printf "$(STYLE_ERROR)%s$(STYLE_RESET)\\n" "[$${PWD_TO_PRINT}] Could not find the tag \"$(REPOSITORY_TAG_$(1))\"!"; \
 						else \
-							printf "%s\\n" "Checking \"$${ACTUAL_REPOSITORY_TAG}\" tag into \"$$(pwd)\"..."; \
+							printf "%s\\n" "[$${PWD_TO_PRINT}] Doing a checkout of the \"$${ACTUAL_REPOSITORY_TAG}\" tag..."; \
 							$(GIT) -c advice.detachedHead=false checkout "tags/$${ACTUAL_REPOSITORY_TAG}" || true; \
+							printf "$(STYLE_SUCCESS)%s$(STYLE_RESET)\\n" "[$${PWD_TO_PRINT}] Checked out the \"$${ACTUAL_REPOSITORY_TAG}\" tag."; \
 						fi; \
 					fi; \
-					echo " "; \
-					sleep 1; \
 				fi; \
 			fi; \
 		fi; \
