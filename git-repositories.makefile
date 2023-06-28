@@ -87,6 +87,7 @@ git-fetch-repository=\
 			fi; \
 		fi; \
 	fi
+#. DEFAULT_BRANCH="$$($(GIT) ls-remote --symref "$${REPOSITORY_URL}" HEAD | awk -F'[/\t]' 'NR == 1 {print $$3}')"
 # $(1) is repository
 git-pull-repository=\
 	if test -z "$(REPOSITORY_DIRECTORY_$(1))"; then \
@@ -112,15 +113,14 @@ git-pull-repository=\
 			if test -z "$${REPOSITORY_URL}"; then \
 				printf "$(STYLE_ERROR)%s$(STYLE_RESET)\\n" "[$${PWD_TO_PRINT}] Could not determine the remote url!"; \
 			else \
-				DEFAULT_BRANCH="$$($(GIT) ls-remote --symref "$${REPOSITORY_URL}" HEAD | awk -F'[/\t]' 'NR == 1 {print $$3}')"; \
 				CURRENT_BRANCH="$$($(GIT) rev-parse --abbrev-ref HEAD)"; \
 				if test -z "$${CURRENT_BRANCH}" || test "$${CURRENT_BRANCH}" = "(unknown)" || test "$${CURRENT_BRANCH}" = "HEAD"; then \
 					printf "$(STYLE_ERROR)%s$(STYLE_RESET)\\n" "[$${PWD_TO_PRINT}] Could not determine the current branch!"; \
 				else \
-					printf "%s\\n" "[$${PWD_TO_PRINT}] Fetching all branches..."; \
-					$(GIT) fetch --quiet --all; \
+					printf "%s\\n" "[$${PWD_TO_PRINT}] Fetching all remote branches..."; \
+					$(GIT) fetch --all --quiet; \
 					if test -z "$$($(GIT) log --oneline HEAD..origin/$${CURRENT_BRANCH} 2>&1)"; then \
-						printf "$(STYLE_WARNING)%s$(STYLE_RESET)\\n" "[$${PWD_TO_PRINT}] Nothing to pull."; \
+						printf "$(STYLE_WARNING)%s$(STYLE_RESET)\\n" "[$${PWD_TO_PRINT}] Nothing to pull for the \"$${CURRENT_BRANCH}\" branch."; \
 					else \
 						COMMIT_HASH_BEFORE="$$($(GIT) rev-parse --verify HEAD)"; \
 						printf "%s\\n" "[$${PWD_TO_PRINT}] Pulling the \"$${CURRENT_BRANCH}\" branch..."; \
