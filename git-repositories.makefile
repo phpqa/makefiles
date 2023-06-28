@@ -46,6 +46,48 @@ git-clone-repository=\
 		fi; \
 	fi
 # $(1) is repository
+git-fetch-repository=\
+	if test -z "$(REPOSITORY_DIRECTORY_$(1))"; then \
+		printf "$(STYLE_ERROR)%s$(STYLE_RESET)\\n" "Could not find variable \"REPOSITORY_DIRECTORY_$(1)\"!"; \
+		exit 1; \
+	fi; \
+	if test ! -d "$(REPOSITORY_DIRECTORY_$(1))"; then \
+		printf "$(STYLE_ERROR)%s$(STYLE_RESET)\\n" "Could not find directory \"$(REPOSITORY_DIRECTORY_$(1))\"."; \
+	else \
+		cd "$(REPOSITORY_DIRECTORY_$(1))"; \
+		PWD_TO_PRINT="$(subst $(patsubst %/,%,$(REPOSITORY_PROJECT_ROOT_DIRECTORY))/,,$(realpath $(REPOSITORY_DIRECTORY_$(1))))"; \
+		if test -n "$(REPOSITORY_MAKEFILE_$(1))"; then \
+			if test ! -f "$(REPOSITORY_MAKEFILE_$(1))"; then \
+				printf "$(STYLE_ERROR)%s$(STYLE_RESET)\\n" "[$${PWD_TO_PRINT}] Could not find file \"$(REPOSITORY_DIRECTORY_$(1))/$(REPOSITORY_MAKEFILE_$(1))\"."; \
+			else \
+				$(MAKE) -f "$(REPOSITORY_MAKEFILE_$(1))" repositories.pull-everything; \
+			fi; \
+		else \
+			REPOSITORY_URL="$(REPOSITORY_URL_$(1))"; \
+			if test -z "$${REPOSITORY_URL}"; then \
+				REPOSITORY_URL="$$($(GIT) config --get remote.origin.url)"; \
+			fi; \
+			if test -z "$${REPOSITORY_URL}"; then \
+				printf "$(STYLE_ERROR)%s$(STYLE_RESET)\\n" "[$${PWD_TO_PRINT}] Could not determine the remote url!"; \
+			else \
+				DEFAULT_BRANCH="$$($(GIT) ls-remote --symref "$${REPOSITORY_URL}" HEAD | awk -F'[/\t]' 'NR == 1 {print $$3}')"; \
+				CURRENT_BRANCH="$$($(GIT) rev-parse --abbrev-ref HEAD)"; \
+				if test -z "$${CURRENT_BRANCH}" || test "$${CURRENT_BRANCH}" = "(unknown)" || test "$${CURRENT_BRANCH}" = "HEAD"; then \
+					printf "$(STYLE_ERROR)%s$(STYLE_RESET)\\n" "[$${PWD_TO_PRINT}] Could not determine the current branch!"; \
+				else \
+					if test "$${DEFAULT_BRANCH}" = "$${CURRENT_BRANCH}"; then \
+						printf "%s\\n" "[$${PWD_TO_PRINT}] Fetching the \"$${CURRENT_BRANCH}\" branch..."; \
+						$(GIT) fetch --quiet "origin" "$${CURRENT_BRANCH}"; \
+					else \
+						printf "%s\\n" "[$${PWD_TO_PRINT}] Fetching the \"$${DEFAULT_BRANCH}\" and \"$${CURRENT_BRANCH}\" branches..."; \
+						$(GIT) fetch --quiet "origin" "$${DEFAULT_BRANCH}"; \
+						$(GIT) fetch --quiet "origin" "$${CURRENT_BRANCH}"; \
+					fi; \
+				fi; \
+			fi; \
+		fi; \
+	fi
+# $(1) is repository
 git-pull-repository=\
 	if test -z "$(REPOSITORY_DIRECTORY_$(1))"; then \
 		printf "$(STYLE_ERROR)%s$(STYLE_RESET)\\n" "Could not find variable \"REPOSITORY_DIRECTORY_$(1)\"!"; \
@@ -146,6 +188,10 @@ git-remove-repository=\
 $(foreach repository,$(REPOSITORY_NAMES),repository.$(repository).clone):repository.%.clone: | $(GIT_DEPENDENCY)
 	@$(call git-clone-repository,$(*))
 
+#. Fetch a repository
+$(foreach repository,$(REPOSITORY_NAMES),repository.$(repository).fetch):repository.%.fetch: | $(GIT_DEPENDENCY)
+	@$(call git-fetch-repository,$(*))
+
 #. Pull a repository
 $(foreach repository,$(REPOSITORY_NAMES),repository.$(repository).pull):repository.%.pull: | $(GIT_DEPENDENCY)
 	@$(call git-pull-repository,$(*))
@@ -158,8 +204,12 @@ $(foreach repository,$(REPOSITORY_NAMES),repository.$(repository).stash):reposit
 $(foreach repository,$(REPOSITORY_NAMES),repository.$(repository).remove):repository.%.remove: | $(GIT_DEPENDENCY)
 	@$(call git-remove-repository,$(*))
 
-#. Case 1: No repositories to pull
+#. Case 1: No repositories
 ifeq ($(REPOSITORY_NAMES),)
+#. Do nothing
+repositories.fetch-everything: ; @true
+.PHONY: repositories.fetch-everything
+
 #. Do nothing
 repositories.pull-everything: ; @true
 .PHONY: repositories.pull-everything
@@ -172,8 +222,12 @@ repositories.stash-everything: ; @true
 repositories.remove-everything: ; @true
 .PHONY: repositories.remove-everything
 else
-#. Case 2: Only this repository to pull
+#. Case 2: Only this repository
 ifeq ($(REPOSITORY_NAMES),$(REPOSITORY_self))
+#. Fetch this repository
+repositories.fetch-everything: | repository.fetch; @true
+.PHONY: repositories.fetch-everything
+
 #. Pull this repository
 repositories.pull-everything: | repository.pull; @true
 .PHONY: repositories.pull-everything
@@ -195,6 +249,23 @@ repositories.clone:
 	@$(MAKE) --file="$(firstword $(MAKEFILE_LIST))" $(MAKE_PARALLELISM_OPTIONS) $(foreach repository,$(REPOSITORY_NAMES),repository.$(repository).clone)
 endif
 .PHONY: repositories.clone
+
+#. Clone all repositories
+repositories.clone-everything: repositories.clone; @true
+.PHONY: repositories.clone-everything
+
+# Fetch all repositories
+ifeq ($(PARALLEL),)
+repositories.fetch: | $(foreach repository,$(REPOSITORY_NAMES),repository.$(repository).fetch); @true
+else
+repositories.fetch:
+	@$(MAKE) --file="$(firstword $(MAKEFILE_LIST))" $(MAKE_PARALLELISM_OPTIONS) $(foreach repository,$(REPOSITORY_NAMES),repository.$(repository).fetch)
+endif
+.PHONY: repositories.fetch
+
+#. Fetch all repositories
+repositories.fetch-everything: repositories.fetch; @true
+.PHONY: repositories.fetch-everything
 
 # Pull all repositories
 ifeq ($(PARALLEL),)
@@ -233,6 +304,10 @@ endif
 endif
 
 ifneq ($(REPOSITORY_self),)
+# Fetch this repository
+repository.fetch: | repository.$(REPOSITORY_self).fetch; @true
+.PHONY: repository.fetch
+
 # Pull this repository
 repository.pull: | repository.$(REPOSITORY_self).pull; @true
 .PHONY: repository.pull
