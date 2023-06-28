@@ -126,7 +126,7 @@ git-pull-repository=\
 						printf "%s\\n" "[$${PWD_TO_PRINT}] Pulling the \"$${CURRENT_BRANCH}\" branch..."; \
 						$(GIT) pull --quiet --rebase origin "$${CURRENT_BRANCH}" || true; \
 						COMMIT_HASH_AFTER="$$($(GIT) rev-parse --verify HEAD)"; \
-						$(GIT) log --oneline --reverse --pretty=format:"%C(yellow)%h%Creset %ci %Cgreen(%cr)%Creset %s %C(bold blue)<%an>%Creset" $${COMMIT_HASH_BEFORE}..$${COMMIT_HASH_AFTER}; \
+						$(GIT) --no-pager log --oneline --reverse --pretty=format:"%C(yellow)%h%Creset %ci %Cgreen(%cr)%Creset %s %C(bold blue)<%an>%Creset" $${COMMIT_HASH_BEFORE}..$${COMMIT_HASH_AFTER}; \
 						printf "%s\\n" ""; \
 						printf "$(STYLE_SUCCESS)%s$(STYLE_RESET)\\n" "[$${PWD_TO_PRINT}] Pulled the \"$${CURRENT_BRANCH}\" branch."; \
 					fi; \
