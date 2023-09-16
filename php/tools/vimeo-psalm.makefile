@@ -3,7 +3,7 @@
 ###
 
 #. Package variables
-PSALM_PACKAGE?=vimeo/psalm
+PSALM_PACKAGE?=psalm/phar
 ifeq ($(PSALM_PACKAGE),)
 $(error The variable PSALM_PACKAGE should never be empty)
 endif
