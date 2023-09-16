@@ -1,5 +1,5 @@
 ###
-##. Make
+##. GNU Make
 ###
 
 #. Check for GNU Make
@@ -102,7 +102,7 @@ print_link?=printf "\033]8;;%s\033\\\\%s\033]8;;\033\\\\" "$(1)" "$(if $(2),$(2)
 println_link?=printf "\033]8;;%s\033\\\\%s\033]8;;\033\\\\\n" "$(1)" "$(if $(2),$(2),$(1))"
 
 ###
-##. Helpers
+##. Force
 ###
 
 #. Force the command to run
