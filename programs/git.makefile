@@ -3,6 +3,7 @@
 ###
 
 LC_ALL?=C
+GIT_SSH_COMMAND?=ssh -o ControlPath=$(if $(PARALLEL),no,~/.ssh/make_%r@%h_%p) -o ControlPersist=10s
 
 GIT_COMMAND?=git
 ifeq ($(GIT_COMMAND),)
@@ -15,7 +16,7 @@ ifeq ($(GIT_DEPENDENCY),)
 $(error The variable GIT_DEPENDENCY should never be empty)
 endif
 
-GIT?=$(if $(GIT_COMMAND),LC_ALL=$(LC_ALL) $(GIT_COMMAND),)
+GIT?=$(if $(GIT_COMMAND),LC_ALL=$(LC_ALL) $(if $(GIT_SSH_COMMAND),GIT_SSH_COMMAND="$(GIT_SSH_COMMAND)" )$(GIT_COMMAND))
 ifeq ($(GIT),)
 $(error The variable GIT should never be empty)
 endif
