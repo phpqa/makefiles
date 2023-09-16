@@ -17,8 +17,8 @@ $(foreach command,while grep sed echo,$(eval $(call check-env-dependency,$(comma
 # TODO create a small image that can extract .env variables from files
 
 DEFAULT_ENV_FILE?=.env
-BASH_NAME_REGEX?=[_[:alpha:][:digit:]]+
-BASH_VARIABLE_REGEX?=\\\$$$(BASH_NAME_REGEX)|\\\$$\{$(BASH_NAME_REGEX)\}
+BASH_NAME_REGEX:=[_[:alpha:][:digit:]]+
+BASH_VARIABLE_REGEX:=\\\$$$(BASH_NAME_REGEX)|\\\$$\{$(BASH_NAME_REGEX)\}
 #. $(1) is the file, $(2) is the variable
 parse_env_string=\
 	RESULT='$(strip $(2))'; \
@@ -31,6 +31,7 @@ parse_env_string=\
 		RESULT="$$(printf "%s" "$${RESULT}" | sed "s/$${ESCAPED_VARIABLE}/$${ESCAPED_VARIABLE_VALUE}/")"; \
 	done; \
 	echo "$${RESULT}"
+
 #. $(1) is the file, $(2) is the variable
 print_env_variable=printf "%s" "$$($(call parse_env_string,$(strip $(1)),$${$(strip $(2))}))"
 println_env_variable=printf "%s\\n" "$$($(call parse_env_string,$(strip $(1)),$${$(strip $(2))}))"
