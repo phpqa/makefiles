@@ -12,7 +12,7 @@ ifeq ($(DOCKER_DIRECTORY),)
 $(error The variable DOCKER_DIRECTORY should never be empty)
 endif
 
-DOCKER_DETECTED?=$(shell command -v $(DOCKER_COMMAND) || which $(DOCKER_COMMAND) 2>/dev/null)
+DOCKER_DETECTED?=$(eval DOCKER_DETECTED:=$(shell command -v $(DOCKER_COMMAND) || which $(DOCKER_COMMAND) 2>/dev/null))$(DOCKER_DETECTED)
 DOCKER_DEPENDENCY?=$(or $(wildcard $(DOCKER_DIRECTORY))) $(if $(DOCKER_DETECTED),docker.assure-usable,docker.not-found)
 ifeq ($(DOCKER_DEPENDENCY),)
 $(error The variable DOCKER_DEPENDENCY should never be empty)
@@ -24,7 +24,7 @@ DOCKER_CONFIG?=$(firstword $(wildcard ~/.docker/config.json ${HOME}/.docker/conf
 DOCKER_API_VERSION?=$(shell $(DOCKER) version --format "{{.Client.APIVersion}}")
 DOCKER_REGISTRIES?=
 
-USE_DOCKER_COMPOSE_1?=$(if $(shell docker compose version 2>/dev/null || true),,yes)
+USE_DOCKER_COMPOSE_1?=$(eval USE_DOCKER_COMPOSE_1:=$(if $(shell docker compose version 2>/dev/null || true),,yes))$(USE_DOCKER_COMPOSE_1)
 DOCKER_COMPOSE_COMMAND?=$(if $(USE_DOCKER_COMPOSE_1),docker-compose,$(DOCKER) compose)
 ifeq ($(DOCKER_COMPOSE_COMMAND),)
 $(error The variable DOCKER_COMPOSE_COMMAND should never be empty)
@@ -37,7 +37,7 @@ ifneq ($(DOCKER_COMPOSE_DIRECTORY),)
 ifeq ($(USE_DOCKER_COMPOSE_1),)
 DOCKER_COMPOSE_DEPENDENCY?=$(DOCKER_DEPENDENCY) compose.assure-usable
 else
-DOCKER_COMPOSE_DETECTED?=$(shell command -v docker-compose || which docker-compose 2>/dev/null)
+DOCKER_COMPOSE_DETECTED?=$(eval DOCKER_COMPOSE_DETECTED:=$(shell command -v docker-compose || which docker-compose 2>/dev/null))$(DOCKER_COMPOSE_DETECTED)
 DOCKER_COMPOSE_DEPENDENCY?=$(DOCKER_DEPENDENCY) $(if $(DOCKER_DETECTED),compose.assure-usable,compose.not-found)
 endif
 ifeq ($(DOCKER_COMPOSE_DEPENDENCY),)

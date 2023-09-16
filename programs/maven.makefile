@@ -7,7 +7,7 @@ ifeq ($(MVN_COMMAND),)
 $(error The variable MVN_COMMAND should never be empty)
 endif
 
-MVN_DETECTED?=$(shell command -v $(MVN_COMMAND) || which $(MVN_COMMAND) 2>/dev/null)
+MVN_DETECTED?=$(eval MVN_DETECTED:=$(shell command -v $(MVN_COMMAND) || which $(MVN_COMMAND) 2>/dev/null))$(MVN_DETECTED)
 MVN_DEPENDENCY?=$(if $(MVN_DETECTED),mvn.assure-usable,mvn.not-found)
 ifeq ($(MVN_DEPENDENCY),)
 $(error The variable MVN_DEPENDENCY should never be empty)
