@@ -2,6 +2,8 @@
 ##. Configuration
 ###
 
+LC_ALL?=C
+
 GIT_COMMAND?=git
 ifeq ($(GIT_COMMAND),)
 $(error The variable GIT_COMMAND should never be empty)
@@ -13,7 +15,7 @@ ifeq ($(GIT_DEPENDENCY),)
 $(error The variable GIT_DEPENDENCY should never be empty)
 endif
 
-GIT?=$(GIT_COMMAND)
+GIT?=$(if $(GIT_COMMAND),LC_ALL=$(LC_ALL) $(GIT_COMMAND),)
 ifeq ($(GIT),)
 $(error The variable GIT should never be empty)
 endif
