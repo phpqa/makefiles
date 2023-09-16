@@ -151,11 +151,17 @@ git-pull-repository=\
 					else \
 						COMMIT_HASH_BEFORE="$$($(GIT) rev-parse --verify HEAD)"; \
 						printf "%s\\n" "[$${PWD_TO_PRINT}] Pulling the \"$${CURRENT_BRANCH}\" branch..."; \
-						$(GIT) pull --quiet --rebase origin "$${CURRENT_BRANCH}" || true; \
-						COMMIT_HASH_AFTER="$$($(GIT) rev-parse --verify HEAD)"; \
-						$(GIT) --no-pager log --oneline --reverse --pretty=format:"%C(yellow)%h%Creset %ci %Cgreen(%cr)%Creset %s %C(bold blue)<%an>%Creset" $${COMMIT_HASH_BEFORE}..$${COMMIT_HASH_AFTER}; \
-						printf "%s\\n" ""; \
-						printf "$(STYLE_SUCCESS)%s$(STYLE_RESET)\\n" "[$${PWD_TO_PRINT}] Pulled the \"$${CURRENT_BRANCH}\" branch."; \
+						OUTPUT="$$($(GIT) pull --rebase origin "$${CURRENT_BRANCH}" 2>&1)"; \
+						RESULT="$$?"; \
+						if test "$${RESULT}" -eq "0"; then \
+							COMMIT_HASH_AFTER="$$($(GIT) rev-parse --verify HEAD)"; \
+							LOGS="$$($(GIT) --no-pager log --oneline --reverse --pretty=format:"%C(yellow)%h%Creset %ci %Cgreen(%cr)%Creset %s %C(bold blue)<%an>%Creset" $${COMMIT_HASH_BEFORE}..$${COMMIT_HASH_AFTER})"; \
+							if test -n "$${LOGS}"; then printf "%s\\n" "$${LOGS}"; fi; \
+							printf "$(STYLE_SUCCESS)%s$(STYLE_RESET)\\n" "[$${PWD_TO_PRINT}] Pulled the \"$${CURRENT_BRANCH}\" branch."; \
+						else \
+							printf "$(STYLE_ERROR)%s$(STYLE_RESET)\\n" "$${OUTPUT}"; \
+							exit $${RESULT}; \
+						fi; \
 					fi; \
 					if test -n "$(REPOSITORY_TAG_$(1))"; then \
 						$(GIT) fetch --all --tags > /dev/null || true; \
