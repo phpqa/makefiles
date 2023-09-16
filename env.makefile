@@ -21,16 +21,20 @@ BASH_NAME_REGEX:=[_[:alpha:][:digit:]]+
 BASH_VARIABLE_REGEX:=\\\$$$(BASH_NAME_REGEX)|\\\$$\{$(BASH_NAME_REGEX)\}
 #. $(1) is the file, $(2) is the variable
 parse_env_string=\
-	RESULT='$(strip $(2))'; \
-	while printf "%s" "$${RESULT}" | grep --quiet --extended-regexp "$(BASH_VARIABLE_REGEX)"; do \
-		VARIABLE="$$(printf "%s" "$${RESULT}" | sed --silent --regexp-extended "s/.*($(BASH_VARIABLE_REGEX)).*/\1/p")"; \
+	TEXT='$(strip $(2))'; \
+	options="$$(set +o xtrace)"; \
+	set +x; \
+	while printf "%s" "$${TEXT}" | grep --quiet --extended-regexp "$(BASH_VARIABLE_REGEX)"; do \
+		VARIABLE="$$(printf "%s" "$${TEXT}" | sed --silent --regexp-extended "s/.*($(BASH_VARIABLE_REGEX)).*/\1/p")"; \
 		VARIABLE_NAME="$$(printf "%s" "$${VARIABLE}" | sed --silent --regexp-extended "s/^\\\$$\{?($(BASH_NAME_REGEX))\}?$$/\1/p")"; \
 		VARIABLE_VALUE="$$( ( $(foreach file,$(strip $(1)) $(strip $(1)).local,( grep -F "$${VARIABLE_NAME}" "$(file)" 2>/dev/null || true ) && ) true ) | sed --silent --regexp-extended "s/^$${VARIABLE_NAME}[ ]*=[ ]*(\"([^\"]+)\"|'([^']+)'|(.*))$$/\2\3\4/p" | tail -n 1)"; \
 		ESCAPED_VARIABLE="$$(printf "%s" "$${VARIABLE}" | sed -e "s/[]\/$$*.^[]/\\\\&/g")"; \
 		ESCAPED_VARIABLE_VALUE="$$(printf "%s" "$${VARIABLE_VALUE}" | sed -e "s/[\/&]/\\\\&/g")"; \
-		RESULT="$$(printf "%s" "$${RESULT}" | sed "s/$${ESCAPED_VARIABLE}/$${ESCAPED_VARIABLE_VALUE}/")"; \
+		TEXT="$$(printf "%s" "$${TEXT}" | sed "s/$${ESCAPED_VARIABLE}/$${ESCAPED_VARIABLE_VALUE}/")"; \
 	done; \
-	echo "$${RESULT}"
+	set +vx; \
+	eval "$${options}"; \
+	echo "$${TEXT}"
 
 #. $(1) is the file, $(2) is the variable
 print_env_variable=printf "%s" "$$($(call parse_env_string,$(strip $(1)),$${$(strip $(2))}))"
