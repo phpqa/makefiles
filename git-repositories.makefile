@@ -18,10 +18,6 @@ REPOSITORY_DIRECTORY_self?=$(eval REPOSITORY_DIRECTORY_self:=$(if $(wildcard $(G
 
 REPOSITORY_NAMES?=$(eval REPOSITORY_NAMES:=$(if $(wildcard $(GIT_DIRECTORY)),self))$(REPOSITORY_NAMES)
 REPOSITORY_self?=$(eval REPOSITORY_self:=$(if $(wildcard $(GIT_DIRECTORY)),$(strip $(foreach variable,$(filter REPOSITORY_DIRECTORY_%,$(.VARIABLES)),$(if $(findstring $(shell pwd),$(realpath $($(variable)))),$(if $(findstring $(realpath $($(variable))),$(shell pwd)),$(patsubst REPOSITORY_DIRECTORY_%,%,$(variable))))))))$(REPOSITORY_self)
-ifneq ($(or $(findstring repository.,$(MAKECMDGOALS)),$(findstring repositories.,$(MAKECMDGOALS)),$(findstring  : , $(MAKECMDGOALS) )),)
-LAZY_REPOSITORY_NAMES=$(REPOSITORY_NAMES)
-LAZY_REPOSITORY_self=$(REPOSITORY_self)
-endif
 
 ###
 ##. Repositories
@@ -216,31 +212,31 @@ git-remove-repository=\
 	fi
 
 #. Clone a repository
-$(foreach repository,$(LAZY_REPOSITORY_NAMES),repository.$(repository).clone):repository.%.clone: | $(GIT_DEPENDENCY)
+$(foreach repository,$(REPOSITORY_NAMES),repository.$(repository).clone):repository.%.clone: | $(GIT_DEPENDENCY)
 	@$(call git-clone-repository,$(*))
 
 #. List a repository
-$(foreach repository,$(LAZY_REPOSITORY_NAMES),repository.$(repository).list):repository.%.list: | $(GIT_DEPENDENCY)
+$(foreach repository,$(REPOSITORY_NAMES),repository.$(repository).list):repository.%.list: | $(GIT_DEPENDENCY)
 	@$(call git-list-repository,$(*))
 
 #. Fetch a repository
-$(foreach repository,$(LAZY_REPOSITORY_NAMES),repository.$(repository).fetch):repository.%.fetch: | $(GIT_DEPENDENCY)
+$(foreach repository,$(REPOSITORY_NAMES),repository.$(repository).fetch):repository.%.fetch: | $(GIT_DEPENDENCY)
 	@$(call git-fetch-repository,$(*))
 
 #. Pull a repository
-$(foreach repository,$(LAZY_REPOSITORY_NAMES),repository.$(repository).pull):repository.%.pull: | $(GIT_DEPENDENCY)
+$(foreach repository,$(REPOSITORY_NAMES),repository.$(repository).pull):repository.%.pull: | $(GIT_DEPENDENCY)
 	@$(call git-pull-repository,$(*))
 
 #. Stash a repository
-$(foreach repository,$(LAZY_REPOSITORY_NAMES),repository.$(repository).stash):repository.%.stash: | $(GIT_DEPENDENCY)
+$(foreach repository,$(REPOSITORY_NAMES),repository.$(repository).stash):repository.%.stash: | $(GIT_DEPENDENCY)
 	@$(call git-stash-repository,$(*))
 
 #. Remove a repository
-$(foreach repository,$(LAZY_REPOSITORY_NAMES),repository.$(repository).remove):repository.%.remove: | $(GIT_DEPENDENCY)
+$(foreach repository,$(REPOSITORY_NAMES),repository.$(repository).remove):repository.%.remove: | $(GIT_DEPENDENCY)
 	@$(call git-remove-repository,$(*))
 
 #. Case 1: No repositories
-ifeq ($(LAZY_REPOSITORY_NAMES),)
+ifeq ($(REPOSITORY_NAMES),)
 #. Do nothing
 repositories.list-everything: ; @true
 .PHONY: repositories.list-everything
@@ -262,7 +258,7 @@ repositories.remove-everything: ; @true
 .PHONY: repositories.remove-everything
 else
 #. Case 2: Only this repository
-ifeq ($(LAZY_REPOSITORY_NAMES),$(LAZY_REPOSITORY_self))
+ifeq ($(REPOSITORY_NAMES),$(REPOSITORY_self))
 #. List this repository
 repositories.list-everything: | repository.list; @true
 .PHONY: repositories.list-everything
@@ -286,10 +282,10 @@ repositories.remove-everything: | repository.remove; @true
 else
 # Clone all repositories
 ifeq ($(PARALLEL),)
-repositories.clone: | $(foreach repository,$(LAZY_REPOSITORY_NAMES),repository.$(repository).clone); @true
+repositories.clone: | $(foreach repository,$(REPOSITORY_NAMES),repository.$(repository).clone); @true
 else
 repositories.clone:
-	@$(MAKE) --file="$(firstword $(MAKEFILE_LIST))" $(MAKE_PARALLELISM_OPTIONS) $(foreach repository,$(LAZY_REPOSITORY_NAMES),repository.$(repository).clone)
+	@$(MAKE) --file="$(firstword $(MAKEFILE_LIST))" $(MAKE_PARALLELISM_OPTIONS) $(foreach repository,$(REPOSITORY_NAMES),repository.$(repository).clone)
 endif
 .PHONY: repositories.clone
 
@@ -299,10 +295,10 @@ repositories.clone-everything: repositories.clone; @true
 
 # List all repositories
 ifeq ($(PARALLEL),)
-repositories.list: | $(foreach repository,$(LAZY_REPOSITORY_NAMES),repository.$(repository).list); @true
+repositories.list: | $(foreach repository,$(REPOSITORY_NAMES),repository.$(repository).list); @true
 else
 repositories.list:
-	@$(MAKE) --file="$(firstword $(MAKEFILE_LIST))" $(foreach repository,$(LAZY_REPOSITORY_NAMES),repository.$(repository).list)
+	@$(MAKE) --file="$(firstword $(MAKEFILE_LIST))" $(foreach repository,$(REPOSITORY_NAMES),repository.$(repository).list)
 endif
 .PHONY: repositories.list
 
@@ -312,10 +308,10 @@ repositories.list-everything: repositories.list; @true
 
 # Fetch all repositories
 ifeq ($(PARALLEL),)
-repositories.fetch: | $(foreach repository,$(LAZY_REPOSITORY_NAMES),repository.$(repository).fetch); @true
+repositories.fetch: | $(foreach repository,$(REPOSITORY_NAMES),repository.$(repository).fetch); @true
 else
 repositories.fetch:
-	@$(MAKE) --file="$(firstword $(MAKEFILE_LIST))" $(MAKE_PARALLELISM_OPTIONS) $(foreach repository,$(LAZY_REPOSITORY_NAMES),repository.$(repository).fetch)
+	@$(MAKE) --file="$(firstword $(MAKEFILE_LIST))" $(MAKE_PARALLELISM_OPTIONS) $(foreach repository,$(REPOSITORY_NAMES),repository.$(repository).fetch)
 endif
 .PHONY: repositories.fetch
 
@@ -325,10 +321,10 @@ repositories.fetch-everything: repositories.fetch; @true
 
 # Pull all repositories
 ifeq ($(PARALLEL),)
-repositories.pull: | $(foreach repository,$(LAZY_REPOSITORY_NAMES),repository.$(repository).pull); @true
+repositories.pull: | $(foreach repository,$(REPOSITORY_NAMES),repository.$(repository).pull); @true
 else
 repositories.pull:
-	@$(MAKE) --file="$(firstword $(MAKEFILE_LIST))" $(MAKE_PARALLELISM_OPTIONS) $(foreach repository,$(LAZY_REPOSITORY_NAMES),repository.$(repository).pull)
+	@$(MAKE) --file="$(firstword $(MAKEFILE_LIST))" $(MAKE_PARALLELISM_OPTIONS) $(foreach repository,$(REPOSITORY_NAMES),repository.$(repository).pull)
 endif
 .PHONY: repositories.pull
 
@@ -338,10 +334,10 @@ repositories.pull-everything: repositories.pull; @true
 
 # Stash files in all repositories
 ifeq ($(PARALLEL),)
-repositories.stash: | $(foreach repository,$(LAZY_REPOSITORY_NAMES),repository.$(repository).stash); @true
+repositories.stash: | $(foreach repository,$(REPOSITORY_NAMES),repository.$(repository).stash); @true
 else
 repositories.stash:
-	@$(MAKE) --file="$(firstword $(MAKEFILE_LIST))" $(MAKE_PARALLELISM_OPTIONS) $(foreach repository,$(LAZY_REPOSITORY_NAMES),repository.$(repository).stash)
+	@$(MAKE) --file="$(firstword $(MAKEFILE_LIST))" $(MAKE_PARALLELISM_OPTIONS) $(foreach repository,$(REPOSITORY_NAMES),repository.$(repository).stash)
 endif
 .PHONY: repositories.stash
 
@@ -350,7 +346,7 @@ repositories.stash-everything: repositories.stash; @true
 .PHONY: repositories.stash-everything
 
 # Remove files in all repositories
-repositories.remove: | $(foreach repository,$(LAZY_REPOSITORY_NAMES),repository.$(repository).remove); @true
+repositories.remove: | $(foreach repository,$(REPOSITORY_NAMES),repository.$(repository).remove); @true
 .PHONY: repositories.remove
 
 #. Remove files in all repositories
@@ -359,24 +355,24 @@ repositories.remove-everything: repositories.remove; @true
 endif
 endif
 
-ifneq ($(LAZY_REPOSITORY_self),)
+ifneq ($(REPOSITORY_self),)
 # List this repository
-repository.list: | repository.$(LAZY_REPOSITORY_self).list; @true
+repository.list: | repository.$(REPOSITORY_self).list; @true
 .PHONY: repository.list
 
 # Fetch this repository
-repository.fetch: | repository.$(LAZY_REPOSITORY_self).fetch; @true
+repository.fetch: | repository.$(REPOSITORY_self).fetch; @true
 .PHONY: repository.fetch
 
 # Pull this repository
-repository.pull: | repository.$(LAZY_REPOSITORY_self).pull; @true
+repository.pull: | repository.$(REPOSITORY_self).pull; @true
 .PHONY: repository.pull
 
 # Stash files in this repository
-repository.stash: | repository.$(LAZY_REPOSITORY_self).stash; @true
+repository.stash: | repository.$(REPOSITORY_self).stash; @true
 .PHONY: repository.stash
 
 # Remove files in this repository
-repository.remove: | repository.$(LAZY_REPOSITORY_self).remove; @true
+repository.remove: | repository.$(REPOSITORY_self).remove; @true
 .PHONY: repository.remove
 endif
