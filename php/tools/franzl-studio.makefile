@@ -1,4 +1,15 @@
 ###
+##. POSIX dependencies - @see https://pubs.opengroup.org/onlinepubs/9699919799/idx/utilities.html
+###
+
+define check-franzl-studio-dependency
+ifeq ($$(shell command -v $(1) || which $(1) 2>/dev/null),)
+$$(error Please provide the command "$(1)")
+endif
+endef
+$(foreach command,awk,$(eval $(call check-franzl-studio-dependency,$(command))))
+
+###
 ##. Dependencies
 ###
 
@@ -85,15 +96,7 @@ endif
 	@$(PHP) vendor/bin/studio load $(STUDIO_PACKAGE_DIRECTORIES)
 	@$(COMPOSER_EXECUTABLE) require --no-interaction --no-scripts --no-progress --optimize-autoloader \
 		$(foreach directory,$(STUDIO_PACKAGE_DIRECTORIES),"$$($(COMPOSER_EXECUTABLE) --working-dir="$(directory)" show --name-only --self):@dev")
-	@$(foreach directory,$(STUDIO_PACKAGE_DIRECTORIES), \
-	PACKAGE="$$($(COMPOSER_EXECUTABLE) --working-dir="$(directory)" show --name-only --self)"; \
-	PACKAGE_PATH="$$($(COMPOSER_EXECUTABLE) --no-interaction --no-scripts show --path "$${PACKAGE}")"; \
-	if printf "$${PACKAGE_PATH}" | grep -q -F "$(directory)"; then \
-		printf "$(STYLE_SUCCESS)%s$(STYLE_RESET)\n" "Package $${PACKAGE} is being loaded from $(directory)."; \
-	else \
-		printf "$(STYLE_ERROR)%s$(STYLE_RESET)\n" "Package $${PACKAGE} is still being loaded from the vendor directory."; \
-	fi; \
-	)
+	@$(MAKE) --file="$(firstword $(MAKEFILE_LIST))" studio.list STUDIO_VENDOR_COLOR="$(STYLE_ERROR)" STUDIO_EXTERNAL_COLOR="$(STYLE_SUCCESS)"
 .PHONY: studio.load
 
 # Unload the packages
@@ -124,17 +127,11 @@ endif
 	@if test -f "$(STUDIO_JSON_FILE)" && grep -q -F '"paths": []' "$(STUDIO_JSON_FILE)"; then \
 		rm -f "$(STUDIO_JSON_FILE)"; \
 	fi
-	@$(foreach directory,$(STUDIO_PACKAGE_DIRECTORIES), \
-	PACKAGE="$$($(COMPOSER_EXECUTABLE) --working-dir="$(directory)" show --name-only --self)"; \
-	PACKAGE_PATH="$$($(COMPOSER_EXECUTABLE) --no-interaction --no-scripts show --path "$${PACKAGE}")"; \
-	if printf "$${PACKAGE_PATH}" | grep -q -F "/vendor/"; then \
-		printf "$(STYLE_SUCCESS)%s$(STYLE_RESET)\n" "Package $${PACKAGE} is being loaded from the vendor directory."; \
-	else \
-		printf "$(STYLE_ERROR)%s$(STYLE_RESET)\n" "Package $${PACKAGE} is still being loaded from the directory $(directory)."; \
-	fi; \
-	)
+	@$(MAKE) --file="$(firstword $(MAKEFILE_LIST))" studio.list STUDIO_VENDOR_COLOR="$(STYLE_SUCCESS)" STUDIO_EXTERNAL_COLOR="$(STYLE_ERROR)"
 .PHONY: studio.unload
 
+STUDIO_VENDOR_COLOR=
+STUDIO_EXTERNAL_COLOR=
 # List the packages
 studio.list: | $(COMPOSER_DEPENDENCY)
 ifeq ($(COMPOSER_EXECUTABLE),)
@@ -143,8 +140,12 @@ endif
 ifeq ($(STUDIO_PACKAGE_DIRECTORIES),)
 	$(error Please provide the variable STUDIO_PACKAGE_DIRECTORIES before running $(@))
 endif
-	@$(foreach directory,$(STUDIO_PACKAGE_DIRECTORIES), \
-	PACKAGE="$$($(COMPOSER_EXECUTABLE) --working-dir="$(directory)" show --name-only --self)"; \
-	$(COMPOSER_EXECUTABLE) --no-interaction --no-scripts show --path "$${PACKAGE}"; \
-	)
+	@PACKAGES_FILTER="$(subst $(space),\|,$(foreach directory,$(STUDIO_PACKAGE_DIRECTORIES),$(shell $(COMPOSER_EXECUTABLE) --working-dir="$(directory)" show --name-only --self)))"; \
+		$(COMPOSER_EXECUTABLE) --no-interaction --no-scripts show --path | grep "$${PACKAGES_FILTER}" | \
+		awk ' \
+			{ \
+				if (index($$2,"vendor")) { printf "$(STUDIO_VENDOR_COLOR)%s$(STYLE_RESET)\n", "Package " $$1 " is being loaded from the vendor directory." } \
+				else { printf "$(STUDIO_EXTERNAL_COLOR)%s$(STYLE_RESET)\n", "Package " $$1 " is being loaded from the directory " $$2 "." } \
+			} \
+		'
 .PHONY: studio.list
