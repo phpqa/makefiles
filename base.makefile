@@ -22,7 +22,28 @@ MAKE_PARALLELISM_OPTIONS=$(if $(shell $(MAKE) -v | grep "3\|4"), -j "$$(nproc 2>
 SHELL?=/bin/sh
 
 #. Add extra flags to the make command
-MAKEFLAGS+=--no-print-directory --no-builtin-rules --environment-overrides
+MAKEFLAGS+=--no-builtin-rules --environment-overrides
+
+###
+##. Verbosity
+###
+
+VERBOSE?=0
+
+ifeq ($(VERBOSE),0)
+Q:=@
+MAKEFLAGS+=--no-print-directory
+endif
+ifeq ($(VERBOSE),1)
+Q:=
+endif
+ifeq ($(VERBOSE),2)
+Q:=
+SHELL+=-x
+endif
+
+#. Run the command without printing "is up to date" messages
+silent-% %.silent:%; @true
 
 ###
 ##. Default variables
@@ -87,6 +108,3 @@ println_link?=printf "\033]8;;%s\033\\\\%s\033]8;;\033\\\\\n" "$(1)" "$(if $(2),
 #. Force the command to run
 force: ; @true
 .PHONY: force
-
-#. Run the command without printing "is up to date" messages
-silent-% %.silent:%; @true
