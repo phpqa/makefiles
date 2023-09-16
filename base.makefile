@@ -6,7 +6,6 @@
 ifneq ($(firstword $(shell $(MAKE) --version)),GNU)
 $(error Please use GNU Make)
 endif
-MAKE_PARALLELISM_OPTIONS=$(if $(shell $(MAKE) -v | grep "3\|4"), -j "$$(nproc 2>/dev/null || sysctl -n hw.physicalcpu 2>/dev/null || echo "1")" ,)$(if $(shell $(MAKE) -v | grep "4"), --output-sync=recurse,)
 
 ###
 ##. Disable built-in rules
@@ -44,6 +43,13 @@ endif
 
 #. Run the command without printing "is up to date" messages
 silent-% %.silent:%; @true
+
+###
+##. Parallelism
+###
+
+MAKE_PARALLELISM_OPTIONS=$(eval MAKE_PARALLELISM_OPTIONS:=$(if $(shell $(MAKE) -v | grep "3\|4"), -j "$$(nproc 2>/dev/null || sysctl -n hw.physicalcpu 2>/dev/null || echo "1")" ,)$(if $(shell $(MAKE) -v | grep "4"), --output-sync=recurse,))$(MAKE_PARALLELISM_OPTIONS)
+
 
 ###
 ##. Default variables
