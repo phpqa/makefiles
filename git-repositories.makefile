@@ -13,6 +13,8 @@ endif
 ##. Configuration
 ###
 
+PARALLEL=1
+
 REPOSITORY_PROJECT_ROOT_DIRECTORY?=
 REPOSITORY_DIRECTORY_self?=$(eval REPOSITORY_DIRECTORY_self:=$(if $(wildcard $(GIT_DIRECTORY)),.))$(REPOSITORY_DIRECTORY_self)
 
@@ -287,12 +289,9 @@ repositories.remove-everything: | repository.remove; @true
 #. Case 3: Multiple repositories to pull
 else
 # Clone all repositories
-ifeq ($(PARALLEL),)
-repositories.clone: | $(foreach repository,$(REPOSITORY_NAMES),repository.$(repository).clone); @true
-else
 repositories.clone:
-	@$(MAKE) --file="$(firstword $(MAKEFILE_LIST))" $(MAKE_PARALLELISM_OPTIONS) $(foreach repository,$(REPOSITORY_NAMES),repository.$(repository).clone)
-endif
+	@$(MAKE) --file="$(firstword $(MAKEFILE_LIST))" $(if $(PARALLEL),$(MAKE_PARALLELISM_OPTIONS)) \
+		$(foreach repository,$(REPOSITORY_NAMES),repository.$(repository).clone)
 .PHONY: repositories.clone
 
 #. Clone all repositories
@@ -300,12 +299,7 @@ repositories.clone-everything: repositories.clone; @true
 .PHONY: repositories.clone-everything
 
 # List all repositories
-ifeq ($(PARALLEL),)
 repositories.list: | $(foreach repository,$(REPOSITORY_NAMES),repository.$(repository).list); @true
-else
-repositories.list:
-	@$(MAKE) --file="$(firstword $(MAKEFILE_LIST))" $(foreach repository,$(REPOSITORY_NAMES),repository.$(repository).list)
-endif
 .PHONY: repositories.list
 
 #. List all repositories
@@ -313,12 +307,9 @@ repositories.list-everything: repositories.list; @true
 .PHONY: repositories.list-everything
 
 # Fetch all repositories
-ifeq ($(PARALLEL),)
-repositories.fetch: | $(foreach repository,$(REPOSITORY_NAMES),repository.$(repository).fetch); @true
-else
 repositories.fetch:
-	@$(MAKE) --file="$(firstword $(MAKEFILE_LIST))" $(MAKE_PARALLELISM_OPTIONS) $(foreach repository,$(REPOSITORY_NAMES),repository.$(repository).fetch)
-endif
+	@$(MAKE) --file="$(firstword $(MAKEFILE_LIST))" $(if $(PARALLEL),$(MAKE_PARALLELISM_OPTIONS)) \
+		$(foreach repository,$(REPOSITORY_NAMES),repository.$(repository).fetch)
 .PHONY: repositories.fetch
 
 #. Fetch all repositories
@@ -326,12 +317,9 @@ repositories.fetch-everything: repositories.fetch; @true
 .PHONY: repositories.fetch-everything
 
 # Pull all repositories
-ifeq ($(PARALLEL),)
-repositories.pull: | $(foreach repository,$(REPOSITORY_NAMES),repository.$(repository).pull); @true
-else
 repositories.pull:
-	@$(MAKE) --file="$(firstword $(MAKEFILE_LIST))" $(MAKE_PARALLELISM_OPTIONS) $(foreach repository,$(REPOSITORY_NAMES),repository.$(repository).pull)
-endif
+	@$(MAKE) --file="$(firstword $(MAKEFILE_LIST))" $(if $(PARALLEL),$(MAKE_PARALLELISM_OPTIONS)) \
+		$(foreach repository,$(REPOSITORY_NAMES),repository.$(repository).pull)
 .PHONY: repositories.pull
 
 #. Pull all repositories
@@ -339,12 +327,9 @@ repositories.pull-everything: repositories.pull; @true
 .PHONY: repositories.pull-everything
 
 # Stash files in all repositories
-ifeq ($(PARALLEL),)
-repositories.stash: | $(foreach repository,$(REPOSITORY_NAMES),repository.$(repository).stash); @true
-else
 repositories.stash:
-	@$(MAKE) --file="$(firstword $(MAKEFILE_LIST))" $(MAKE_PARALLELISM_OPTIONS) $(foreach repository,$(REPOSITORY_NAMES),repository.$(repository).stash)
-endif
+	@$(MAKE) --file="$(firstword $(MAKEFILE_LIST))" $(if $(PARALLEL),$(MAKE_PARALLELISM_OPTIONS)) \
+		$(foreach repository,$(REPOSITORY_NAMES),repository.$(repository).stash)
 .PHONY: repositories.stash
 
 #. Stash files in all repositories
