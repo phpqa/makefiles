@@ -13,6 +13,7 @@ endif
 COMPOSER_CHECK_PLATFORM_REQS_FLAGS?=
 COMPOSER_VALIDATE_FLAGS?=--no-check-publish --no-interaction
 COMPOSER_OUTDATED_FLAGS?=--direct --locked --no-dev
+COMPOSER_AUDIT_FLAGS?=
 
 ###
 ##. Composer
@@ -39,6 +40,15 @@ endif
 	@$(COMPOSER_EXECUTABLE) validate $(COMPOSER_VALIDATE_FLAGS)
 .PHONY: composer.validate
 PHP_QUALITY_ASSURANCE_CHECK_TOOLS+=composer.validate
+
+# Validate the composer.json file
+# @see https://getcomposer.org/doc/03-cli.md#validate
+composer.validate.strict: | $(COMPOSER_DEPENDENCY)
+ifeq ($(COMPOSER_EXECUTABLE),)
+	$(error Please provide the variable COMPOSER_EXECUTABLE)
+endif
+	@$(COMPOSER_EXECUTABLE) validate --strict $(COMPOSER_VALIDATE_FLAGS)
+.PHONY: composer.validate-strict
 
 # List available updates
 # @see https://getcomposer.org/doc/03-cli.md#outdated
@@ -72,3 +82,13 @@ composer.outdated-strict-minor: composer.outdated; @true
 composer.outdated-strict-major: COMPOSER_OUTDATED_FLAGS+=--major-only --strict
 composer.outdated-strict-major: composer.outdated; @true
 .PHONY: composer.outdated-strict-major
+
+# Audit the installed packages for possible security issues
+# @see https://getcomposer.org/doc/03-cli.md#audit
+composer.audit: $(COMPOSER_LOCK) | $(COMPOSER_DEPENDENCY)
+ifeq ($(COMPOSER_EXECUTABLE),)
+	$(error Please provide the variable COMPOSER_EXECUTABLE)
+endif
+	@$(COMPOSER_EXECUTABLE) audit $(COMPOSER_AUDIT_FLAGS)
+.PHONY: composer.audit
+PHP_QUALITY_ASSURANCE_CHECK_TOOLS+=composer.audit

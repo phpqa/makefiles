@@ -54,7 +54,7 @@ endif
 COMPOSER_INIT_FLAGS+=--no-interaction
 COMPOSER_INSTALL_FLAGS+=
 COMPOSER_UPDATE_FLAGS+=
-COMPOSER_AUDIT_FLAGS+=
+COMPOSER_BUMP_FLAGS+=
 
 ###
 ##. Composer
@@ -159,6 +159,28 @@ $(COMPOSER_VENDOR_DIRECTORY): $(COMPOSER_LOCK) | $(COMPOSER_DEPENDENCY)
 		touch "$(@)"; \
 	fi
 
+#. (internal) Untouch the Composer related files - set last modified date back to latest git commit
+composer.untouch: | $(GIT_DEPENDENCY)
+ifeq ($(GIT),)
+	$(error Please provide the variable GIT before running $(@))
+endif
+	@$(foreach file,$(COMPOSER) $(COMPOSER_LOCK), \
+	touch -d "$$($(GIT) log --pretty=format:%ci -1 "HEAD" -- "$(file)")" "$(file)"; \
+	printf "%s: %s\n" "$(file)" "$$(date -r "$(file)" +"%Y-%m-%d %H:%M:%S")"; \
+	)
+
+# Configure Composer with some more strict flags
+# @see https://getcomposer.org/doc/06-config.md
+composer.configure-strict: | $(COMPOSER_DEPENDENCY)
+	@$(COMPOSER_EXECUTABLE) config optimize-autoloader true
+	@$(COMPOSER_EXECUTABLE) config sort-packages true
+	@$(COMPOSER_EXECUTABLE) config platform-check true
+.PHONY: composer.configure-strict
+
+###
+##. Composer commands
+###
+
 # Initialize the project dependencies
 # @see https://getcomposer.org/doc/03-cli.md#init
 composer.init: | $(COMPOSER_DEPENDENCY)
@@ -180,29 +202,17 @@ composer.update: $(COMPOSER_LOCK) | $(COMPOSER_DEPENDENCY)
 # Update only the lock file
 # @see https://getcomposer.org/doc/03-cli.md#update-u
 composer.update-lock: $(COMPOSER_LOCK) | $(COMPOSER_DEPENDENCY)
-	@$(COMPOSER_EXECUTABLE) update $(COMPOSER_UPDATE_FLAGS) --lock
+	@$(COMPOSER_EXECUTABLE) update --lock $(COMPOSER_UPDATE_FLAGS)
 .PHONY: composer.update-lock
 
-# Audit the packages you have installed for possible security issues
-# @see https://getcomposer.org/doc/03-cli.md#audit
-composer.audit: $(COMPOSER_LOCK) | $(COMPOSER_DEPENDENCY)
-	@$(COMPOSER_EXECUTABLE) audit $(COMPOSER_AUDIT_FLAGS)
-.PHONY: composer.audit
+# Bump the lower limit of the composer.json requirements to the currently installed versions
+# @see https://getcomposer.org/doc/03-cli.md#bump
+composer.bump: $(COMPOSER_LOCK) | $(COMPOSER_DEPENDENCY)
+	@$(COMPOSER_EXECUTABLE) bump $(COMPOSER_BUMP_FLAGS)
+.PHONY: composer.bump
 
-#. (internal) Untouch the Composer related files - set last modified date back to latest git commit
-composer.untouch: | $(GIT_DEPENDENCY)
-ifeq ($(GIT),)
-	$(error Please provide the variable GIT before running $(@))
-endif
-	@$(foreach file,$(COMPOSER) $(COMPOSER_LOCK), \
-	touch -d "$$($(GIT) log --pretty=format:%ci -1 "HEAD" -- "$(file)")" "$(file)"; \
-	printf "%s: %s\n" "$(file)" "$$(date -r "$(file)" +"%Y-%m-%d %H:%M:%S")"; \
-	)
-
-# Configure Composer with some more strict flags
-# @see https://getcomposer.org/doc/06-config.md
-composer.configure-strict: | $(COMPOSER_DEPENDENCY)
-	@$(COMPOSER_EXECUTABLE) config optimize-autoloader true
-	@$(COMPOSER_EXECUTABLE) config sort-packages true
-	@$(COMPOSER_EXECUTABLE) config platform-check true
-.PHONY: composer.configure-strict
+# Bump the lower limit of the composer.json requirements to the currently installed versions
+# @see https://getcomposer.org/doc/03-cli.md#bump
+composer.bump.dryrun: $(COMPOSER_LOCK) | $(COMPOSER_DEPENDENCY)
+	@$(COMPOSER_EXECUTABLE) bump --dry-run $(COMPOSER_BUMP_FLAGS)
+.PHONY: composer.bump.dryrun
