@@ -28,17 +28,21 @@ MAKEFLAGS+=--no-builtin-rules --environment-overrides
 ###
 
 VERBOSE?=0
+NO_PRINTING_LEVELS?=0
+NO_SHELL_PRINTING_LEVELS?=0 1
+NO_SHELL_TIMING_LEVELS?=0 1 2
 
-ifeq ($(VERBOSE),0)
+ifneq ($(filter $(VERBOSE),$(NO_PRINTING_LEVELS)),)
 Q:=@
 MAKEFLAGS+=--no-print-directory
-endif
-ifeq ($(VERBOSE),1)
+else
 Q:=
 endif
-ifeq ($(VERBOSE),2)
-Q:=
+ifeq ($(filter $(VERBOSE),$(NO_SHELL_PRINTING_LEVELS)),)
 SHELL+=-x
+endif
+ifeq ($(filter $(VERBOSE),$(NO_SHELL_TIMING_LEVELS)),)
+SHELL:=time $(SHELL)
 endif
 
 #. Run the command without printing "is up to date" messages
