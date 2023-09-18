@@ -4,26 +4,28 @@ Add the following in your project's makefile:
 
 ```makefile
 ###
-##. Configuration
+##. Makefiles
 ###
 
-#. This installs/updates the included makefiles
+#. Install and update the makefiles
 MAKEFILES_REPOSITORY:=https://github.com/phpqa/makefiles.git
-MAKEFILES_DIRECTORY:=.makefiles
+MAKEFILES_DIRECTORY:=$(CURDIR)/.makefiles
 MAKEFILES_TAG:=$(shell git ls-remote --tags --refs --sort="version:refname" "$(MAKEFILES_REPOSITORY)" "v*.*.*" | tail -n 1 | awk -F/ '{ print $$3 }')
 MAKEFILES_LOG:=$(shell \
 	if test ! -d $(MAKEFILES_DIRECTORY); then git clone $(MAKEFILES_REPOSITORY) "$(MAKEFILES_DIRECTORY)"; fi; \
-	if test -n "$(MAKEFILES_TAG)" && test -z "$$(git -C "$(MAKEFILES_DIRECTORY)" --no-pager describe --always --dirty | grep "^$(MAKEFILES_TAG)")"; then \
+	if test -n "$(MAKEFILES_TAG)" && test -z "$$(git -C "$(MAKEFILES_DIRECTORY)" --no-pager describe --tags --always --dirty | grep "^$(MAKEFILES_TAG)")"; then \
 		git -C "$(MAKEFILES_DIRECTORY)" fetch --all --tags; \
 		git -C "$(MAKEFILES_DIRECTORY)" reset --hard "tags/$(MAKEFILES_TAG)"; \
 	fi \
 )
 
-#. At least include the base.makefile file
-include $(MAKEFILES_DIRECTORY)/base.makefile            # Add some base functionality
-include $(MAKEFILES_DIRECTORY)/help.makefile            # Add documentation automatically
-include $(MAKEFILES_DIRECTORY)/repositories.makefile    # Add repository management
-include $(MAKEFILES_DIRECTORY)/parent-makefile.makefile # Add a makefile to the parent directory to redirect
+###
+## About
+###
+
+#. Load the base and help makefiles
+include $(MAKEFILES_DIRECTORY)/base.makefile
+include $(MAKEFILES_DIRECTORY)/help.makefile
 ```
 
 Change the MAKEFILES_TAG variable to the latest tag of this project, or the tag of the version you want to use:
@@ -43,6 +45,24 @@ Run the following command to see if it works:
 ```shell
 make help
 ```
+
+## Other makefiles
+
+### `include $(MAKEFILES_DIRECTORY)/help.makefile`
+
+Automatically load the documentation from all included makefiles.
+
+### `include $(MAKEFILES_DIRECTORY)/env.makefile`
+
+Read variables from a .env file.
+
+### `include $(MAKEFILES_DIRECTORY)/repositories.makefile`
+
+Clone and pull your repositories.
+
+### `include $(MAKEFILES_DIRECTORY)/parent-makefile.makefile`
+
+Add a makefile to the parent directory to redirect
 
 ## Planned
 
