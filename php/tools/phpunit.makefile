@@ -24,6 +24,7 @@ endif
 
 #. Register as a tool
 PHP_TESTING_TOOLS_DEPENDENCIES+=$(filter-out $(PHP_DEPENDENCY),$(PHPUNIT_DEPENDENCY))
+PHP_QUALITY_ASSURANCE_REPORT_TOOLS_DEPENDENCIES+=$(filter-out $(PHP_DEPENDENCY),$(PHPUNIT_DEPENDENCY))
 HELP_TARGETS_TO_SKIP+=$(wildcard $(filter-out $(PHP_DEPENDENCY),$(PHPUNIT_DEPENDENCY)))
 
 #. Configuration variables
@@ -85,3 +86,14 @@ phpunit: | $(PHPUNIT_DEPENDENCY) $(PHPUNIT_CONFIG)
 	@$(PHPUNIT)$(if $(PHPUNIT_FLAGS), $(PHPUNIT_FLAGS))
 .PHONY: phpunit
 PHP_TESTING_TOOLS+=phpunit
+PHP_QUALITY_ASSURANCE_REPORT_TOOLS+=phpunit
+
+#. List the PHPUnit report
+phpunit.report.list:
+	@$(if $(wildcard $(PHPUNIT_COVERAGE_DIRECTORY)/index.html),printf "%s: %s\n" "PHPUnit" "$$($(call println_link,file://$(abspath $(PHPUNIT_COVERAGE_DIRECTORY)/index.html,$(PHPUNIT_COVERAGE_DIRECTORY)/index.html)))")
+.PHONY: phpunit.report.list
+
+#. Remove the PHPUnit report
+phpunit.report.remove:
+	@$(if $(wildcard $(PHPUNIT_COVERAGE_DIRECTORY)/index.html),rm -rf $(PHPUNIT_COVERAGE_DIRECTORY))
+.PHONY: phpunit.report.remove
