@@ -46,6 +46,7 @@ make help
 
 ## Planned
 
+- Replace @ by $(-)
 - bin/php should detect docker-compose vs docker compose on the fly, and it should fallback to the local php if none of the other options are available
 - bin/php should always be the same file, and it should save the builded image, if ever it cannot run directly on compose
 - define variables warned for with --warn-undefined-variables in the base.makefile
@@ -58,3 +59,4 @@ make help
 - Limit the dependencies on make and docker, by using a make image with docker daemon forwarding to the host
 - Add phars for the different tools
 - make it possible to run the phpqa tools from common, by setting the php directory
+- use phar files for tools that have them
