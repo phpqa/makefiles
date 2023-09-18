@@ -17,9 +17,10 @@ DOTENV_LINTER_SERVICE_NAME?=dotenv-linter
 #. Tool variables
 DOTENV_LINTER_COMMAND?=check
 
-DOTENV_LINTER_CHECK_TARGETS?=$(if $(TARGET),$(TARGET),$(wildcard .env .env.*))
-DOTENV_LINTER_FIX_TARGETS?=$(if $(TARGET),$(TARGET),$(wildcard .env .env.*))
-DOTENV_LINTER_COMPARE_TARGETS?=$(if $(TARGET),$(TARGET),$(wildcard .env*.dist .env*.example))
+DEFAULT_ENV_FILE?=
+DOTENV_LINTER_CHECK_TARGETS?=$(if $(TARGET),$(TARGET),$(wildcard $(or $(DEFAULT_ENV_FILE),.env) $(or $(DEFAULT_ENV_FILE),.env).*))
+DOTENV_LINTER_FIX_TARGETS?=$(if $(TARGET),$(TARGET),$(wildcard $(or $(DEFAULT_ENV_FILE),.env) $(or $(DEFAULT_ENV_FILE),.env).*))
+DOTENV_LINTER_COMPARE_TARGETS?=$(if $(TARGET),$(TARGET),$(wildcard $(or $(DEFAULT_ENV_FILE),.env)*.dist $(or $(DEFAULT_ENV_FILE),.env)*.example))
 
 #. Building the flags
 DOTENV_LINTER_CHECK_CONTAINER_RUN_FLAGS?=

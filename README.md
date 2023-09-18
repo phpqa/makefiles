@@ -9,7 +9,7 @@ Add the following in your project's makefile:
 
 #. Install and update the makefiles
 MAKEFILES_REPOSITORY:=https://github.com/phpqa/makefiles.git
-MAKEFILES_DIRECTORY:=$(CURDIR)/.makefiles
+MAKEFILES_DIRECTORY:=$(abspath $(dir $(firstword $(MAKEFILE_LIST)))/.makefiles)
 MAKEFILES_TAG:=$(shell git ls-remote --tags --refs --sort="version:refname" "$(MAKEFILES_REPOSITORY)" "v*.*.*" | tail -n 1 | awk -F/ '{ print $$3 }')
 MAKEFILES_LOG:=$(shell \
 	if test ! -d $(MAKEFILES_DIRECTORY); then git clone $(MAKEFILES_REPOSITORY) "$(MAKEFILES_DIRECTORY)"; fi; \

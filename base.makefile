@@ -24,6 +24,13 @@ SHELL?=/bin/sh
 MAKEFLAGS+=--no-builtin-rules --environment-overrides
 
 ###
+##. Current working directory
+###
+
+CWD=$(eval CWD:=$$(abspath $$(dir $$(firstword $(MAKEFILE_LIST)))))$(CWD)
+CWD_PREFIX=$(if $(CWD),$(CWD)/)
+
+###
 ##. Verbosity
 ###
 
