@@ -22,8 +22,6 @@ BASH_VARIABLE_REGEX:=\\\$$$(BASH_NAME_REGEX)|\\\$$\{$(BASH_NAME_REGEX)\}
 #. $(1) is the file, $(2) is the variable
 parse_env_string=\
 	TEXT='$(strip $(2))'; \
-	options="$$(set +o xtrace)"; \
-	set +x; \
 	while printf "%s" "$${TEXT}" | grep -q -E "$(BASH_VARIABLE_REGEX)"; do \
 		VARIABLE="$$(printf "%s" "$${TEXT}" | sed --silent --regexp-extended "s/.*($(BASH_VARIABLE_REGEX)).*/\1/p")"; \
 		VARIABLE_NAME="$$(printf "%s" "$${VARIABLE}" | sed --silent --regexp-extended "s/^\\\$$\{?($(BASH_NAME_REGEX))\}?$$/\1/p")"; \
@@ -32,8 +30,6 @@ parse_env_string=\
 		ESCAPED_VARIABLE_VALUE="$$(printf "%s" "$${VARIABLE_VALUE}" | sed -e "s/[\/&]/\\\\&/g")"; \
 		TEXT="$$(printf "%s" "$${TEXT}" | sed "s/$${ESCAPED_VARIABLE}/$${ESCAPED_VARIABLE_VALUE}/")"; \
 	done; \
-	set +vx; \
-	eval "$${options}"; \
 	echo "$${TEXT}"
 
 #. $(1) is the file, $(2) is the variable
