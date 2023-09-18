@@ -17,10 +17,10 @@ php.report: $(filter-out $(PHP_QUALITY_ASSURANCE_REPORT_TOOLS_TO_SKIP),$(PHP_QUA
 .PHONY: php.report
 
 # List all reports
-php.report.list: $(filter-out $(PHP_QUALITY_ASSURANCE_REPORT_TOOLS_TO_SKIP),$(PHP_QUALITY_ASSURANCE_REPORT_TOOLS).report.list); @true
+php.report.list: $(addsuffix .report.list,$(filter-out $(PHP_QUALITY_ASSURANCE_REPORT_TOOLS_TO_SKIP),$(PHP_QUALITY_ASSURANCE_REPORT_TOOLS))); @true
 .PHONY: php.report.list
 
 # Remove all reports #!
-php.report.remove: $(filter-out $(PHP_QUALITY_ASSURANCE_REPORT_TOOLS_TO_SKIP),$(PHP_QUALITY_ASSURANCE_REPORT_TOOLS).report.remove); @true
+php.report.remove: $(addsuffix .report.remove,$(filter-out $(PHP_QUALITY_ASSURANCE_REPORT_TOOLS_TO_SKIP),$(PHP_QUALITY_ASSURANCE_REPORT_TOOLS))); @true
 .PHONY: php.report.remove
 endif
