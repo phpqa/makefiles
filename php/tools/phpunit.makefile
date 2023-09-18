@@ -32,7 +32,8 @@ PHPUNIT_CONFIG?=$(firstword $(wildcard $(PHPUNIT_POSSIBLE_CONFIGS)))
 
 #. Extra variables
 PHPUNIT_COVERAGE_DIRECTORY?=
-PHPUNIT_JUNIT?=
+TESTDOX?=
+JUNIT_FILE?=
 
 #. Building the flags
 PHPUNIT_FLAGS?=
@@ -49,9 +50,15 @@ PHPUNIT_FLAGS+=--coverage-html="$(PHPUNIT_COVERAGE_DIRECTORY)"
 endif
 endif
 
-ifneq ($(PHPUNIT_JUNIT),)
+ifneq ($(TESTDOX),)
+ifeq ($(findstring --testdox,$(PHPUNIT_FLAGS)),)
+PHPUNIT_FLAGS+=--testdox
+endif
+endif
+
+ifneq ($(JUNIT_FILE),)
 ifeq ($(findstring --log-junit,$(PHPUNIT_FLAGS)),)
-PHPUNIT_FLAGS+=--log-junit="$(PHPUNIT_JUNIT)"
+PHPUNIT_FLAGS+=--log-junit="$(JUNIT_FILE)"
 endif
 endif
 
