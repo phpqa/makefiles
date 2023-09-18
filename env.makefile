@@ -24,7 +24,7 @@ parse_env_string=\
 	TEXT='$(strip $(2))'; \
 	options="$$(set +o xtrace)"; \
 	set +x; \
-	while printf "%s" "$${TEXT}" | grep --quiet --extended-regexp "$(BASH_VARIABLE_REGEX)"; do \
+	while printf "%s" "$${TEXT}" | grep -q -E "$(BASH_VARIABLE_REGEX)"; do \
 		VARIABLE="$$(printf "%s" "$${TEXT}" | sed --silent --regexp-extended "s/.*($(BASH_VARIABLE_REGEX)).*/\1/p")"; \
 		VARIABLE_NAME="$$(printf "%s" "$${VARIABLE}" | sed --silent --regexp-extended "s/^\\\$$\{?($(BASH_NAME_REGEX))\}?$$/\1/p")"; \
 		VARIABLE_VALUE="$$( ( $(foreach file,$(strip $(1)) $(strip $(1)).local,( grep -F "$${VARIABLE_NAME}" "$(file)" 2>/dev/null || true ) && ) true ) | sed --silent --regexp-extended "s/^$${VARIABLE_NAME}[ ]*=[ ]*(\"([^\"]+)\"|'([^']+)'|(.*))$$/\2\3\4/p" | tail -n 1)"; \
