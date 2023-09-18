@@ -19,7 +19,7 @@ REPOSITORY_PROJECT_ROOT_DIRECTORY?=
 REPOSITORY_DIRECTORY_self?=$(eval REPOSITORY_DIRECTORY_self:=$$(if $$(wildcard $(GIT_DIRECTORY)),.))$(REPOSITORY_DIRECTORY_self)
 
 REPOSITORY_NAMES?=$(eval REPOSITORY_NAMES:=$$(if $$(wildcard $$(GIT_DIRECTORY)),self))$(REPOSITORY_NAMES)
-REPOSITORY_self?=$(eval REPOSITORY_self:=$$(if $$(wildcard $$(GIT_DIRECTORY)),$$(strip $$(foreach variable,$$(filter REPOSITORY_DIRECTORY_%,$$(.VARIABLES)),$$(if $$(findstring $$(shell pwd),$$(realpath $$($$(variable)))),$$(if $$(findstring $$(realpath $$($$(variable))),$$(shell pwd)),$$(patsubst REPOSITORY_DIRECTORY_%,%,$$(variable))))))))$(REPOSITORY_self)
+REPOSITORY_self?=$(eval REPOSITORY_self:=$$(firstword $$(strip $$(foreach variable,$$(filter REPOSITORY_DIRECTORY_%,$$(.VARIABLES)),$$(if $$(filter $$(shell pwd),$$($$(variable))),$$(patsubst REPOSITORY_DIRECTORY_%,%,$$(variable)))))))$(REPOSITORY_self)
 
 ###
 ##. Repositories
