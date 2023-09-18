@@ -7,7 +7,7 @@ ifeq ($(CURL_COMMAND),)
 $(error The variable CURL_COMMAND should never be empty)
 endif
 
-CURL_DETECTED?=$(eval CURL_DETECTED:=$(shell command -v $(CURL_COMMAND) || which $(CURL_COMMAND) 2>/dev/null))$(CURL_DETECTED)
+CURL_DETECTED?=$(eval CURL_DETECTED:=$$(shell command -v $(CURL_COMMAND) || which $(CURL_COMMAND) 2>/dev/null))$(CURL_DETECTED)
 CURL_DEPENDENCY?=$(if $(CURL_DETECTED),curl.assure-usable,curl.not-found)
 ifeq ($(CURL_DEPENDENCY),)
 $(error The variable CURL_DEPENDENCY should never be empty)

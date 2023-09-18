@@ -7,7 +7,7 @@ ifeq ($(JQ_COMMAND),)
 $(error The variable JQ_COMMAND should never be empty)
 endif
 
-JQ_DETECTED?=$(eval JQ_DETECTED:=$(shell command -v $(JQ_COMMAND) || which $(JQ_COMMAND) 2>/dev/null))$(JQ_DETECTED)
+JQ_DETECTED?=$(eval JQ_DETECTED:=$$(shell command -v $(JQ_COMMAND) || which $(JQ_COMMAND) 2>/dev/null))$(JQ_DETECTED)
 JQ_DEPENDENCY?=$(if $(JQ_DETECTED),jq.assure-usable,$(if $(DOCKER_DETECTED),$(DOCKER_DEPENDENCY),jq.not-found))
 ifeq ($(JQ_DEPENDENCY),)
 $(error The variable JQ_DEPENDENCY should never be empty)
