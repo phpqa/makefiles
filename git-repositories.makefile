@@ -63,7 +63,7 @@ git-list-repository=\
 			if test ! -f "$(REPOSITORY_MAKEFILE_$(1))"; then \
 				printf "$(STYLE_ERROR)%s$(STYLE_RESET)\\n" "[$${PWD_TO_PRINT}] Could not find file \"$(REPOSITORY_DIRECTORY_$(1))/$(REPOSITORY_MAKEFILE_$(1))\"."; \
 			else \
-				$(MAKE) -f "$(REPOSITORY_MAKEFILE_$(1))" repositories.list-everything; \
+				$(MAKE) --file "$(REPOSITORY_MAKEFILE_$(1))" repositories.list-everything; \
 			fi; \
 		else \
 			REPOSITORY_URL="$(REPOSITORY_URL_$(1))"; \
@@ -89,7 +89,7 @@ git-fetch-repository=\
 			if test ! -f "$(REPOSITORY_MAKEFILE_$(1))"; then \
 				printf "$(STYLE_ERROR)%s$(STYLE_RESET)\\n" "[$${PWD_TO_PRINT}] Could not find file \"$(REPOSITORY_DIRECTORY_$(1))/$(REPOSITORY_MAKEFILE_$(1))\"."; \
 			else \
-				$(MAKE) -f "$(REPOSITORY_MAKEFILE_$(1))" repositories.fetch-everything; \
+				$(MAKE) --file "$(REPOSITORY_MAKEFILE_$(1))" repositories.fetch-everything; \
 			fi; \
 		else \
 			REPOSITORY_URL="$(REPOSITORY_URL_$(1))"; \
@@ -132,7 +132,7 @@ git-pull-repository=\
 			if test ! -f "$(REPOSITORY_MAKEFILE_$(1))"; then \
 				printf "$(STYLE_ERROR)%s$(STYLE_RESET)\\n" "[$${PWD_TO_PRINT}] Could not find file \"$(REPOSITORY_DIRECTORY_$(1))/$(REPOSITORY_MAKEFILE_$(1))\"."; \
 			else \
-				$(MAKE) -f "$(REPOSITORY_MAKEFILE_$(1))" repositories.pull-everything; \
+				$(MAKE) --file "$(REPOSITORY_MAKEFILE_$(1))" repositories.pull-everything; \
 			fi; \
 		else \
 			REPOSITORY_URL="$(REPOSITORY_URL_$(1))"; \
@@ -194,7 +194,7 @@ git-stash-repository=\
 			if test ! -f "$(REPOSITORY_MAKEFILE_$(1))"; then \
 				printf "$(STYLE_ERROR)%s$(STYLE_RESET)\\n" "Could not find file \"$(REPOSITORY_DIRECTORY_$(1))/$(REPOSITORY_MAKEFILE_$(1))\"."; \
 			else \
-				$(MAKE) -f "$(REPOSITORY_MAKEFILE_$(1))" repositories.stash-everything; \
+				$(MAKE) --file "$(REPOSITORY_MAKEFILE_$(1))" repositories.stash-everything; \
 			fi; \
 		else \
 			if test -z "$$($(GIT) status -s)"; then \
