@@ -38,5 +38,5 @@ println_env_variable=printf "%s\\n" "$$($(call parse_env_string,$(strip $(1)),$$
 get_env_variable=$(shell $(call print_env_variable,$(1),$(2)))
 check_variable_is_not_empty=if test -z "$${$(strip $(1))}"; then printf "$(STYLE_ERROR)%s$(STYLE_RESET)\n" "Could not find the $(strip $(1)) environment variable."; exit 1; fi
 define define_env_variable
-$(eval $(2)=$$(eval $(2):=$$(shell $$(call print_env_variable,$(1),$(2))))$$($(2)))
+$(eval $(2)?=$$(eval $(2):=$$(shell $$(call print_env_variable,$(1),$(2))))$$($(2)))
 endef
