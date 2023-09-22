@@ -59,9 +59,9 @@ ifneq ($(DOCKER_COMPOSE_SERVICE_NAME_FOR_PHP),)
 	@printf "%s\\n" "fi" >> "$(@)"
 else
 ifneq ($(PHP),)
-	@printf "%s\\n" "if test -f \$$(dirname \$$(readlink -f "\$$0"))/composer; then" >> "$(@)"
-	@printf "%s\\n" "    $(PHP) \$$(dirname \$$(readlink -f "\$$0"))/composer check-platform-reqs --no-plugins --quiet \\" >> "$(@)"
-	@printf "%s\\n" "        || $(PHP) \$$(dirname \$$(readlink -f "\$$0"))/composer check-platform-reqs --no-plugins" >> "$(@)"
+	@printf "%s\\n" "if test -f \$$(dirname \$$(readlink -m "\$$0"))/composer; then" >> "$(@)"
+	@printf "%s\\n" "    $(PHP) \$$(dirname \$$(readlink -m "\$$0"))/composer check-platform-reqs --no-plugins --quiet \\" >> "$(@)"
+	@printf "%s\\n" "        || $(PHP) \$$(dirname \$$(readlink -m "\$$0"))/composer check-platform-reqs --no-plugins" >> "$(@)"
 	@printf "%s\\n" "fi" >> "$(@)"
 	@printf "%s\\n" "$(PHP)$(if $(PHP_FLAGS), $(PHP_FLAGS)) \"\$$@\"" >> "$(@)"
 else
