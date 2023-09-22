@@ -82,7 +82,27 @@ endif
 	@if test -f "$(STUDIO_JSON_FILE).disabled"; then mv "$(STUDIO_JSON_FILE).disabled" "$(STUDIO_JSON_FILE)"; fi
 endif
 
-# Load the packages
+STUDIO_VENDOR_COLOR=
+STUDIO_EXTERNAL_COLOR=
+# List all packages known by Studio, and where they are being loaded from
+studio.list: | $(COMPOSER_DEPENDENCY)
+ifeq ($(COMPOSER_EXECUTABLE),)
+	$(error Please provide the variable COMPOSER_EXECUTABLE before running $(@))
+endif
+ifeq ($(STUDIO_PACKAGE_DIRECTORIES),)
+	$(error Please provide the variable STUDIO_PACKAGE_DIRECTORIES before running $(@))
+endif
+	@PACKAGES_FILTER="$(subst $(space),\|,$(foreach directory,$(STUDIO_PACKAGE_DIRECTORIES),$(shell $(COMPOSER_EXECUTABLE) --working-dir="$(directory)" show --name-only --self)))"; \
+		$(COMPOSER_EXECUTABLE) --no-interaction --no-scripts show --path | grep "$${PACKAGES_FILTER}" | \
+		awk ' \
+			{ \
+				if (index($$2,"vendor")) { printf "$(STUDIO_VENDOR_COLOR)%s$(STYLE_RESET)\n", "Package " $$1 " is being loaded from the vendor directory." } \
+				else { printf "$(STUDIO_EXTERNAL_COLOR)%s$(STYLE_RESET)\n", "Package " $$1 " is being loaded from the directory " $$2 "." } \
+			} \
+		'
+.PHONY: studio.list
+
+# Load all packages, to use the code from their local directories
 studio.load: | $(PHP_DEPENDENCY) $(COMPOSER_DEPENDENCY) $(STUDIO_DEPENDENCY)
 ifeq ($(PHP),)
 	$(error Please provide the variable PHP)
@@ -99,7 +119,7 @@ endif
 	@$(MAKE) --file="$(firstword $(MAKEFILE_LIST))" studio.list STUDIO_VENDOR_COLOR="$(STYLE_ERROR)" STUDIO_EXTERNAL_COLOR="$(STYLE_SUCCESS)"
 .PHONY: studio.load
 
-# Unload the packages
+# Unload all packages, to use the code from their vendor dependency
 studio.unload: | $(PHP_DEPENDENCY) $(COMPOSER_DEPENDENCY) $(GIT_DEPENDENCY) $(JQ_DEPENDENCY) $(STUDIO_DEPENDENCY)
 ifeq ($(PHP),)
 	$(error Please provide the variable PHP)
@@ -130,22 +150,17 @@ endif
 	@$(MAKE) --file="$(firstword $(MAKEFILE_LIST))" studio.list STUDIO_VENDOR_COLOR="$(STYLE_SUCCESS)" STUDIO_EXTERNAL_COLOR="$(STYLE_ERROR)"
 .PHONY: studio.unload
 
-STUDIO_VENDOR_COLOR=
-STUDIO_EXTERNAL_COLOR=
-# List the packages
-studio.list: | $(COMPOSER_DEPENDENCY)
-ifeq ($(COMPOSER_EXECUTABLE),)
-	$(error Please provide the variable COMPOSER_EXECUTABLE before running $(@))
-endif
-ifeq ($(STUDIO_PACKAGE_DIRECTORIES),)
-	$(error Please provide the variable STUDIO_PACKAGE_DIRECTORIES before running $(@))
-endif
-	@PACKAGES_FILTER="$(subst $(space),\|,$(foreach directory,$(STUDIO_PACKAGE_DIRECTORIES),$(shell $(COMPOSER_EXECUTABLE) --working-dir="$(directory)" show --name-only --self)))"; \
-		$(COMPOSER_EXECUTABLE) --no-interaction --no-scripts show --path | grep "$${PACKAGES_FILTER}" | \
-		awk ' \
-			{ \
-				if (index($$2,"vendor")) { printf "$(STUDIO_VENDOR_COLOR)%s$(STYLE_RESET)\n", "Package " $$1 " is being loaded from the vendor directory." } \
-				else { printf "$(STUDIO_EXTERNAL_COLOR)%s$(STYLE_RESET)\n", "Package " $$1 " is being loaded from the directory " $$2 "." } \
-			} \
-		'
-.PHONY: studio.list
+# List the packages known by Studio, filtered on %, and where they are being loaded from
+studio.list-%:
+	@STUDIO_PACKAGE_DIRECTORIES="$(strip $(foreach v,$(STUDIO_PACKAGE_DIRECTORIES),$(if $(findstring $(*),$(v)),$(v))))" \
+		$(MAKE) --file="$(firstword $(MAKEFILE_LIST))" studio.list
+
+# Load the packages, filtered on %, to use the code from their local directories
+studio.load-%:
+	@STUDIO_PACKAGE_DIRECTORIES="$(strip $(foreach v,$(STUDIO_PACKAGE_DIRECTORIES),$(if $(findstring $(*),$(v)),$(v))))" \
+		$(MAKE) --file="$(firstword $(MAKEFILE_LIST))" studio.load
+
+# Unload the packages, filtered on %, to use the code from their vendor dependency
+studio.unload-%:
+	@STUDIO_PACKAGE_DIRECTORIES="$(strip $(foreach v,$(STUDIO_PACKAGE_DIRECTORIES),$(if $(findstring $(*),$(v)),$(v))))" \
+		$(MAKE) --file="$(firstword $(MAKEFILE_LIST))" studio.unload
