@@ -13,11 +13,10 @@ endif
 ##. Configuration
 ###
 
-GIT_PARALLEL?=1
-REPOSITORY_CLONE_IN_PARALLEL?=$(GIT_PARALLEL)
-REPOSITORY_FETCH_IN_PARALLEL?=$(GIT_PARALLEL)
-REPOSITORY_PULL_IN_PARALLEL?=$(GIT_PARALLEL)
-REPOSITORY_STASH_IN_PARALLEL?=$(GIT_PARALLEL)
+GIT_SSH_COMMAND?=
+REPOSITORY_CLONE_IN_PARALLEL?=
+REPOSITORY_FETCH_IN_PARALLEL?=
+REPOSITORY_PULL_IN_PARALLEL?=
 
 REPOSITORY_PROJECT_ROOT_DIRECTORY?=
 REPOSITORY_DIRECTORY_self?=$(eval REPOSITORY_DIRECTORY_self:=$$(if $$(wildcard $(GIT_DIRECTORY)),.))$(REPOSITORY_DIRECTORY_self)
@@ -35,6 +34,7 @@ git-clone-repository=\
 		printf "$(STYLE_ERROR)%s$(STYLE_RESET)\\n" "Could not find variable \"REPOSITORY_DIRECTORY_$(1)\"!"; \
 		exit 1; \
 	fi; \
+	$(if $(REPOSITORY_CLONE_IN_PARALLEL),export GIT_SSH_COMMAND="$(or $(GIT_SSH_COMMAND),ssh -o ControlPath=no)";) \
 	if test ! -d "$(REPOSITORY_DIRECTORY_$(1))"; then \
 		if test -z "$(REPOSITORY_URL_$(1))"; then \
 			printf "$(STYLE_ERROR)%s$(STYLE_RESET)\\n" "Could not find variable \"REPOSITORY_URL_$(1)\"!"; \
@@ -96,6 +96,7 @@ git-fetch-repository=\
 				$(MAKE) --file "$(REPOSITORY_MAKEFILE_$(1))" repositories.fetch-everything; \
 			fi; \
 		else \
+			$(if $(REPOSITORY_FETCH_IN_PARALLEL),export GIT_SSH_COMMAND="$(or $(GIT_SSH_COMMAND),ssh -o ControlPath=no)";) \
 			REPOSITORY_URL="$(REPOSITORY_URL_$(1))"; \
 			if test -z "$${REPOSITORY_URL}"; then \
 				REPOSITORY_URL="$$($(GIT) config --get remote.origin.url)"; \
@@ -139,6 +140,7 @@ git-pull-repository=\
 				$(MAKE) --file "$(REPOSITORY_MAKEFILE_$(1))" repositories.pull-everything; \
 			fi; \
 		else \
+			$(if $(REPOSITORY_PULL_IN_PARALLEL),export GIT_SSH_COMMAND="$(or $(GIT_SSH_COMMAND),ssh -o ControlPath=no)";) \
 			REPOSITORY_URL="$(REPOSITORY_URL_$(1))"; \
 			if test -z "$${REPOSITORY_URL}"; then \
 				REPOSITORY_URL="$$($(GIT) config --get remote.origin.url)"; \
@@ -294,7 +296,8 @@ repositories.remove-everything: | repository.remove; @true
 else
 # Clone all repositories
 repositories.clone:
-	@$(MAKE) --file="$(firstword $(MAKEFILE_LIST))" $(if $(REPOSITORY_CLONE_IN_PARALLEL),$(MAKE_PARALLELISM_OPTIONS)) \
+	@$(if $(REPOSITORY_CLONE_IN_PARALLEL),REPOSITORY_CLONE_IN_PARALLEL=$(REPOSITORY_CLONE_IN_PARALLEL)) \
+		$(MAKE) --file="$(firstword $(MAKEFILE_LIST))" $(if $(REPOSITORY_CLONE_IN_PARALLEL),$(MAKE_PARALLELISM_OPTIONS)) \
 		$(foreach repository,$(REPOSITORY_NAMES),repository.$(repository).clone)
 .PHONY: repositories.clone
 
@@ -312,7 +315,8 @@ repositories.list-everything: repositories.list; @true
 
 # Fetch all repositories
 repositories.fetch:
-	@$(MAKE) --file="$(firstword $(MAKEFILE_LIST))" $(if $(REPOSITORY_FETCH_IN_PARALLEL),$(MAKE_PARALLELISM_OPTIONS)) \
+	@$(if $(REPOSITORY_FETCH_IN_PARALLEL),REPOSITORY_FETCH_IN_PARALLEL=$(REPOSITORY_FETCH_IN_PARALLEL)) \
+		$(MAKE) --file="$(firstword $(MAKEFILE_LIST))" $(if $(REPOSITORY_FETCH_IN_PARALLEL),$(MAKE_PARALLELISM_OPTIONS)) \
 		$(foreach repository,$(REPOSITORY_NAMES),repository.$(repository).fetch)
 .PHONY: repositories.fetch
 
@@ -322,7 +326,8 @@ repositories.fetch-everything: repositories.fetch; @true
 
 # Pull all repositories
 repositories.pull:
-	@$(MAKE) --file="$(firstword $(MAKEFILE_LIST))" $(if $(REPOSITORY_PULL_IN_PARALLEL),$(MAKE_PARALLELISM_OPTIONS)) \
+	@$(if $(REPOSITORY_PULL_IN_PARALLEL),REPOSITORY_PULL_IN_PARALLEL=$(REPOSITORY_PULL_IN_PARALLEL)) \
+		$(MAKE) --file="$(firstword $(MAKEFILE_LIST))" $(if $(REPOSITORY_PULL_IN_PARALLEL),$(MAKE_PARALLELISM_OPTIONS)) \
 		$(foreach repository,$(REPOSITORY_NAMES),repository.$(repository).pull)
 .PHONY: repositories.pull
 
@@ -332,8 +337,7 @@ repositories.pull-everything: repositories.pull; @true
 
 # Stash files in all repositories
 repositories.stash:
-	@$(MAKE) --file="$(firstword $(MAKEFILE_LIST))" $(if $(REPOSITORY_STASH_IN_PARALLEL),$(MAKE_PARALLELISM_OPTIONS)) \
-		$(foreach repository,$(REPOSITORY_NAMES),repository.$(repository).stash)
+	@$(MAKE) --file="$(firstword $(MAKEFILE_LIST))" $(foreach repository,$(REPOSITORY_NAMES),repository.$(repository).stash)
 .PHONY: repositories.stash
 
 #. Stash files in all repositories
