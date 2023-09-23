@@ -3,7 +3,8 @@
 ###
 
 LC_ALL?=C
-GIT_SSH_COMMAND?=ssh -o ControlPath=$(if $(PARALLEL),no,~/.ssh/make_%r@%h_%p) -o ControlPersist=10s
+GIT_PARALLEL?=
+GIT_SSH_COMMAND?=ssh -o ControlPath=$(if $(GIT_PARALLEL),no,~/.ssh/make_%r@%h_%p) -o ControlPersist=10s
 
 GIT_COMMAND?=git
 ifeq ($(GIT_COMMAND),)

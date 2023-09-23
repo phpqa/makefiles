@@ -13,7 +13,11 @@ endif
 ##. Configuration
 ###
 
-PARALLEL=1
+GIT_PARALLEL?=1
+REPOSITORY_CLONE_IN_PARALLEL?=$(GIT_PARALLEL)
+REPOSITORY_FETCH_IN_PARALLEL?=$(GIT_PARALLEL)
+REPOSITORY_PULL_IN_PARALLEL?=$(GIT_PARALLEL)
+REPOSITORY_STASH_IN_PARALLEL?=$(GIT_PARALLEL)
 
 REPOSITORY_PROJECT_ROOT_DIRECTORY?=
 REPOSITORY_DIRECTORY_self?=$(eval REPOSITORY_DIRECTORY_self:=$$(if $$(wildcard $(GIT_DIRECTORY)),.))$(REPOSITORY_DIRECTORY_self)
@@ -290,7 +294,7 @@ repositories.remove-everything: | repository.remove; @true
 else
 # Clone all repositories
 repositories.clone:
-	@$(MAKE) --file="$(firstword $(MAKEFILE_LIST))" $(if $(PARALLEL),$(MAKE_PARALLELISM_OPTIONS)) \
+	@$(MAKE) --file="$(firstword $(MAKEFILE_LIST))" $(if $(REPOSITORY_CLONE_IN_PARALLEL),$(MAKE_PARALLELISM_OPTIONS)) \
 		$(foreach repository,$(REPOSITORY_NAMES),repository.$(repository).clone)
 .PHONY: repositories.clone
 
@@ -308,7 +312,7 @@ repositories.list-everything: repositories.list; @true
 
 # Fetch all repositories
 repositories.fetch:
-	@$(MAKE) --file="$(firstword $(MAKEFILE_LIST))" $(if $(PARALLEL),$(MAKE_PARALLELISM_OPTIONS)) \
+	@$(MAKE) --file="$(firstword $(MAKEFILE_LIST))" $(if $(REPOSITORY_FETCH_IN_PARALLEL),$(MAKE_PARALLELISM_OPTIONS)) \
 		$(foreach repository,$(REPOSITORY_NAMES),repository.$(repository).fetch)
 .PHONY: repositories.fetch
 
@@ -318,7 +322,7 @@ repositories.fetch-everything: repositories.fetch; @true
 
 # Pull all repositories
 repositories.pull:
-	@$(MAKE) --file="$(firstword $(MAKEFILE_LIST))" $(if $(PARALLEL),$(MAKE_PARALLELISM_OPTIONS)) \
+	@$(MAKE) --file="$(firstword $(MAKEFILE_LIST))" $(if $(REPOSITORY_PULL_IN_PARALLEL),$(MAKE_PARALLELISM_OPTIONS)) \
 		$(foreach repository,$(REPOSITORY_NAMES),repository.$(repository).pull)
 .PHONY: repositories.pull
 
@@ -328,7 +332,7 @@ repositories.pull-everything: repositories.pull; @true
 
 # Stash files in all repositories
 repositories.stash:
-	@$(MAKE) --file="$(firstword $(MAKEFILE_LIST))" $(if $(PARALLEL),$(MAKE_PARALLELISM_OPTIONS)) \
+	@$(MAKE) --file="$(firstword $(MAKEFILE_LIST))" $(if $(REPOSITORY_STASH_IN_PARALLEL),$(MAKE_PARALLELISM_OPTIONS)) \
 		$(foreach repository,$(REPOSITORY_NAMES),repository.$(repository).stash)
 .PHONY: repositories.stash
 
