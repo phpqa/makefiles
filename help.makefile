@@ -86,17 +86,17 @@ help:
 						{ if (content ~ /^title_link /) { title_link=substr(content,12); continue } } \
 						{ if (content ~ /^doc /) { \
 							# TODO add multiline docs \
-							doc=substr(content,5); \
-							match(doc,/^[^\.a-zA-Z0-9\s]+/); \
-							indent=substr(doc,RSTART,RLENGTH); \
-							doc=substr(doc,RLENGTH+1); \
+							doc[file]=substr(content,5); \
+							match(doc[file],/^[^\.a-zA-Z0-9\s]+/); \
+							indent=substr(doc[file],RSTART,RLENGTH); \
+							doc[file]=substr(doc[file],RLENGTH+1); \
 							continue \
 						} } \
-						{ if (content ~ /^doc_link /) { doc_link=substr(content,10); continue } } \
+						{ if (content ~ /^doc_link /) { doc_link[file]=substr(content,10); continue } } \
 						{ if (content ~ /^target /) { \
 							target=substr(content,8); \
 							if (title != last_title) { \
-								if (doc_link) { \
+								if (doc_link[file]) { \
 									printf "\n\033]8;;%s\033\\%s\033]8;;\033\\\n",title_link,title \
 								} else { \
 									printf "\n%s\n",title \
@@ -104,21 +104,21 @@ help:
 								last_title=title; \
 							}; \
 							printf style_dim "%s" style_reset style_title "%-*s" style_reset,indent,title_length-length(indent),target; \
-							if (doc == "") { doc=style_dim "No documentation" style_reset }; \
-							if (doc ~ /# TODO/) { doc=substr(doc,1,match(doc,/# TODO/)-1) }; \
-							if (doc ~ /#!/) { warning="$(ICON_WARNING)" substr(doc,match(doc,/#!/)+2); doc=substr(doc,1,match(doc,/#!/)-1) } ; \
-							if (doc_link) { \
-								printf " \033]8;;%s\033\\%s\033]8;;\033\\",doc_link,doc \
+							if (doc[file] == "") { doc[file]=style_dim "No documentation" style_reset }; \
+							if (doc[file] ~ /# TODO/) { doc[file]=substr(doc[file],1,match(doc[file],/# TODO/)-1) }; \
+							if (doc[file] ~ /#!/) { warning[file]="$(ICON_WARNING)" substr(doc[file],match(doc[file],/#!/)+2); doc[file]=substr(doc[file],1,match(doc[file],/#!/)-1) } ; \
+							if (doc_link[file]) { \
+								printf " \033]8;;%s\033\\%s\033]8;;\033\\",doc_link[file],doc[file] \
 							} else { \
-								printf " %s",doc \
+								printf " %s",doc[file] \
 							}; \
-							if (warning) { printf style_warning "%s" style_reset,warning; }; \
+							if (warning[file]) { printf style_warning "%s" style_reset,warning[file]; }; \
 							printf "\n"; \
 							title_link=""; \
 							indent=""; \
-							doc=""; \
-							doc_link=""; \
-							warning=""; \
+							doc[file]=""; \
+							doc_link[file]=""; \
+							warning[file]=""; \
 							# TODO reset all variables here \
 						} } \
 					} \
