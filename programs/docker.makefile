@@ -2,17 +2,17 @@
 ##. Configuration
 ###
 
-DOCKER_COMMAND?=docker
-ifeq ($(DOCKER_COMMAND),)
-$(error The variable DOCKER_COMMAND should never be empty)
-endif
-
 DOCKER_DIRECTORY?=.
 ifeq ($(DOCKER_DIRECTORY),)
 $(error The variable DOCKER_DIRECTORY should never be empty)
 endif
 
-DOCKER_DETECTED?=$(eval DOCKER_DETECTED:=$$(shell command -v $(DOCKER_COMMAND) || which $(DOCKER_COMMAND) 2>/dev/null))$(DOCKER_DETECTED)
+DOCKER_COMMAND?=docker
+ifeq ($(DOCKER_COMMAND),)
+$(error The variable DOCKER_COMMAND should never be empty)
+endif
+
+DOCKER_DETECTED?=$(eval DOCKER_DETECTED:=$$(shell $(if $(wildcard $(filter-out .,$(DOCKER_DIRECTORY))),cd "$(DOCKER_DIRECTORY)" && )( command -v $(DOCKER_COMMAND) || which $(DOCKER_COMMAND) 2>/dev/null )))$(DOCKER_DETECTED)
 DOCKER_DEPENDENCY?=$(or $(wildcard $(DOCKER_DIRECTORY))) $(if $(DOCKER_DETECTED),docker.assure-usable,docker.not-found)
 ifeq ($(DOCKER_DEPENDENCY),)
 $(error The variable DOCKER_DEPENDENCY should never be empty)
@@ -21,10 +21,15 @@ endif
 DOCKER?=$(if $(wildcard $(filter-out .,$(DOCKER_DIRECTORY))),cd "$(DOCKER_DIRECTORY)" && )$(DOCKER_COMMAND)
 DOCKER_SOCKET?=$(firstword $(wildcard /var/run/docker.sock /run/podman/podman.sock ${XDG_RUNTIME_DIR}/podman/podman.sock))
 DOCKER_CONFIG?=$(firstword $(wildcard ~/.docker/config.json ${HOME}/.docker/config.json))
-DOCKER_API_VERSION?=$(shell $(DOCKER) version --format "{{.Client.APIVersion}}")
+DOCKER_API_VERSION?=$(eval DOCKER_API_VERSION:=$$(shell $$(DOCKER) version --format "{{.Client.APIVersion}}"))$(DOCKER_API_VERSION)
 DOCKER_REGISTRIES?=
 
-USE_DOCKER_COMPOSE_1?=$(eval USE_DOCKER_COMPOSE_1:=$$(if $$(shell docker compose version 2>/dev/null || true),,yes))$(USE_DOCKER_COMPOSE_1)
+IMAGE_DIRECTORIES?=$(patsubst %/.,%,$(wildcard images/*/. image/*/. containers/*/. container/*/. docker/*/.))
+IMAGE_BUILD_DIRECTORY?=./.cache
+IMAGE_BUILD_FLAGS?=
+IMAGE_TAG?=
+
+USE_DOCKER_COMPOSE_1?=$(eval USE_DOCKER_COMPOSE_1:=$$(if $$(shell $$(DOCKER) compose version 2>/dev/null || true),,yes))$(USE_DOCKER_COMPOSE_1)
 DOCKER_COMPOSE_COMMAND?=$(if $(USE_DOCKER_COMPOSE_1),docker-compose,$(DOCKER) compose)
 ifeq ($(DOCKER_COMPOSE_COMMAND),)
 $(error The variable DOCKER_COMPOSE_COMMAND should never be empty)
@@ -90,25 +95,106 @@ docker.assure-usable: # Do not depend on $(DOCKER_DEPENDENCY), as DOCKER_DEPENDE
 	fi
 .PHONY: docker.assure-usable
 
+###
+## Container
+###
+
 # Login to all $DOCKER_REGISTRIES
-docker.login: | $(DOCKER_DEPENDENCY)
+container.registries.login: | $(DOCKER_DEPENDENCY)
 	@$(foreach registry,$(DOCKER_REGISTRIES),$(DOCKER) login $(registry);)
 .PHONY: docker.login
 
-#. Create a network %
-docker.network.%.create: | $(DOCKER_DEPENDENCY)
+# Create a container network %
+container.network.%.create: | $(DOCKER_DEPENDENCY)
 	@$(DOCKER) network create $(*) 2>/dev/null || true
 
-#. Remove a network %
-docker.network.%.remove: | $(DOCKER_DEPENDENCY)
+# Remove a container network %
+container.network.%.remove: | $(DOCKER_DEPENDENCY)
 	@$(DOCKER) network rm $(*) 2>/dev/null || true
 
-#. Follow the logs from container %
-docker.container.%.logs: | $(DOCKER_COMPOSE_DEPENDENCY)
-	@$(DOCKER) container logs --follow --since "$$($(DOCKER) container inspect --format "{{ .State.StartedAt }}" "$(*)")" "$(*)"
+ifneq ($(IMAGE_BUILD_DIRECTORY),)
+$(IMAGE_BUILD_DIRECTORY):
+	$(Q)if test ! -d "$(@)"; then mkdir -p "$(@)"; fi
+endif
 
-#. Follow the latest logs from container %
-docker.container.%.latest-logs: | $(DOCKER_COMPOSE_DEPENDENCY)
+define image_targets
+# Build the image
+container.image.$(notdir $(1)).build: $(1) $$(MAKEFILE_LIST) | $$(DOCKER_DEPENDENCY)
+	$$(Q)cd "$$(<)" && $$(DOCKER) image build --tag "$$(or $$(IMAGE_TAG),$(1):latest)"$$(if $$(IMAGE_BUILD_FLAGS), $$(IMAGE_BUILD_FLAGS)) .
+.PHONY: container.image.$(notdir $(1)).build
+
+# Build the image target
+container.image.$(notdir $(1)).target.%.build: $(1) $$(MAKEFILE_LIST) | $$(DOCKER_DEPENDENCY)
+	$$(Q)cd "$$(<)" && $$(DOCKER) image build --target="$$(*)" --tag "$$(or $$(IMAGE_TAG),$(1):$$(*))"$$(if $$(IMAGE_BUILD_FLAGS), $$(IMAGE_BUILD_FLAGS)) .
+
+#. Build the image and save it to an archive
+$$(if $$(IMAGE_BUILD_DIRECTORY),$$(patsubst %/,%,$$(IMAGE_BUILD_DIRECTORY))/)$(notdir $(1)).tar.gz: $(1) $$(MAKEFILE_LIST) | $$(DOCKER_DEPENDENCY) $$(IMAGE_BUILD_DIRECTORY)
+	$$(Q)IMAGE_TAG=$$(IMAGE_TAG) $$(MAKE) --file="$$(firstword $$(MAKEFILE_LIST))" container.image.$(notdir $(1)).build
+	$$(Q)if test ! -d "$$(dir $$(@))"; then mkdir -p "$$(dir $$(@))"; fi
+	$$(Q)$$(DOCKER) image save "$$$$($$(DOCKER) image inspect --format="{{.ID}}" "$$(or $$(IMAGE_TAG),$(1):latest)")" --output "$$(@)"
+	$$(Q)touch "$$(@)"
+.PRECIOUS: $$(if $$(IMAGE_BUILD_DIRECTORY),$$(patsubst %/,%,$$(IMAGE_BUILD_DIRECTORY))/)$(notdir $(1)).tar.gz
+
+#. Build the image target and save it to an archive
+$$(if $$(IMAGE_BUILD_DIRECTORY),$$(patsubst %/,%,$$(IMAGE_BUILD_DIRECTORY))/)$(notdir $(1)).%.tar.gz: $(1) $$(MAKEFILE_LIST) | $$(DOCKER_DEPENDENCY) $$(IMAGE_BUILD_DIRECTORY)
+	$$(Q)IMAGE_TAG=$$(IMAGE_TAG) $$(MAKE) --file="$$(firstword $$(MAKEFILE_LIST))" container.image.$(notdir $(1)).target.$$(*).build
+	$$(Q)if test ! -d "$$(dir $$(@))"; then mkdir -p "$$(dir $$(@))"; fi
+	$$(Q)$$(DOCKER) image save "$$$$($$(DOCKER) image inspect --format="{{.ID}}" "$$(or $$(IMAGE_TAG),$(1):$$(*))")" --output "$$(@)"
+	$$(Q)touch "$$(@)"
+.PRECIOUS: $$(if $$(IMAGE_BUILD_DIRECTORY),$$(patsubst %/,%,$$(IMAGE_BUILD_DIRECTORY))/)$(notdir $(1)).%.tar.gz
+
+# Save the image
+container.image.$(notdir $(1)).save: $$(if $$(IMAGE_BUILD_DIRECTORY),$$(patsubst %/,%,$$(IMAGE_BUILD_DIRECTORY))/)$(notdir $(1)).tar.gz
+	@true
+.PHONY: container.image.$(notdir $(1)).save
+
+# Save the image target
+container.image.$(notdir $(1)).target.%.save: $$(if $$(IMAGE_BUILD_DIRECTORY),$$(patsubst %/,%,$$(IMAGE_BUILD_DIRECTORY))/)$(notdir $(1)).%.tar.gz
+	@true
+
+# Load the image
+container.image.$(notdir $(1)).load: $$(if $$(IMAGE_BUILD_DIRECTORY),$$(patsubst %/,%,$$(IMAGE_BUILD_DIRECTORY))/)$(notdir $(1)).tar.gz
+	$$(Q) \
+		load=false; \
+		if test -z "$$$$($$(DOCKER) image ls --quiet --no-trunc --filter="reference=$$(or $$(IMAGE_TAG),$(1):latest)")"; then \
+			load=true; \
+		else \
+			timestamp_image="$$$$($$(DOCKER) image inspect --format="{{json .Metadata.LastTagTime}}" "$(or $(IMAGE_TAG),$(1):latest)" | sed 's/"//g' | date -f - +%s)"; \
+			timestamp_archive="$$$$(date -r "$$(<)" +%s)"; \
+			if test $$$${timestamp_image} -lt $$$${timestamp_archive}; then \
+				load=true; \
+			fi; \
+		fi; \
+		if test "$$$${load}" = "true"; then \
+			$$(DOCKER) image tag "$$$$($$(DOCKER) image load --input "$$(<)" | sed 's/.* sha256:\([^ ]*\)/\1/')" "$(or $(IMAGE_TAG),$(1):latest)"; \
+		fi
+.PHONY: container.image.$(notdir $(1)).load
+
+# Load the image target
+container.image.$(notdir $(1)).target.%.load: $$(if $$(IMAGE_BUILD_DIRECTORY),$$(patsubst %/,%,$$(IMAGE_BUILD_DIRECTORY))/)$(notdir $(1)).%.tar.gz
+	$$(Q) \
+		load=false; \
+		if test -z "$$$$($$(DOCKER) image ls --quiet --no-trunc --filter="reference=$$(or $$(IMAGE_TAG),$(1):$$(*))")"; then \
+			load=true; \
+		else \
+			timestamp_image="$$$$($$(DOCKER) image inspect --format="{{json .Metadata.LastTagTime}}" "$$(or $$(IMAGE_TAG),$(1):$$(*))" | sed 's/"//g' | date -f - +%s)"; \
+			timestamp_archive="$$$$(date -r "$$(<)" +%s)"; \
+			if test $$$${timestamp_image} -lt $$$${timestamp_archive}; then \
+				load=true; \
+			fi; \
+		fi; \
+		if test "$$$${load}" = "true"; then \
+			$$(DOCKER) image tag "$$$$($$(DOCKER) image load --input "$$(<)" | sed 's/.* sha256:\([^ ]*\)/\1/')" "$$(or $$(IMAGE_TAG),$(1):$$(*))"; \
+		fi
+endef
+$(foreach image_directory,$(IMAGE_DIRECTORIES),$(eval $(call image_targets,$(image_directory))))
+
+# Follow the logs from container %
+container.%.follow-logs: | $(DOCKER_COMPOSE_DEPENDENCY)
+	@$(DOCKER) container logs --follow "$(*)"
+
+# Follow the logs since the last start from container %
+container.%.follow-latest-logs: | $(DOCKER_COMPOSE_DEPENDENCY)
 	@$(DOCKER) container logs --follow --since "$$($(DOCKER) container inspect --format "{{ .State.StartedAt }}" "$(*)")" "$(*)"
 
 ###
