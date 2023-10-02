@@ -1,41 +1,25 @@
 ###
-##. Configuration
-###
-
-JQ_COMMAND?=jq
-ifeq ($(JQ_COMMAND),)
-$(error The variable JQ_COMMAND should never be empty)
-endif
-
-JQ_DETECTED?=$(eval JQ_DETECTED:=$$(shell command -v $(JQ_COMMAND) || which $(JQ_COMMAND) 2>/dev/null))$(JQ_DETECTED)
-JQ_DEPENDENCY?=$(if $(JQ_DETECTED),jq.assure-usable,$(if $(DOCKER_DETECTED),$(DOCKER_DEPENDENCY),jq.not-found))
-ifeq ($(JQ_DEPENDENCY),)
-$(error The variable JQ_DEPENDENCY should never be empty)
-endif
-
-JQ_DOCKER_IMAGE?=stedolan/jq:latest
-JQ?=$(if $(JQ_DETECTED),$(JQ_COMMAND),$(if $(DOCKER_DETECTED),$(DOCKER) run --rm --interactive $(JQ_DOCKER_IMAGE),$(JQ_COMMAND)))
-ifeq ($(JQ),)
-$(error The variable JQ should never be empty)
-endif
-
-###
 ##. jq
 ##. Lightweight and flexible command-line JSON processor
 ##. @see https://stedolan.github.io/jq/
 ###
 
-#. Exit if JQ_COMMAND is not found
-jq.not-found:
-	@printf "$(STYLE_ERROR)%s$(STYLE_RESET)\\n" "Please install jq."
-	@exit 1
-.PHONY: jq.not-found
-
-#. Assure that JQ is usable
-jq.assure-usable:
-	@if test -z "$$($(JQ) --version 2>/dev/null || true)"; then \
-		printf "$(STYLE_ERROR)%s$(STYLE_RESET)\n" 'Could not use jq as "$(value JQ)".'; \
-		$(JQ) --version; \
-		exit 1; \
-	fi
-.PHONY: jq.assure-usable
+COMMAND_NAMES+=jq
+COMMAND_VARIABLE_PREFIX_jq:=JQ
+ifndef JQ
+JQ_DEFAULT_COMMAND:=jq
+JQ_DIRECTORY?=.
+JQ?=$(eval JQ:=$$(strip\
+	$$(if $$(wildcard $$(filter-out .,$$(JQ_DIRECTORY))),cd "$$(JQ_DIRECTORY)" && ) \
+	$$(shell $$(if $$(JQ_DIRECTORY),cd "$$(JQ_DIRECTORY)" && ) (\
+		command -v $(JQ_DEFAULT_COMMAND) \
+		|| which $(JQ_DEFAULT_COMMAND) 2>/dev/null \
+		$$(if $$(and $$(DOCKER),$$(JQ_IMAGE_TAG),$$(wildcard $$(if $$(JQ_DIRECTORY),$$(patsubst %/,%,$$(JQ_DIRECTORY)))/bin/jq)), || printf "%s" "bin/jq") \
+	) ) \
+))$(JQ)
+endif
+JQ_DEPENDENCY?=$(eval JQ_DEPENDENCY:=$$(if $$($JQ),jq.assure-usable,jq.not-found))$(JQ_DEPENDENCY)
+JQ_USABILITY_CHECK_COMMAND?=$(JQ) --version 2>&1
+JQ_IMAGE_VERSION?=
+JQ_IMAGE_TAG?=ghcr.io/jqlang/jq:$(or $(JQ_IMAGE_VERSION),latest)
+JQ_CONTAINER_RUN_FLAGS?=--version

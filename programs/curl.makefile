@@ -1,41 +1,26 @@
 ###
-##. Configuration
-###
-
-CURL_COMMAND?=curl
-ifeq ($(CURL_COMMAND),)
-$(error The variable CURL_COMMAND should never be empty)
-endif
-
-CURL_DETECTED?=$(eval CURL_DETECTED:=$$(shell command -v $(CURL_COMMAND) || which $(CURL_COMMAND) 2>/dev/null))$(CURL_DETECTED)
-CURL_DEPENDENCY?=$(if $(CURL_DETECTED),curl.assure-usable,curl.not-found)
-ifeq ($(CURL_DEPENDENCY),)
-$(error The variable CURL_DEPENDENCY should never be empty)
-endif
-
-CURL?=$(CURL_COMMAND)
-ifeq ($(CURL),)
-$(error The variable CURL should never be empty)
-endif
-
-###
 ##. curl
 ##. Command line tool and library for transferring data with URLs
 ##. @see https://curl.se/
 ##. @see https://hub.docker.com/r/curlimages/curl
 ###
 
-#. Exit if CURL_COMMAND is not found
-curl.not-found:
-	@printf "$(STYLE_ERROR)%s$(STYLE_RESET)\\n" "Please install curl."
-	@exit 1
-.PHONY: curl.not-found
-
-#. Assure that CURL is usable
-curl.assure-usable:
-	@if test -z "$$($(CURL) --version 2>/dev/null || true)"; then \
-		printf "$(STYLE_ERROR)%s$(STYLE_RESET)\n" 'Could not use curl as "$(value CURL)".'; \
-		$(CURL) --version; \
-		exit 1; \
-	fi
-.PHONY: curl.assure-usable
+COMMAND_NAMES+=curl
+COMMAND_VARIABLE_PREFIX_curl:=CURL
+ifndef CURL
+CURL_DEFAULT_COMMAND:=curl
+CURL_DIRECTORY?=.
+CURL?=$(eval CURL:=$$(strip\
+	$$(if $$(wildcard $$(filter-out .,$$(CURL_DIRECTORY))),cd "$$(CURL_DIRECTORY)" && ) \
+	$$(shell $$(if $$(CURL_DIRECTORY),cd "$$(CURL_DIRECTORY)" && ) (\
+		command -v $(CURL_DEFAULT_COMMAND) \
+		|| which $(CURL_DEFAULT_COMMAND) 2>/dev/null \
+		$$(if $$(and $$(DOCKER),$$(CURL_IMAGE_TAG),$$(wildcard $$(if $$(CURL_DIRECTORY),$$(patsubst %/,%,$$(CURL_DIRECTORY)))/bin/curl)), || printf "%s" "bin/curl") \
+	) ) \
+))$(CURL)
+endif
+CURL_DEPENDENCY?=$(eval CURL_DEPENDENCY:=$$(if $$($CURL),curl.assure-usable,curl.not-found))$(CURL_DEPENDENCY)
+CURL_USABILITY_CHECK_COMMAND?=$(CURL) --version 2>&1
+CURL_IMAGE_VERSION?=
+CURL_IMAGE_TAG?=curlimages/curl:$(or $(CURL_IMAGE_VERSION),latest)
+CURL_CONTAINER_RUN_FLAGS?=--rm --interactive --tty
