@@ -80,3 +80,5 @@ Add a makefile to the parent directory to redirect
 - Add phars for the different tools
 - make it possible to run the phpqa tools from common, by setting the php directory
 - use phar files for tools that have them
+- add check tool: git --no-pager diff master..translation-service | grep "TODO|FIXME" https://stackoverflow.com/questions/25039242/how-to-list-all-my-current-todo-messages-in-a-git-repository
+- Extract the urls from composer.makefile, and make it optional to download the setup and sig, but download directly from the url, with a version and a signature
