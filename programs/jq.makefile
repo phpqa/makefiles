@@ -14,7 +14,7 @@ JQ?=$(eval JQ:=$$(strip\
 	$$(shell $$(if $$(JQ_DIRECTORY),cd "$$(JQ_DIRECTORY)" && ) (\
 		command -v $(JQ_DEFAULT_COMMAND) \
 		|| which $(JQ_DEFAULT_COMMAND) 2>/dev/null \
-		$$(if $$(and $$(DOCKER),$$(JQ_IMAGE_TAG),$$(wildcard $$(if $$(JQ_DIRECTORY),$$(patsubst %/,%,$$(JQ_DIRECTORY)))/bin/jq)), || printf "%s" "bin/jq") \
+		$$(if $$(and $$(DOCKER),$$(JQ_IMAGE_TAG)), || printf "%s" "bin/jq") \
 	) ) \
 ))$(JQ)
 endif

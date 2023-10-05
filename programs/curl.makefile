@@ -15,7 +15,7 @@ CURL?=$(eval CURL:=$$(strip\
 	$$(shell $$(if $$(CURL_DIRECTORY),cd "$$(CURL_DIRECTORY)" && ) (\
 		command -v $(CURL_DEFAULT_COMMAND) \
 		|| which $(CURL_DEFAULT_COMMAND) 2>/dev/null \
-		$$(if $$(and $$(DOCKER),$$(CURL_IMAGE_TAG),$$(wildcard $$(if $$(CURL_DIRECTORY),$$(patsubst %/,%,$$(CURL_DIRECTORY)))/bin/curl)), || printf "%s" "bin/curl") \
+		$$(if $$(and $$(DOCKER),$$(CURL_IMAGE_TAG)), || printf "%s" "bin/curl") \
 	) ) \
 ))$(CURL)
 endif
