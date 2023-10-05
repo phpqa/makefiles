@@ -29,6 +29,8 @@ include ../../programs/docker.makefile
 
 include ../../programs/curl.makefile
 include ../../programs/jq.makefile
+include ../../programs.makefile
+
 include ../../docker-tools/ctop.makefile
 include ../../docker-tools/dive.makefile
 include ../../docker-tools/dockly.makefile

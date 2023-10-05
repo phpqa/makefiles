@@ -11,6 +11,7 @@ include ../../help.makefile
 
 include ../../programs/git.makefile
 include ../../programs/jq.makefile
+include ../../programs.makefile
 
 ###
 ## Docker & Compose
@@ -127,7 +128,7 @@ stop: compose.down; @true
 .PHONY: stop
 
 # Clear the services
-clear: compose.clear traefik.clear dozzle.clear docker.network.traefik.remove; @true
+clear: compose.clear traefik.clear dozzle.clear container.network.traefik.remove; @true
 .PHONY: clear
 
 # Clean all directories and files
@@ -146,6 +147,6 @@ clean: | clear
 # Test if the external Traefik network does not get in the way
 test-traefik-external-network:
 	@$(MAKE) --file="$(firstword $(MAKEFILE_LIST))" compose.service.traefik.ensure-stopped
-	@$(MAKE) --file="$(firstword $(MAKEFILE_LIST))" docker.network.traefik.remove
+	@$(MAKE) --file="$(firstword $(MAKEFILE_LIST))" container.network.traefik.remove
 	@if test -f composer.lock; then touch composer.lock; fi
 	@$(MAKE) --file="$(firstword $(MAKEFILE_LIST))" start
