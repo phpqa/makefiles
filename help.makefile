@@ -140,16 +140,15 @@ list-makefiles:
 			\
 			{ if (/^# Variables/) { skip_segment=1 } } \
 			{ if (/^# Directories/) { skip_segment=1 } } \
-			{ if (/^# Implicit Rules/) { skip_segment=0 } } \
+			{ if (/^# Implicit Rules/) { skip_segment=1 } } \
 			{ if (/^# Files/) { skip_segment=0 } } \
 			{ if (skip_segment==1) { next } } \
 			\
 			{ if (/^\.PHONY|^\.SUFFIXES|^\.DEFAULT|^\.PRECIOUS/) { next } } \
 			{ if (/^[\t]/) { next } } \
 			\
-			{ if (/^# Not a target:/) { include="yes"; next } } \
 			{ if (/^.:/) { next } } \
-			{ if (/^([^#]+):/) { if (include=="yes") { match($$0,/:/); file=substr($$0,1,RSTART-1) } } } \
+			{ if (/^([^#]+):/) { match($$0,/:/); file=substr($$0,1,RSTART-1) } } \
 			{ if (/^$$|^[\t]+$$/) { if (file) { search=replace=file; gsub(" ","\\ ",replace); gsub(" "search,replace"\n",MAKEFILE_LIST) }; original=""; file=""; include="no"; } } \
 			\
 			END { print MAKEFILE_LIST } \
