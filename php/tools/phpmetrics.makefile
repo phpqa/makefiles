@@ -26,23 +26,18 @@ endif
 PHP_QUALITY_ASSURANCE_REPORT_TOOLS_DEPENDENCIES+=$(filter-out $(PHP_DEPENDENCY),$(PHPMETRICS_DEPENDENCY))
 HELP_TARGETS_TO_SKIP+=$(wildcard $(filter-out $(PHP_DEPENDENCY),$(PHPMETRICS_DEPENDENCY)))
 
-#. Extra variables
+#. Configuration variables
 PHPMETRICS_DIRECTORIES_TO_CHECK?=.
-PHPMETRICS_OUTPUT_DIRECTORY?=
-JUNIT_FILE?=
+
+#. Report variables
+PHPMETRICS_REPORT_DIRECTORY?=
 
 #. Building the flags
 PHPMETRICS_FLAGS?=
 
-ifneq ($(PHPMETRICS_OUTPUT_DIRECTORY),)
+ifneq ($(PHPMETRICS_REPORT_DIRECTORY),)
 ifeq ($(findstring --report-html,$(PHPMETRICS_FLAGS)),)
-PHPMETRICS_FLAGS+=--report-html="$(PHPMETRICS_OUTPUT_DIRECTORY)"
-endif
-endif
-
-ifneq ($(JUNIT_FILE),)
-ifeq ($(findstring --junit,$(PHPMETRICS_FLAGS)),)
-PHPMETRICS_FLAGS+=--junit="$(JUNIT_FILE)"
+PHPMETRICS_FLAGS+=--report-html="$(PHPMETRICS_REPORT_DIRECTORY)"
 endif
 endif
 
@@ -63,14 +58,17 @@ endif
 phpmetrics: | $(PHPMETRICS_DEPENDENCY) $(PHPMETRICS_CONFIG)
 	@$(PHPMETRICS)$(if $(PHPMETRICS_FLAGS), $(PHPMETRICS_FLAGS)) $(PHPMETRICS_DIRECTORIES_TO_CHECK)
 .PHONY: phpmetrics
+
+ifneq ($(PHPMETRICS_REPORT_DIRECTORY),)
 PHP_QUALITY_ASSURANCE_REPORT_TOOLS+=phpmetrics
 
 #. List the PhpMetrics report
 phpmetrics.report.list:
-	@$(if $(wildcard $(PHPMETRICS_OUTPUT_DIRECTORY)/index.html),printf "%s: %s\n" "PhpMetrics" "$$($(call println_link,file://$(abspath $(PHPMETRICS_OUTPUT_DIRECTORY)/index.html,$(PHPMETRICS_OUTPUT_DIRECTORY)/index.html)))")
+	@$(if $(wildcard $(PHPMETRICS_REPORT_DIRECTORY)/index.html),printf "%s: %s\n" "PhpMetrics" "$$($(call println_link,file://$(abspath $(PHPMETRICS_REPORT_DIRECTORY)/index.html,$(PHPMETRICS_REPORT_DIRECTORY)/index.html)))")
 .PHONY: phpmetrics.report.list
 
 #. Remove the PhpMetrics report
 phpmetrics.report.remove:
-	@$(if $(wildcard $(PHPMETRICS_OUTPUT_DIRECTORY)/index.html),rm -rf $(PHPMETRICS_OUTPUT_DIRECTORY))
+	@$(if $(wildcard $(PHPMETRICS_REPORT_DIRECTORY)/index.html),rm -rf $(PHPMETRICS_REPORT_DIRECTORY))
 .PHONY: phpmetrics.report.remove
+endif

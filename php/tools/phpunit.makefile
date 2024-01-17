@@ -31,10 +31,8 @@ HELP_TARGETS_TO_SKIP+=$(wildcard $(filter-out $(PHP_DEPENDENCY),$(PHPUNIT_DEPEND
 PHPUNIT_POSSIBLE_CONFIGS?=phpunit.xml phpunit.xml.dist
 PHPUNIT_CONFIG?=$(firstword $(wildcard $(PHPUNIT_POSSIBLE_CONFIGS)))
 
-#. Extra variables
-PHPUNIT_COVERAGE_DIRECTORY?=
-TESTDOX?=
-JUNIT_FILE?=
+#. Report variables
+PHPUNIT_REPORT_DIRECTORY?=
 
 #. Building the flags
 PHPUNIT_FLAGS?=
@@ -45,21 +43,9 @@ PHPUNIT_FLAGS+=--configuration="$(PHPUNIT_CONFIG)"
 endif
 endif
 
-ifneq ($(PHPUNIT_COVERAGE_DIRECTORY),)
+ifneq ($(PHPUNIT_REPORT_DIRECTORY),)
 ifeq ($(findstring --coverage-html,$(PHPUNIT_FLAGS)),)
-PHPUNIT_FLAGS+=--coverage-html="$(PHPUNIT_COVERAGE_DIRECTORY)"
-endif
-endif
-
-ifneq ($(TESTDOX),)
-ifeq ($(findstring --testdox,$(PHPUNIT_FLAGS)),)
-PHPUNIT_FLAGS+=--testdox
-endif
-endif
-
-ifneq ($(JUNIT_FILE),)
-ifeq ($(findstring --log-junit,$(PHPUNIT_FLAGS)),)
-PHPUNIT_FLAGS+=--log-junit="$(JUNIT_FILE)"
+PHPUNIT_FLAGS+=--coverage-html="$(PHPUNIT_REPORT_DIRECTORY)"
 endif
 endif
 
@@ -86,14 +72,17 @@ phpunit: | $(PHPUNIT_DEPENDENCY) $(PHPUNIT_CONFIG)
 	@$(PHPUNIT)$(if $(PHPUNIT_FLAGS), $(PHPUNIT_FLAGS))
 .PHONY: phpunit
 PHP_TESTING_TOOLS+=phpunit
+
+ifneq ($(PHPUNIT_REPORT_DIRECTORY),)
 PHP_QUALITY_ASSURANCE_REPORT_TOOLS+=phpunit
 
 #. List the PHPUnit report
 phpunit.report.list:
-	@$(if $(wildcard $(PHPUNIT_COVERAGE_DIRECTORY)/index.html),printf "%s: %s\n" "PHPUnit" "$$($(call println_link,file://$(abspath $(PHPUNIT_COVERAGE_DIRECTORY)/index.html,$(PHPUNIT_COVERAGE_DIRECTORY)/index.html)))")
+	@$(if $(wildcard $(PHPUNIT_REPORT_DIRECTORY)/index.html),printf "%s: %s\n" "PHPUnit" "$$($(call println_link,file://$(abspath $(PHPUNIT_REPORT_DIRECTORY)/index.html,$(PHPUNIT_REPORT_DIRECTORY)/index.html)))")
 .PHONY: phpunit.report.list
 
 #. Remove the PHPUnit report
 phpunit.report.remove:
-	@$(if $(wildcard $(PHPUNIT_COVERAGE_DIRECTORY)/index.html),rm -rf $(PHPUNIT_COVERAGE_DIRECTORY))
+	@$(if $(wildcard $(PHPUNIT_REPORT_DIRECTORY)/index.html),rm -rf $(PHPUNIT_REPORT_DIRECTORY))
 .PHONY: phpunit.report.remove
+endif
