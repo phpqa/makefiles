@@ -209,9 +209,9 @@ compose.not-found:
 
 #. Assure that DOCKER_COMPOSE is usable
 compose.assure-usable:
-	@if test -z "$$($(DOCKER_COMPOSE) --version 2>/dev/null || true)"; then \
+	@if test -z "$$($(DOCKER_COMPOSE) version 2>/dev/null || true)"; then \
 		printf "$(STYLE_ERROR)%s$(STYLE_RESET)\n" 'Could not use DOCKER_COMPOSE as "$(value DOCKER_COMPOSE)".'; \
-		$(DOCKER_COMPOSE) --version; \
+		$(DOCKER_COMPOSE) version; \
 		exit 1; \
 	fi
 .PHONY: compose.assure-usable
