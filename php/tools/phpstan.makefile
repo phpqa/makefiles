@@ -87,6 +87,11 @@ phpstan-baseline.neon: $(PHPSTAN_CONFIG) | $(PHPSTAN_DEPENDENCY)
 	@$(PHPSTAN)$(if $(PHPSTAN_BASELINE_FLAGS), $(PHPSTAN_BASELINE_FLAGS)) --generate-baseline="$(if $(PHPSTAN_BASELINE),$(PHPSTAN_BASELINE),$(firstword $(PHPSTAN_POSSIBLE_BASELINES)))"
 .PRECIOUS: phpstan-baseline.neon
 
+# Update the baseline for PHPStan
+phpstan.update-baseline: $(PHPSTAN_CONFIG) | $(PHPSTAN_DEPENDENCY)
+	@$(PHPSTAN)$(if $(PHPSTAN_BASELINE_FLAGS), $(PHPSTAN_BASELINE_FLAGS)) --generate-baseline="$(if $(PHPSTAN_BASELINE),$(PHPSTAN_BASELINE),$(firstword $(PHPSTAN_POSSIBLE_BASELINES)))"
+.PHONY: phpstan.update-baseline
+
 # Clear the PHPStan cache
 phpstan.clear-cache: $(PHPSTAN_CONFIG) | $(PHPSTAN_DEPENDENCY)
 	@$(PHPSTAN)$(if $(PHPSTAN_CLEAR_CACHE_FLAGS), $(PHPSTAN_CLEAR_CACHE_FLAGS)) clear-result-cache
