@@ -124,3 +124,13 @@ println_link?=printf "\033]8;;%s\033\\\\%s\033]8;;\033\\\\\n" "$(1)" "$(if $(2),
 #. Force the command to run
 force: ; @true
 .PHONY: force
+
+###
+##. Debug
+###
+
+#. Debug
+debug:
+	@$(MAKE) -v
+	@echo "flags: $(MAKE) $(MAKEFLAGS)"
+	@echo "shell flags: $(shell echo $${MAKE} $${MAKEFLAGS})"
