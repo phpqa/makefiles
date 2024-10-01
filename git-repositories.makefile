@@ -159,7 +159,7 @@ git-pull-repository=\
 					else \
 						COMMIT_HASH_BEFORE="$$($(GIT) rev-parse --verify HEAD)"; \
 						printf "%s\\n" "[$${PWD_TO_PRINT}] Pulling the \"$${CURRENT_BRANCH}\" branch..."; \
-						OUTPUT="$$($(GIT) pull --rebase origin "$${CURRENT_BRANCH}" 2>&1)"; \
+						OUTPUT="$$($(GIT) pull --rebase --autostash origin "$${CURRENT_BRANCH}" 2>&1)"; \
 						RESULT="$$?"; \
 						if test "$${RESULT}" -eq "0"; then \
 							COMMIT_HASH_AFTER="$$($(GIT) rev-parse --verify HEAD)"; \
