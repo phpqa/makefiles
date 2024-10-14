@@ -31,7 +31,7 @@ HELP_TARGETS_TO_SKIP+=$(wildcard $(filter-out $(PHP_DEPENDENCY),$(RECTOR_DEPENDE
 RECTOR_POSSIBLE_CONFIGS?=rector.php
 RECTOR_CONFIG?=$(wildcard $(RECTOR_POSSIBLE_CONFIGS))
 
-RECTOR_DIRECTORIES_TO_CHECK?=$(if $(RECTOR_CONFIG),,.)
+RECTOR_TARGETS_TO_CHECK?=$(if $(RECTOR_CONFIG),,.)
 
 RECTOR_MEMORY_LIMIT?=
 
@@ -69,12 +69,12 @@ rector.php: | $(RECTOR_DEPENDENCY)
 # Run Rector #!
 # @see https://github.com/rectorphp/rector
 rector: | $(RECTOR_DEPENDENCY) rector.php
-	@$(RECTOR)$(if $(RECTOR_FLAGS), $(RECTOR_FLAGS)) process $(RECTOR_DIRECTORIES_TO_CHECK)
+	@$(RECTOR)$(if $(RECTOR_FLAGS), $(RECTOR_FLAGS)) process $(RECTOR_TARGETS_TO_CHECK)
 .PHONY: rector
 PHP_QUALITY_ASSURANCE_FIX_TOOLS+=rector
 
 # Dryrun Rector
 rector.dryrun: | $(RECTOR_DEPENDENCY) rector.php
-	@$(RECTOR)$(if $(RECTOR_FLAGS), $(RECTOR_FLAGS)) --dry-run process $(RECTOR_DIRECTORIES_TO_CHECK)
+	@$(RECTOR)$(if $(RECTOR_FLAGS), $(RECTOR_FLAGS)) --dry-run process $(RECTOR_TARGETS_TO_CHECK)
 .PHONY: rector.dryrun
 PHP_QUALITY_ASSURANCE_CHECK_TOOLS+=rector.dryrun
