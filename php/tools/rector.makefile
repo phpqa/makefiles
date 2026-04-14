@@ -69,12 +69,12 @@ rector.php: | $(RECTOR_DEPENDENCY)
 # Run Rector #!
 # @see https://github.com/rectorphp/rector
 rector: | $(RECTOR_DEPENDENCY) rector.php
-	@$(RECTOR)$(if $(RECTOR_FLAGS), $(RECTOR_FLAGS)) process $(RECTOR_TARGETS_TO_CHECK)
+	@$(RECTOR) process$(if $(RECTOR_FLAGS), $(RECTOR_FLAGS)) $(RECTOR_TARGETS_TO_CHECK)
 .PHONY: rector
 PHP_QUALITY_ASSURANCE_FIX_TOOLS+=rector
 
 # Dryrun Rector
 rector.dryrun: | $(RECTOR_DEPENDENCY) rector.php
-	@$(RECTOR)$(if $(RECTOR_FLAGS), $(RECTOR_FLAGS)) --dry-run process $(RECTOR_TARGETS_TO_CHECK)
+	@$(RECTOR) process$(if $(RECTOR_FLAGS), $(RECTOR_FLAGS)) --dry-run $(RECTOR_TARGETS_TO_CHECK)
 .PHONY: rector.dryrun
 PHP_QUALITY_ASSURANCE_CHECK_TOOLS+=rector.dryrun
