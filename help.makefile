@@ -36,6 +36,7 @@ help:
 			BEGIN { \
 				{ if (length(show_pattern) == 0) { show_pattern="empty" } } \
 				{ if (length(skip_pattern) == 0) { skip_pattern="empty" } } \
+				makefile_realpaths_count=split(makefile_realpaths,makefile_realpaths_list,"\n"); \
 			} \
 			{ if (current_file != FILENAME) { \
 				if (!first_file) { first_file=current_file } \
@@ -62,15 +63,13 @@ help:
 				} } \
 			} } \
 			{ if (/^include .+\/?(.+)$$/) { \
-				included_path_origin=substr($$0,9); \
-				match(included_path_origin,/(\/.*$$|^[^\/]+$$)/); \
-				included_path_partial=substr(included_path_origin,RSTART,RLENGTH+1); \
-				included_path_partial_escaped=included_path_partial; gsub(" ","\\ ",included_path_partial_escaped); \
-				match("\n" makefile_realpaths "\n","\n" included_path_partial_escaped "\n"); \
-				included_path_real=substr("\n" makefile_realpaths "\n",RSTART + 1,RLENGTH - 2); \
-				if (included_path_real == "") { \
-					match(makefile_realpaths,"[^\n]*" included_path_partial_escaped); \
-					included_path_real=substr(makefile_realpaths,RSTART,RLENGTH); \
+				included_path_partial=substr($$0,9); \
+				sub(/^.*\)\/?/,"",included_path_partial); \
+				gsub(" ","\\ ",included_path_partial); \
+				included_path_real=""; \
+				for (realpath_number = 1; realpath_number <= makefile_realpaths_count && included_path_real == ""; realpath_number++) { \
+					realpath=makefile_realpaths_list[realpath_number]; \
+					if (realpath == included_path_partial || substr(realpath,length(realpath)-length(included_path_partial)) == "/" included_path_partial) { included_path_real=realpath } \
 				} \
 				renders[current_file,current_line]="include " included_path_real; \
 				next; \
