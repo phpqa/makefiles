@@ -18,11 +18,14 @@ $(foreach command,awk sort,$(eval $(call check-help-dependency,$(command))))
 HELP_TARGETS_TO_SKIP+=
 HELP_FIRST_COLUMN_WIDTH?=34
 
+#. The output of these sub-makes gets parsed: never let them print "make[1]: Entering directory" (GNU Make 4.4+ does so inside $(shell) too)
+HELP_MAKE=$(MAKE) --no-print-directory --file="$(firstword $(MAKEFILE_LIST))"
+
 # Show this help
 help:
 	@awk \
-		-v makefile_realpaths="$$($(MAKE) --file="$(firstword $(MAKEFILE_LIST))" list-makefiles)" \
-		-v show_pattern="$$($(MAKE) --file="$(firstword $(MAKEFILE_LIST))" list-make-targets-as-database | awk -F ";" '/^[a-zA-Z0-9_%\/\.-]+/{ if (skipped) printf "|"; printf "^%s:", $$3; skipped=1 }')" \
+		-v makefile_realpaths="$$($(HELP_MAKE) list-makefiles)" \
+		-v show_pattern="$$($(HELP_MAKE) list-make-targets-as-database | awk -F ";" '/^[a-zA-Z0-9_%\/\.-]+/{ if (skipped) printf "|"; printf "^%s:", $$3; skipped=1 }')" \
 		-v skip_pattern="$(subst $(subst ,, ),|,$(foreach target,$(HELP_TARGETS_TO_SKIP),^$(target):))" \
 		-v style_title="$(STYLE_TITLE)" \
 		-v style_dim="$(STYLE_DIM)" \
@@ -125,7 +128,7 @@ help:
 				} \
 			} \
 			END { render(first_file) } \
-		' $(shell $(MAKE) --file="$(firstword $(MAKEFILE_LIST))" list-makefiles)
+		' $(shell $(HELP_MAKE) list-makefiles)
 .PHONY: help
 
 ###
@@ -134,7 +137,7 @@ help:
 
 #. List all included makefiles
 list-makefiles:
-	@$(MAKE) --file="$(firstword $(MAKEFILE_LIST))" --jobs=1 --always-make --print-data-base --no-builtin-rules --no-builtin-variables : 2>/dev/null \
+	@$(HELP_MAKE) --jobs=1 --always-make --print-data-base --no-builtin-rules --no-builtin-variables : 2>/dev/null \
 		| awk -v MAKEFILE_LIST="$(MAKEFILE_LIST)" ' \
 			BEGIN { MAKEFILE_LIST=" " MAKEFILE_LIST } \
 			\
@@ -164,7 +167,7 @@ list-make-variable-%:
 
 #. List all make variables as semi-colon separated list
 list-make-variables-as-database:
-	@$(MAKE) --file="$(firstword $(MAKEFILE_LIST))" --jobs=1 --print-data-base --no-builtin-rules --no-builtin-variables : 2>/dev/null \
+	@$(HELP_MAKE) --jobs=1 --print-data-base --no-builtin-rules --no-builtin-variables : 2>/dev/null \
 		| awk ' \
 			{ if (/^# Variables/) { skip_segment=0 } } \
 			{ if (/^# Directories/) { skip_segment=1 } } \
@@ -198,7 +201,7 @@ list-make-variables-as-database:
 
 #. List all make variables
 list-make-variables:
-	@$(MAKE) --file="$(firstword $(MAKEFILE_LIST))" list-make-variables-as-database \
+	@$(HELP_MAKE) list-make-variables-as-database \
 		| awk -F ";" \
 			-v style_underlined="$(STYLE_UNDERLINED)" \
 			-v style_reset="$(STYLE_RESET)" \
@@ -212,7 +215,7 @@ list-make-variables:
 
 #. List all make targets as semi-colon separated list
 list-make-targets-as-database:
-	@$(MAKE) --file="$(firstword $(MAKEFILE_LIST))" --jobs=1 --always-make --print-data-base --no-builtin-rules --no-builtin-variables : 2>/dev/null \
+	@$(HELP_MAKE) --jobs=1 --always-make --print-data-base --no-builtin-rules --no-builtin-variables : 2>/dev/null \
 		| awk ' \
 			{ if (/^# Variables/) { skip_segment=1 } } \
 			{ if (/^# Directories/) { skip_segment=1 } } \
@@ -256,7 +259,7 @@ list-make-targets-as-database:
 
 #. List all make targets
 list-make-targets:
-	@$(MAKE) --file="$(firstword $(MAKEFILE_LIST))" list-make-targets-as-database  \
+	@$(HELP_MAKE) list-make-targets-as-database  \
 		| awk -F ";" \
 			-v style_underlined="$(STYLE_UNDERLINED)" \
 			-v style_title="$(STYLE_TITLE)" \
