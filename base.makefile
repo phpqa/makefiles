@@ -3,7 +3,7 @@
 ###
 
 #. Check for GNU Make
-ifneq ($(firstword $(shell $(MAKE) --version)),GNU)
+ifeq ($(MAKE_VERSION),)
 $(error Please use GNU Make)
 endif
 
